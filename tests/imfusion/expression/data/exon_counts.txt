@@ -1,0 +1,4 @@
+# Program:featureCounts v1.4.6-p5; Command:"featureCounts" "-a" "/home/NFS/users/j.d.ruiter/references/mus_musculus/mm10/gtf/DEXSeq/Mus_musculus.GRCm38.76.DEXSeq.no_aggr.gtf" "-o" "./exon_counts.txt" "-f" "-t" "exonic_part" "--minOverlap" "1" "-O" "a.bam" "b.bam"
+Geneid	Chr	Start	End	Strand	Length	a.bam	b.bam
+ENSMUSG00000090025	1	3054233	3054733	+	501	0	1
+ENSMUSG00000064842	1	3102016	3102125	+	110	0	0

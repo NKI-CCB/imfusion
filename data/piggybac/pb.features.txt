@@ -1,0 +1,7 @@
+name	start	end	strand	type
+CbASA	732	939  	1	SA
+SV40_pA	970	1191 	1
+SV40_pA	1224	1446	-1
+CAGS_promoter	1518	3238	1
+SD	3343	3520	1	SD
+En2SA	3557	3986	-1	SA

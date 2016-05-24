@@ -1,0 +1,11 @@
+im_fusion.egg-info
+__pycache__
+*.pyc
+.DS_Store
+.cache
+.coverage
+htmlcov
+.idea
+.vscode
+docs/_build
+RELEASE-VERSION

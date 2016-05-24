@@ -1,0 +1,19 @@
+name: imfusion
+dependencies:
+  - python = 2.7
+
+  - future
+  - toolz
+
+  - pandas
+  - numexpr
+  - scipy
+  - seaborn
+
+  - pip:
+    - pysam == 0.8.4
+    - git+https://github.com/mdshw5/pyfaidx.git
+    - intervaltree
+
+    # Optional dependencies
+    # - rpy2    # For single-sample test.
