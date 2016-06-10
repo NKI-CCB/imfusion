@@ -23,6 +23,9 @@ def setup_parser(subparsers):
                            help='Base name of the merged output files.')
     subparser.add_argument('--samples', nargs='+', default=None,
                            help='IDs of samples to subset the output to.')
+    subparser.add_argument('--no_expression', default=True,
+                           dest='with_expression', action='store_false',
+                           help='Don\'t include expression counts.')
 
     subparser.set_defaults(main=main)
 
@@ -39,12 +42,14 @@ def main(args):
     # Read and merge insertions.
     logger.info('Merging samples')
     merged_ins, merged_counts = merge_samples(
-        sample_dirs, samples=args.samples)
+        sample_dirs, samples=args.samples,
+        with_expression=args.with_expression)
 
     # Write outputs.
     logger.info('Writing outputs')
     ins_out_path = args.output_base.with_suffix('.insertions.txt')
     merged_ins.to_csv(str(ins_out_path), sep='\t', index=False)
 
-    exon_out_path = args.output_base.with_suffix('.exon_counts.txt')
-    merged_counts.to_csv(str(exon_out_path), sep='\t', index=True)
+    if args.with_expression:
+        exon_out_path = args.output_base.with_suffix('.exon_counts.txt')
+        merged_counts.to_csv(str(exon_out_path), sep='\t', index=True)

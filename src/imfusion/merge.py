@@ -10,7 +10,7 @@ from imfusion.expression.util import read_exon_counts
 from imfusion.model import Insertion
 
 
-def merge_samples(dir_paths, samples=None):
+def merge_samples(dir_paths, samples=None, with_expression=True):
     """Merges samples in dir_paths to a single insertions/exon counts frame.
 
     Parameters
@@ -19,12 +19,15 @@ def merge_samples(dir_paths, samples=None):
         Paths to the sample directories.
     samples : List[str]
         Samples to subset the results to.
+    with_expression : bool
+        Whether to include expression.
 
     Returns
     -------
     tuple(pandas.DataFrame, pandas.DataFrame)
         Two DataFrames respectively containing the merged insertions
-        and the merged exon counts.
+        and the merged exon counts. If with_expression is False, the
+        merged counts frame is returned as None.
 
     """
 
@@ -34,9 +37,12 @@ def merge_samples(dir_paths, samples=None):
     merged_insertions = merge_insertion_frames(ins_frames)
 
     # Merge counts.
-    count_paths = [dp / 'exon_counts.txt' for dp in dir_paths]
-    count_frames = [read_exon_counts(cp) for cp in count_paths]
-    merged_counts = merge_exon_counts(count_frames)
+    if with_expression:
+        count_paths = [dp / 'exon_counts.txt' for dp in dir_paths]
+        count_frames = [read_exon_counts(cp) for cp in count_paths]
+        merged_counts = merge_exon_counts(count_frames)
+    else:
+        merged_counts = None
 
     # Subset to samples if given.
     if samples is not None:
