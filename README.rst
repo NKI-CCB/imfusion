@@ -1,8 +1,8 @@
 .. image:: https://img.shields.io/travis/jrderuiter/im-fusion/develop.svg?style=flat-square
     :target: https://travis-ci.org/jrderuiter/im-fusion
 
-.. image:: https://img.shields.io/coveralls/jrderuiter/imfusion/develop.svg?style=flat-square
-    :target: https://coveralls.io/github/jrderuiter/imfusion
+.. image:: https://img.shields.io/coveralls/jrderuiter/im-fusion/develop.svg?style=flat-square
+    :target: https://coveralls.io/github/jrderuiter/im-fusion
 
 IM-Fusion
 =========
