@@ -1,3 +1,9 @@
+.. image:: https://img.shields.io/travis/jrderuiter/imfusion/develop.svg?style=flat-square
+    :target: https://travis-ci.org/jrderuiter/imfusion
+
+.. image:: https://img.shields.io/coveralls/jrderuiter/imfusion/develop.svg?style=flat-square
+    :target: https://coveralls.io/github/jrderuiter/imfusion
+
 IM-Fusion
 =========
 

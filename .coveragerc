@@ -1,2 +1,5 @@
 [run]
+source = imfusion
+
+[report]
 omit = src/imfusion/_version.py

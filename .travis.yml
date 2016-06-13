@@ -1,0 +1,46 @@
+language: python
+
+python:
+  # We don't actually use the Travis Python, but this keeps it organized.
+  - '2.7'
+  - '3.5'
+
+install:
+  - sudo apt-get update
+
+  # Install Anaconda.
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+
+  # Useful for debugging any issues with conda.
+  - conda info -a
+
+  # Create conda environment and install dependencies.
+  - "conda create -q -n test -c jrderuiter -c bioconda -c r
+    python=$TRAVIS_PYTHON_VERSION intervaltree future pandas
+    numexpr pysam=0.8.4 toolz scipy seaborn pyfaidx intervaltree pathlib2
+    r rpy2 tophat bowtie subread mock pytest pytest-datafiles
+    pytest-mock pytest-helpers-namespace"
+
+  # Activate environment and install im-fusion.
+  - source activate test
+  - pip install .
+
+  # Install coverage dependencies.
+  - pip install pytest-cov python-coveralls
+
+before_script:
+  # Use xvfb during testing for matplotlib.
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
+
+script: py.test --cov imfusion --cov-report term-missing
+
+after_success:
+    - coveralls
