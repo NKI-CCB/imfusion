@@ -51,8 +51,8 @@ Dependencies
 Python dependencies
 -------------------
 
-IM-Fusion is compatible with both Python 2.7 and Python 3.3+. However,
-identifying insertions only works in Python 3.3+ if a Python
+IM-Fusion is compatible with both Python 2.7 and Python 3.4+. However,
+identifying insertions only works in Python 3.4+ if a Python
 3 compatible version of Tophat2 is installed. Such a version can be obtained
 from bioconda or by applying the 2to3 conversion to Tophats scripts.
 

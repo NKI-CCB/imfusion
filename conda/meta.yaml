@@ -64,6 +64,7 @@ test:
     - pytest-helpers-namespace
 
 about:
-  home:
-  license:
-  license_file:
+  home: https://github.com/jrderuiter/im-fusion
+  license: MIT
+  summary: "IM-Fusion - Tool for identifying transposon insertions
+    and their effects from RNA-sequencing data"
