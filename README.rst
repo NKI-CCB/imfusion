@@ -1,8 +1,11 @@
-.. image:: https://img.shields.io/travis/jrderuiter/im-fusion/develop.svg?style=flat-square
+.. image:: https://img.shields.io/travis/jrderuiter/im-fusion/develop.svg
     :target: https://travis-ci.org/jrderuiter/im-fusion
 
-.. image:: https://img.shields.io/coveralls/jrderuiter/im-fusion/develop.svg?style=flat-square
+.. image:: https://img.shields.io/coveralls/jrderuiter/im-fusion/develop.svg
     :target: https://coveralls.io/github/jrderuiter/im-fusion
+
+.. image:: https://img.shields.io/badge/ReadTheDocs-latest-green.svg
+    :target: https://im-fusion.readthedocs.io/en/latest/
 
 IM-Fusion
 =========
@@ -36,7 +39,8 @@ their effects from RNA-sequencing data" (*submitted*).
 Documentation
 =============
 
-IM-Fusion's documentation is available on ReadTheDocs.
+IM-Fusion's documentation is available at
+`im-fusion.readthedocs.io <https://im-fusion.readthedocs.io>`_.
 
 Installation
 ============
