@@ -1,30 +1,34 @@
 name: imfusion-dev
+channels:
+  - jrderuiter
+  - bioconda
+  - r
 dependencies:
-  - python = 2.7
+  - python
 
+  # Basic dependencies.
+  - intervaltree
   - future
-  - toolz
-
   - pandas
   - numexpr
+  - pysam ==0.8.4
+  - toolz
   - scipy
   - seaborn
+  - pyfaidx
+  - intervaltree
+  - pathlib2 # [py27]
+  - r
+  - rpy2
 
-  # Testing/development dependencies.
-  - sphinx
+  # Bioconda dependencies.
+  - tophat
+  - bowtie
+  - subread
+
+  # Test dependencies.
+  - mock
   - pytest
-
-  - pip:
-    - pysam == 0.8.4
-    - git+https://github.com/mdshw5/pyfaidx.git
-    - intervaltree
-
-    # Optional dependencies
-    # - rpy2    # For single-sample test.
-
-    # Testing/development dependencies.
-    - sphinx-autobuild
-    - pytest-mock
-    - pytest-datafiles
-    - pytest-coverage
-    - pytest-helpers-namespace
+  - pytest-datafiles
+  - pytest-mock
+  - pytest-helpers-namespace

@@ -1,19 +1,27 @@
 name: imfusion
+channels:
+  - jrderuiter
+  - bioconda
+  - r
 dependencies:
-  - python = 2.7
+  - python
 
+  # Basic dependencies.
+  - intervaltree
   - future
-  - toolz
-
   - pandas
   - numexpr
+  - pysam ==0.8.4
+  - toolz
   - scipy
   - seaborn
+  - pyfaidx
+  - intervaltree
+  - pathlib2 # [py27]
+  - r
+  - rpy2
 
-  - pip:
-    - pysam == 0.8.4
-    - git+https://github.com/mdshw5/pyfaidx.git
-    - intervaltree
-
-    # Optional dependencies
-    # - rpy2    # For single-sample test.
+  # Bioconda dependencies.
+  - tophat
+  - bowtie
+  - subread

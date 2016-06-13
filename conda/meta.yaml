@@ -1,0 +1,69 @@
+package:
+  name: im-fusion
+  version: {{ environ.get('GIT_DESCRIBE_TAG', '')[1:]+ '+' + environ.get('GIT_DESCRIBE_NUMBER', '') }}
+
+source:
+  path: ../
+
+requirements:
+  build:
+    - setuptools
+
+    # Basic dependencies.
+    - python
+    - future
+    - pandas
+    - numexpr
+    - pysam ==0.8.4
+    - toolz
+    - scipy
+    - seaborn
+    - pyfaidx
+    - intervaltree
+    - pathlib2 # [py27]
+    - r
+    - rpy2
+
+  run:
+    # Basic dependencies.
+    - python
+    - intervaltree
+    - future
+    - pandas
+    - numexpr
+    - pysam ==0.8.4
+    - toolz
+    - scipy
+    - seaborn
+    - pyfaidx
+    - intervaltree
+    - pathlib2 # [py27]
+    - r
+    - rpy2
+
+    # Bioconda dependencies.
+    - tophat
+    - bowtie
+    - subread
+
+test:
+  imports:
+    - imfusion
+
+  commands:
+    - im-fusion -h
+    - tophat --version
+    - featureCounts -v
+    - py.test $SRC_DIR
+
+  requires:
+    - mock
+    - pytest
+    - pytest-datafiles
+    - pytest-mock
+    - pytest-helpers-namespace
+
+about:
+  home:
+  license:
+  license_file:

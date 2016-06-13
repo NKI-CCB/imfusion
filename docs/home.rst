@@ -31,9 +31,9 @@ IM-Fusion has the following key features:
   effects for a single insertion in a specific sample, or determine the general
   effect of insertions on a given gene within the tumor cohort.
 
-For more details on the approach and a comparison with existing
-DNA-sequencing approaches, please see our preprint *"Identifying transposon
-insertions and their effects from RNA-sequencing data"* on bioRxiv.
+For more details on the approach and a comparison with existing DNA-sequencing
+approaches, please see our paper "Identifying transposon insertions and
+their effects from RNA-sequencing data" (*submitted*).
 
 Where to start?
 ---------------

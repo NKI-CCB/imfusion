@@ -6,7 +6,7 @@ import versioneer
 
 # General requirements.
 INSTALL_REQUIRES = ['future', 'pandas', 'numexpr', 'pysam',
-                    'toolz', 'scipy', 'seaborn', 'pyfaidx',
+                    'toolz', 'seaborn', 'pyfaidx',
                     'scipy', 'intervaltree']
 
 EXTRAS_REQUIRE = {

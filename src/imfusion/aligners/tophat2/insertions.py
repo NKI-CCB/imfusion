@@ -381,10 +381,10 @@ def tophat2_align(fastqs, index_path, output_dir, kwargs=None,
         fastqs_1, fastqs_2 = fastqs, None
 
     # Concatenate inputs.
-    fastqs_1 = ','.join(str(fp) for fp in  fastqs_1).encode()
-    fastqs_2 = ','.join((str(fp) for fp in fastqs_2)).encode() \
+    fastqs_1 = ','.join(str(fp) for fp in  fastqs_1)
+    fastqs_2 = ','.join((str(fp) for fp in fastqs_2)) \
         if fastqs_2 is not None else None
-
+    
     # Remove output_dir kwargs, as we override these with our
     # own arguments anyway. After removing, inject out output_dir.
     overridden_kwargs = {'-o', '--output-dir'}
