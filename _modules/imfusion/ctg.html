@@ -1,0 +1,642 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.ctg &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>imfusion.ctg</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.ctg</h1><div class="highlight"><pre>
+<span></span><span class="c1"># pylint: disable=W0622,W0614,W0401</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=W0622,W0614,W0401</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">import</span> <span class="nn">toolz</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">intervaltree</span> <span class="kn">import</span> <span class="n">IntervalTree</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">poisson</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.expression.de_test</span> <span class="kn">import</span> <span class="n">de_exon</span>
+
+
+<div class="viewcode-block" id="test_ctgs"><a class="viewcode-back" href="../../api.html#imfusion.ctg.test_ctgs">[docs]</a><span class="k">def</span> <span class="nf">test_ctgs</span><span class="p">(</span><span class="n">insertion_frame</span><span class="p">,</span> <span class="n">reference_seq</span><span class="p">,</span> <span class="n">reference_gtf</span><span class="p">,</span>
+              <span class="n">chromosomes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">gene_ids</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">per_sample</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Identifies genes that are significantly enriched for insertions (CTGs).</span>
+
+<span class="sd">    This function takes a DataFrame of insertions, coming from multiple samples,</span>
+<span class="sd">    and identifies if any genes are more frequently affected by an</span>
+<span class="sd">    insertion than would be expected by chance. These genes are called</span>
+<span class="sd">    Commonly Targeted Genes (CTGs). CTGs are selected by comparing the</span>
+<span class="sd">    number of insertions within the gene to the number of insertions</span>
+<span class="sd">    that would be expected from the background insertion rate, which is</span>
+<span class="sd">    modeled using a Poisson distribution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertion_frame : pd.DataFrame</span>
+<span class="sd">        Insertions to test (in DataFrame format).</span>
+<span class="sd">    reference_sequence : pyfaidx.Fasta</span>
+<span class="sd">        Fasta sequence of the reference genome.</span>
+<span class="sd">    reference_gtf : GtfFile</span>
+<span class="sd">        GtfFile containing reference genes.</span>
+<span class="sd">    chromosomes : list[str]</span>
+<span class="sd">        List of chromosomes to include, defaults to all chromosomes</span>
+<span class="sd">        in reference_gtf.</span>
+<span class="sd">    pattern : str</span>
+<span class="sd">        Specificity pattern of the used transposon.</span>
+<span class="sd">    genes : list[str]</span>
+<span class="sd">        List of genes to test (defaults to all genes with an insertion).</span>
+<span class="sd">    per_sample : bool</span>
+<span class="sd">        Whether to perform the per sample test (recommended), which</span>
+<span class="sd">        effectively collapes insertions per sample/gene combination.</span>
+<span class="sd">        This avoids issues in which insertions that are detected</span>
+<span class="sd">        multiple times or that may have hopped inside the gene locus</span>
+<span class="sd">        are counted multiple times.</span>
+<span class="sd">    window : tuple(int, int)</span>
+<span class="sd">        Window to include around gene (in bp). Specified as (upstream_dist,</span>
+<span class="sd">        downstream_dist). For example: (-2000, 2000) specifies in a 2KB</span>
+<span class="sd">        window around each gene.</span>
+<span class="sd">    threshold : float</span>
+<span class="sd">        Maximum p-value for selected CTGs.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.DataFrame</span>
+<span class="sd">        Results of CTG test for tested genes. Contains three columns:</span>
+<span class="sd">        gene_id, p_val and p_val_corr. The last column, p_val_corr,</span>
+<span class="sd">        represents the p-value of the gene after correcting for</span>
+<span class="sd">        multiple testing using bonferroni correction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Read reference genes from GTF.</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;-- Reading reference genes&#39;</span><span class="p">)</span>
+
+    <span class="n">ref_genes</span> <span class="o">=</span> <span class="n">reference_gtf</span><span class="o">.</span><span class="n">get_region</span><span class="p">(</span>
+        <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;feature&#39;</span><span class="p">:</span> <span class="s1">&#39;gene&#39;</span><span class="p">})</span>
+    <span class="n">ref_genes</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;gene_id&#39;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c1"># Subset reference genes to given chromosomes.</span>
+    <span class="k">if</span> <span class="n">chromosomes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+
+        <span class="n">ref_genes</span> <span class="o">=</span> <span class="n">ref_genes</span><span class="p">[</span><span class="n">ref_genes</span><span class="p">[</span><span class="s1">&#39;contig&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">chromosomes</span><span class="p">)]</span>
+
+    <span class="c1"># Determine gene intervals to include.</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="p">(</span><span class="n">_apply_gene_window</span><span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span>
+                 <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">ref_genes</span><span class="o">.</span><span class="n">iterrows</span><span class="p">())</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="p">[</span><span class="n">int_</span> <span class="k">for</span> <span class="n">int_</span> <span class="ow">in</span> <span class="n">intervals</span> <span class="k">if</span> <span class="n">int_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">int_</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+
+    <span class="c1"># Subset insertions to gene intervals.</span>
+    <span class="n">insertion_frame</span> <span class="o">=</span> <span class="n">_subset_to_intervals</span><span class="p">(</span><span class="n">insertion_frame</span><span class="p">,</span> <span class="n">intervals</span><span class="p">)</span>
+
+    <span class="c1"># Collapse insertions per gene/sample (recommended).</span>
+    <span class="c1"># Corrects for hopping/multiple detection issues.</span>
+    <span class="k">if</span> <span class="n">per_sample</span><span class="p">:</span>
+        <span class="n">insertion_frame</span> <span class="o">=</span> <span class="n">_collapse_per_sample</span><span class="p">(</span><span class="n">insertion_frame</span><span class="p">)</span>
+
+    <span class="c1"># Calculate total number of pattern occurrences within intervals.</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;-- Counting pattern occurrences&#39;</span><span class="p">)</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="n">count_total</span><span class="p">(</span><span class="n">reference_seq</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span> <span class="n">intervals</span><span class="o">=</span><span class="n">intervals</span><span class="p">)</span>
+
+    <span class="c1"># Determine which genes to test, defaulting to all genes with an insertion.</span>
+    <span class="k">if</span> <span class="n">gene_ids</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">gene_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">insertion_frame</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">())</span>
+
+    <span class="c1"># Calculate p-values for each gene.</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;-- Calculating significance for genes&#39;</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span>
+        <span class="p">((</span><span class="n">gene_id</span><span class="p">,</span> <span class="n">ref_genes</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">gene_id</span><span class="p">][</span><span class="s1">&#39;gene_name&#39;</span><span class="p">],</span>
+          <span class="n">test_region</span><span class="p">(</span><span class="o">*</span><span class="n">_apply_gene_window</span><span class="p">(</span><span class="n">ref_genes</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">gene_id</span><span class="p">],</span> <span class="n">window</span><span class="p">),</span>
+                     <span class="n">insertion_frame</span><span class="o">=</span><span class="n">insertion_frame</span><span class="p">,</span>
+                     <span class="n">reference</span><span class="o">=</span><span class="n">reference_seq</span><span class="p">,</span>
+                     <span class="n">total</span><span class="o">=</span><span class="n">total</span><span class="p">,</span>
+                     <span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span>
+                     <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;gene_id&#39;</span><span class="p">:</span> <span class="n">gene_id</span><span class="p">}))</span>
+         <span class="k">for</span> <span class="n">gene_id</span> <span class="ow">in</span> <span class="n">gene_ids</span><span class="p">),</span>
+        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">,</span> <span class="s1">&#39;gene_name&#39;</span><span class="p">,</span> <span class="s1">&#39;pval&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Calculate corrected p-value using bonferroni correction.</span>
+    <span class="n">result</span><span class="p">[</span><span class="s1">&#39;pval_corr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;pval&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">))</span><span class="o">.</span><span class="n">clip_upper</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="c1"># Threshold results and sort by p-value.</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;pval_corr&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">threshold</span><span class="p">]</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;pval_corr&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="test_de"><a class="viewcode-back" href="../../api.html#imfusion.ctg.test_de">[docs]</a><span class="k">def</span> <span class="nf">test_de</span><span class="p">(</span><span class="n">ctgs</span><span class="p">,</span> <span class="n">insertions</span><span class="p">,</span> <span class="n">dexseq_gtf</span><span class="p">,</span> <span class="n">exon_counts_path</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests identified CTGs for differential expression.</span>
+
+<span class="sd">    This function takes CTG frame produced by `test_ctgs` and tests each</span>
+<span class="sd">    of the identified CTGs for differential expression using the groupwise</span>
+<span class="sd">    exon-level differential expression test (`de_exon`). The resulting</span>
+<span class="sd">    DE p-values are added to the DataFrame and CTGs that are not</span>
+<span class="sd">    differentially expressed are dropped.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ctgs : pandas.DataFrame</span>
+<span class="sd">        DataFrame containing the identified CTGs (as generated by `test_ctgs`).</span>
+<span class="sd">    insertions : List[insertions]</span>
+<span class="sd">        List of insertions to use in the test. Should be the same insertions</span>
+<span class="sd">        as used to identify CTGs.</span>
+<span class="sd">    dexseq_gtf : imfusion.util.tabix.GtfFile</span>
+<span class="sd">        GtfFile instance containing the flattened exon representation of</span>
+<span class="sd">        the original reference_gtf. The corresponding gtf file is typically</span>
+<span class="sd">        generated using DEXSeqs script for preparing exon annotations.</span>
+<span class="sd">    exon_counts_path : pathlib:Path</span>
+<span class="sd">        Path to the file containing exon counts for all samples.</span>
+<span class="sd">    threshold : float</span>
+<span class="sd">        Maximum p-value for differential expression.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.DataFrame</span>
+<span class="sd">        CTG dataFrame containing the differential expression test results.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Test each CTG genes for differential expression.</span>
+    <span class="n">de_results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">gene_id</span> <span class="ow">in</span> <span class="n">ctgs</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">de_results</span><span class="p">[</span><span class="n">gene_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">de_exon</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_id</span><span class="p">,</span>
+                                          <span class="n">dexseq_gtf</span><span class="p">,</span> <span class="n">exon_counts_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="c1"># Summarize result in a DataFrame.</span>
+    <span class="n">de_results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(((</span><span class="n">gene_id</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">p_value</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">direction</span><span class="p">)</span>
+                               <span class="k">for</span> <span class="n">gene_id</span><span class="p">,</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">de_results</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span>
+                              <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">,</span> <span class="s1">&#39;de_pval&#39;</span><span class="p">,</span> <span class="s1">&#39;de_direction&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Merge with CTG frame.</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">ctgs</span><span class="p">,</span> <span class="n">de_results</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;gene_id&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Select significant diff. expr. CTGs.</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="n">merged</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;de_pval &lt; {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">threshold</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">merged</span></div>
+
+
+<span class="k">def</span> <span class="nf">_subset_to_intervals</span><span class="p">(</span><span class="n">insertion_frame</span><span class="p">,</span> <span class="n">intervals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subsets insertions for a list of genomic intervals.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Create lookup trees.</span>
+    <span class="n">trees</span> <span class="o">=</span> <span class="p">{</span><span class="n">chrom</span><span class="p">:</span> <span class="n">IntervalTree</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">((</span><span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">chrom_int</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">chrom</span><span class="p">,</span> <span class="n">chrom_int</span> <span class="ow">in</span>
+             <span class="n">itertools</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">intervals</span><span class="p">),</span> <span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))}</span>
+
+    <span class="c1"># Determine which insertions overlap trees.</span>
+    <span class="k">def</span> <span class="nf">_in_intervals</span><span class="p">(</span><span class="n">ins</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ins</span><span class="o">.</span><span class="n">seqname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">trees</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">trees</span><span class="p">[</span><span class="n">ins</span><span class="o">.</span><span class="n">seqname</span><span class="p">]</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">ins</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">insertion_frame</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">insertion_frame</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">_in_intervals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+
+
+<span class="k">def</span> <span class="nf">_collapse_per_sample</span><span class="p">(</span><span class="n">insertion_frame</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">insertion_frame</span>
+            <span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;sample_id&#39;</span><span class="p">,</span> <span class="s1">&#39;gene_id&#39;</span><span class="p">])</span>
+            <span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="s1">&#39;seqname&#39;</span><span class="p">:</span> <span class="s1">&#39;first&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;position&#39;</span><span class="p">:</span> <span class="s1">&#39;mean&#39;</span><span class="p">})</span>
+            <span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">_apply_gene_window</span><span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">window</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gene</span><span class="o">.</span><span class="n">contig</span><span class="p">,</span> <span class="n">gene</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">gene</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">upstream_offset</span><span class="p">,</span> <span class="n">downstream_offset</span> <span class="o">=</span> <span class="n">window</span>
+
+        <span class="k">if</span> <span class="n">gene</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">gene</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">downstream_offset</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">gene</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">upstream_offset</span>
+        <span class="k">elif</span> <span class="n">gene</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">gene</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="n">upstream_offset</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">gene</span><span class="o">.</span><span class="n">end</span> <span class="o">+</span> <span class="n">downstream_offset</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown value for strand&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">gene</span><span class="o">.</span><span class="n">contig</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span>
+
+
+<span class="k">def</span> <span class="nf">test_region</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">insertion_frame</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span>
+                <span class="n">pattern</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">intervals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests a given genomic region for enrichment in insertions.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">total</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">count_total</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span> <span class="n">intervals</span><span class="o">=</span><span class="n">intervals</span><span class="p">)</span>
+
+    <span class="c1"># Count pattern in region.</span>
+    <span class="n">region_count</span> <span class="o">=</span> <span class="n">count_region</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span>
+
+    <span class="c1"># Sub-select insertions for region.</span>
+    <span class="n">region_ins</span> <span class="o">=</span> <span class="n">insertion_frame</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+        <span class="s1">&#39;seqname == {!r} and position &gt; {} and position &lt; {}&#39;</span>
+        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+
+    <span class="c1"># Apply additional filters to insertions if given</span>
+    <span class="c1"># (such as filtering on gene name/id for example).</span>
+    <span class="k">if</span> <span class="n">filters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">filter_str</span> <span class="o">=</span> <span class="s1">&#39; and &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;{} == {!r}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                                  <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">filters</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">region_ins</span> <span class="o">=</span> <span class="n">region_ins</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">filter_str</span><span class="p">)</span>
+
+    <span class="c1"># Calculate p-value.</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">region_ins</span><span class="p">)</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">insertion_frame</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">region_count</span> <span class="o">/</span> <span class="n">total</span><span class="p">)</span>
+
+    <span class="c1"># Note here we use loc=1, because we are interested in</span>
+    <span class="c1"># calculating P(X &gt;= x), not P(X &gt; x) (the default</span>
+    <span class="c1"># surivival function).</span>
+    <span class="n">p_val</span> <span class="o">=</span> <span class="n">poisson</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">p_val</span>
+
+
+<span class="k">def</span> <span class="nf">count_region</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Counts occurrences of pattern within given genomic region.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    chrom : str</span>
+<span class="sd">        Region chromosome name.</span>
+<span class="sd">    start : int</span>
+<span class="sd">        Region start position.</span>
+<span class="sd">    end : int</span>
+<span class="sd">        Region end position.</span>
+<span class="sd">    reference : pyfaidx.Fasta</span>
+<span class="sd">        Reference to count occurrences for.</span>
+<span class="sd">    pattern : str</span>
+<span class="sd">        Regex pattern of string to search for. If None, the length</span>
+<span class="sd">        of the region is returned.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Number of occurrences of the pattern within the given region.</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">seq</span> <span class="o">=</span> <span class="n">reference</span><span class="p">[</span><span class="n">chrom</span><span class="p">][</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">pattern</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">count_pattern</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">count</span>
+
+
+<span class="k">def</span> <span class="nf">count_pattern</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Counts occurrences of pattern in sequence.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sequence : pyfaidx.Sequence or str</span>
+<span class="sd">        Sequence to search.</span>
+<span class="sd">    pattern : str</span>
+<span class="sd">        Pattern to count.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        int: Number of occurrences of pattern.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">count_matches</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">regex</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">count_matches</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">regex</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Counts matches of regex in string.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    sequence : pyfaidx.Sequence or str</span>
+<span class="sd">        Sequence to search.</span>
+<span class="sd">    regex : SRE_Pattern</span>
+<span class="sd">        Regex to apply.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Number of occurrences of regex.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">((</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">regex</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">sequence</span><span class="p">))))</span>
+
+
+<span class="k">def</span> <span class="nf">count_total</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">intervals</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Counts total occurrences of pattern in reference.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reference : pyfaidx.Fasta</span>
+<span class="sd">        Reference to count occurrences for.</span>
+<span class="sd">    pattern : str</span>
+<span class="sd">        Regex pattern of string to search for. If None, the length of</span>
+<span class="sd">        sequences is counted instead of pattern of occurrences.</span>
+<span class="sd">    intervals : List[tuple(str, int, int)]</span>
+<span class="sd">        List of genomic intervals to which search should be restricted.</span>
+<span class="sd">        If None, the entire reference is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Number of occurrences of the pattern within the given reference,</span>
+<span class="sd">        or within the given intervals (if applicable).</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">pattern</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">count_func</span> <span class="o">=</span> <span class="n">toolz</span><span class="o">.</span><span class="n">curry</span><span class="p">(</span><span class="n">count_matches</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">pattern</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># If no pattern is specified, use sequence length.</span>
+        <span class="n">count_func</span> <span class="o">=</span> <span class="nb">len</span>
+
+    <span class="k">if</span> <span class="n">intervals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># Simply count for the entire sequence.</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">count_func</span><span class="p">(</span><span class="n">reference</span><span class="p">[</span><span class="n">seq</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Flatten intervals, and then only count for sequences</span>
+        <span class="c1"># within the flattened intervals.</span>
+        <span class="n">merged_intervals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">merge_genomic_intervals</span><span class="p">(</span><span class="n">intervals</span><span class="p">))</span>
+
+        <span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">reference</span><span class="p">[</span><span class="n">chrom</span><span class="p">][</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">chrom</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">merged_intervals</span><span class="p">]</span>
+
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">count_func</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">seqs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">count</span>
+
+
+<span class="k">def</span> <span class="nf">merge_genomic_intervals</span><span class="p">(</span><span class="n">intervals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Merges overlapping genomic intervals.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    intervals : List[tuple(str, int, int)]</span>
+<span class="sd">        List of intervals to merge. Intervals are specified as tuples</span>
+<span class="sd">        of (chomosome, start_position, end_position) values.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">    tuple(str, int, int)</span>
+<span class="sd">        Next merged interval.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Group intervals by chromosome.</span>
+    <span class="n">grouped_intervals</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span>
+        <span class="nb">sorted</span><span class="p">(</span><span class="n">intervals</span><span class="p">),</span> <span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="c1"># Now yield merged intervals per chromosome.</span>
+    <span class="k">for</span> <span class="n">chrom</span><span class="p">,</span> <span class="n">grp</span> <span class="ow">in</span> <span class="n">grouped_intervals</span><span class="p">:</span>
+        <span class="n">chrom_intervals</span> <span class="o">=</span> <span class="p">[</span><span class="n">interval</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">interval</span> <span class="ow">in</span> <span class="n">grp</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="ow">in</span> <span class="n">merge_intervals</span><span class="p">(</span><span class="n">chrom_intervals</span><span class="p">,</span> <span class="n">is_sorted</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">chrom</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span>
+
+
+<span class="k">def</span> <span class="nf">merge_intervals</span><span class="p">(</span><span class="n">intervals</span><span class="p">,</span> <span class="n">is_sorted</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Merges overlapping intervals.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    intervals : List[tuple(int, int)]</span>
+<span class="sd">        List of intervals to merge. Intervals are specified as tuples</span>
+<span class="sd">        of (start_position, end_position) values.</span>
+<span class="sd">    is_sorted : bool</span>
+<span class="sd">        Indicates if the intervals have already been sorted. Avoids</span>
+<span class="sd">        re-sorting an already sorted list.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">    tuple(int, int)</span>
+<span class="sd">        Next merged interval.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_sorted</span><span class="p">:</span>
+        <span class="n">intervals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">intervals</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Ensure intervals is a list.</span>
+        <span class="n">intervals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">intervals</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">intervals</span><span class="p">:</span>
+        <span class="c1"># No intervals to merge.</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Low and high represent the bounds of</span>
+    <span class="c1"># the current run of merges.</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">intervals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="k">if</span> <span class="n">iv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">high</span><span class="p">:</span>
+            <span class="c1"># New interval overlaps current run,</span>
+            <span class="c1"># merge with the current run.</span>
+            <span class="n">high</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="n">iv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Current run is over, yield accumulated</span>
+            <span class="c1"># interval and start new run.</span>
+            <span class="k">yield</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span>
+            <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">iv</span>
+
+    <span class="k">yield</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1+1.g9b7cc62',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

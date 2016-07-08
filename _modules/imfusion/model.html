@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.model &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>imfusion.model</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.model</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Module containing model classes for fusions and insertions.&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=W0622,W0614,W0401</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=W0622,W0614,W0401</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">toolz</span>
+
+
+<span class="n">_Fusion</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s1">&#39;Fusion&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;seqname&#39;</span><span class="p">,</span> <span class="s1">&#39;anchor_genome&#39;</span><span class="p">,</span> <span class="s1">&#39;anchor_transposon&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;strand_genome&#39;</span><span class="p">,</span> <span class="s1">&#39;strand_transposon&#39;</span><span class="p">,</span> <span class="s1">&#39;flank_genome&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;flank_transposon&#39;</span><span class="p">,</span> <span class="s1">&#39;spanning_reads&#39;</span><span class="p">,</span> <span class="s1">&#39;supporting_mates&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;spanning_mates&#39;</span><span class="p">,</span> <span class="s1">&#39;gene_id&#39;</span><span class="p">,</span> <span class="s1">&#39;gene_name&#39;</span><span class="p">,</span> <span class="s1">&#39;gene_strand&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;feature_name&#39;</span><span class="p">,</span> <span class="s1">&#39;feature_type&#39;</span><span class="p">,</span> <span class="s1">&#39;feature_strand&#39;</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="Fusion"><a class="viewcode-back" href="../../api.html#imfusion.model.Fusion">[docs]</a><span class="k">class</span> <span class="nc">Fusion</span><span class="p">(</span><span class="n">_Fusion</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a gene-transposon fusion.</span>
+
+<span class="sd">    Used by fusion identification tools (such as Tophat2) to return the</span>
+<span class="sd">    fusions that are identified. Not all fields are required if these</span>
+<span class="sd">    are not available. However, the following fields should at least</span>
+<span class="sd">    be provided: `seqname`, `anchor_genome`, `anchor_transposon`,</span>
+<span class="sd">    `strand_genome`, `strand_transposon`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        seqname (str): Chromosome involved in the fusion.</span>
+<span class="sd">        anchor_genome (int): Genomic fusion breakpoint.</span>
+<span class="sd">        anchor_transposon (int): Transposon fusion breakpoint.</span>
+<span class="sd">        strand_genome (int): Strand of fusion in genome (-1 or 1)</span>
+<span class="sd">        strand_transposon (int): Strand of fusion in transposon (-1 or 1)</span>
+<span class="sd">        flank_genome (int): Size of flanking region on genome.</span>
+<span class="sd">        flank_transposon (int): Size of flanking region in transposon.</span>
+<span class="sd">        gene_id (str): ID of affected gene.</span>
+<span class="sd">        gene_name (str): Name of affected gene.</span>
+<span class="sd">        gene_strand (int): Strand of affected gene.</span>
+<span class="sd">        feature_name (str): Name of affected transposon feature.</span>
+<span class="sd">        feature_type (str): Feature type (SD/SA).</span>
+<span class="sd">        feature_strand (int): Strand of affected transposon feature.</span>
+<span class="sd">        spanning_reads (int): Number of supporting single-end reads.</span>
+<span class="sd">        supporting_mates (int): Number of mate pairs that support the fusion,</span>
+<span class="sd">            but do not span the breakpoint with either mate.</span>
+<span class="sd">        supporting_spanning_mates (int): Number of mate pairs that support</span>
+<span class="sd">            the fusion and have at least one mate spanning the breakpoint.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;flank_genome&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;flank_transposon&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                    <span class="s1">&#39;spanning_reads&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;supporting_mates&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                    <span class="s1">&#39;spanning_mates&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;gene_id&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+                    <span class="s1">&#39;gene_name&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s1">&#39;gene_strand&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                    <span class="s1">&#39;feature_name&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s1">&#39;feature_type&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+                    <span class="s1">&#39;feature_strand&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">}</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">toolz</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">defaults</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span></div>
+
+
+
+<span class="n">_Insertion</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span>
+    <span class="s1">&#39;Insertion&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;seqname&#39;</span><span class="p">,</span> <span class="s1">&#39;position&#39;</span><span class="p">,</span> <span class="s1">&#39;strand&#39;</span><span class="p">,</span> <span class="s1">&#39;sample_id&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;gene_id&#39;</span><span class="p">,</span> <span class="s1">&#39;gene_name&#39;</span><span class="p">,</span> <span class="s1">&#39;gene_strand&#39;</span><span class="p">,</span> <span class="s1">&#39;orientation&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;feature_name&#39;</span><span class="p">,</span> <span class="s1">&#39;feature_type&#39;</span><span class="p">,</span> <span class="s1">&#39;feature_strand&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;anchor_genome&#39;</span><span class="p">,</span> <span class="s1">&#39;anchor_transposon&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;flank_genome&#39;</span><span class="p">,</span> <span class="s1">&#39;flank_transposon&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;spanning_reads&#39;</span><span class="p">,</span> <span class="s1">&#39;supporting_mates&#39;</span><span class="p">,</span> <span class="s1">&#39;spanning_mates&#39;</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="Insertion"><a class="viewcode-back" href="../../api.html#imfusion.model.Insertion">[docs]</a><span class="k">class</span> <span class="nc">Insertion</span><span class="p">(</span><span class="n">_Insertion</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class respresenting a RNA-seq transposon insertion site.</span>
+
+<span class="sd">    Used to represent insertions derived from RNA-seq fusions. Not all fields</span>
+<span class="sd">    are required, though at least the following should be specified: `id`,</span>
+<span class="sd">    `seqname`, `position`, `strand` and `sample`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        id (str): ID of the insertion.</span>
+<span class="sd">        seqname (str): Chromosome of the insertion.</span>
+<span class="sd">        position (int): Genomic position of the insertion.</span>
+<span class="sd">        strand (int): Strand of the insertion (-1 or 1).</span>
+<span class="sd">        sample_id (str): Sample in which the insertion was identified.</span>
+<span class="sd">        gene_id (str): ID of the gene involved in the fusion.</span>
+<span class="sd">        gene_name (str): Name of the gene involved in the fusion.</span>
+<span class="sd">        gene_strand (int): Strand of the gene involved in the fusion.</span>
+<span class="sd">        orientation (str): Relative orientation of the insertion.</span>
+<span class="sd">        feature_name (str): Name of the transposon feature involved</span>
+<span class="sd">            in the fusion.</span>
+<span class="sd">        feature_strand (int): Strand of transposon feature involved</span>
+<span class="sd">            in the fusion.</span>
+<span class="sd">        anchor_genome (int): Genomic fusion breakpoint.</span>
+<span class="sd">        anchor_transposon (int): Transposon fusion breakpoint.</span>
+<span class="sd">        flank_genome (int): Size of flanking region on genome.</span>
+<span class="sd">        flank_transposon (int): Size of flanking region in transposon.</span>
+<span class="sd">        spanning_reads (int): Number of supporting single-end reads.</span>
+<span class="sd">        supporting_mates (int): Number of mate pairs that support the fusion,</span>
+<span class="sd">            but do not span the breakpoint with either mate.</span>
+<span class="sd">        spanning_mates (int): Number of mate pairs that support</span>
+<span class="sd">            the fusion and have at least one mate spanning the breakpoint.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;anchor_genome&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;anchor_transposon&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                    <span class="s1">&#39;flank_genome&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;flank_transposon&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                    <span class="s1">&#39;spanning_reads&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;supporting_mates&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                    <span class="s1">&#39;spanning_mates&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;gene_id&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+                    <span class="s1">&#39;gene_name&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s1">&#39;gene_strand&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+                    <span class="s1">&#39;orientation&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s1">&#39;feature_name&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+                    <span class="s1">&#39;feature_type&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s1">&#39;feature_strand&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">}</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">toolz</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">defaults</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">read_frame</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">from_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">ins</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read_frame</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">),</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span>
+                           <span class="n">dtype</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;seqname&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">})</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_frame</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">ins_frame</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">ins_frame</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">to_frame</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">insertions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">_fields</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1+1.g9b7cc62',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

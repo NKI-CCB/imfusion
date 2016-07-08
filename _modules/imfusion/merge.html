@@ -1,0 +1,291 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.merge &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>imfusion.merge</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.merge</h1><div class="highlight"><pre>
+<span></span><span class="c1"># pylint: disable=W0622,W0614,W0401</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=W0622,W0614,W0401</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.expression.util</span> <span class="kn">import</span> <span class="n">read_exon_counts</span>
+<span class="kn">from</span> <span class="nn">imfusion.model</span> <span class="kn">import</span> <span class="n">Insertion</span>
+
+
+<div class="viewcode-block" id="merge_samples"><a class="viewcode-back" href="../../api.html#imfusion.merge.merge_samples">[docs]</a><span class="k">def</span> <span class="nf">merge_samples</span><span class="p">(</span><span class="n">dir_paths</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">with_expression</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Merges samples in dir_paths to a single insertions/exon counts frame.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dir_paths : List[pathlib.Path]</span>
+<span class="sd">        Paths to the sample directories.</span>
+<span class="sd">    samples : List[str]</span>
+<span class="sd">        Samples to subset the results to.</span>
+<span class="sd">    with_expression : bool</span>
+<span class="sd">        Whether to include expression.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple(pandas.DataFrame, pandas.DataFrame)</span>
+<span class="sd">        Two DataFrames respectively containing the merged insertions</span>
+<span class="sd">        and the merged exon counts. If with_expression is False, the</span>
+<span class="sd">        merged counts frame is returned as None.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Merge insertions.</span>
+    <span class="n">ins_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">dp</span> <span class="o">/</span> <span class="s1">&#39;insertions.txt&#39;</span> <span class="k">for</span> <span class="n">dp</span> <span class="ow">in</span> <span class="n">dir_paths</span><span class="p">]</span>
+    <span class="n">ins_frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">Insertion</span><span class="o">.</span><span class="n">read_frame</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span> <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="n">ins_paths</span><span class="p">]</span>
+    <span class="n">merged_insertions</span> <span class="o">=</span> <span class="n">merge_insertion_frames</span><span class="p">(</span><span class="n">ins_frames</span><span class="p">)</span>
+
+    <span class="c1"># Merge counts.</span>
+    <span class="k">if</span> <span class="n">with_expression</span><span class="p">:</span>
+        <span class="n">count_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">dp</span> <span class="o">/</span> <span class="s1">&#39;exon_counts.txt&#39;</span> <span class="k">for</span> <span class="n">dp</span> <span class="ow">in</span> <span class="n">dir_paths</span><span class="p">]</span>
+        <span class="n">count_frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">read_exon_counts</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span> <span class="k">for</span> <span class="n">cp</span> <span class="ow">in</span> <span class="n">count_paths</span><span class="p">]</span>
+        <span class="n">merged_counts</span> <span class="o">=</span> <span class="n">merge_exon_counts</span><span class="p">(</span><span class="n">count_frames</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">merged_counts</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c1"># Subset to samples if given.</span>
+    <span class="k">if</span> <span class="n">samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">merged_insertions</span> <span class="o">=</span> <span class="n">merged_insertions</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span>
+            <span class="n">merged_insertions</span><span class="p">[</span><span class="s1">&#39;sample_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">samples</span><span class="p">)]</span>
+        <span class="n">merged_counts</span> <span class="o">=</span> <span class="n">merged_counts</span><span class="p">[</span><span class="n">samples</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">merged_insertions</span><span class="p">,</span> <span class="n">merged_counts</span></div>
+
+
+<span class="k">def</span> <span class="nf">merge_insertion_frames</span><span class="p">(</span><span class="n">insertion_frames</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Merges insertion frames into a single frame.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Check for duplicate samples.</span>
+    <span class="n">seen_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">insertion_frames</span><span class="p">:</span>
+        <span class="n">frame_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="s1">&#39;sample_id&#39;</span><span class="p">])</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="n">frame_samples</span> <span class="o">&amp;</span> <span class="n">seen_samples</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">overlap</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Duplicate samples ({})&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">overlap</span><span class="p">)))</span>
+
+        <span class="n">seen_samples</span> <span class="o">=</span> <span class="n">seen_samples</span> <span class="o">|</span> <span class="n">frame_samples</span>
+
+    <span class="c1"># Merge insertions.</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">insertion_frames</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c1"># Augment original ids with sample names to keep them unique.</span>
+    <span class="n">merged</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">merged</span><span class="p">[</span><span class="s1">&#39;sample_id&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">merged</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">merged</span>
+
+
+<span class="k">def</span> <span class="nf">merge_exon_counts</span><span class="p">(</span><span class="n">count_frames</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Merges expression count frames into a single frame.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Merge counts.</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">count_frames</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Check for duplicate samples.</span>
+    <span class="n">col_counts</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">Counter</span><span class="p">(</span><span class="n">merged</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">duplicates</span> <span class="o">=</span> <span class="p">{</span><span class="n">sample</span><span class="p">:</span> <span class="n">count</span> <span class="k">for</span> <span class="n">sample</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">col_counts</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                  <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">duplicates</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Duplicate samples ({})&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">duplicates</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+
+    <span class="k">return</span> <span class="n">merged</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1+1.g9b7cc62',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

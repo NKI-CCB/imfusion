@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installation &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="index.html"/>
+        <link rel="next" title="Getting started" href="getting_started.html"/>
+        <link rel="prev" title="Home" href="home.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#using-conda-recommended">Using conda (recommended)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-pip">Using pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#python-dependencies">Python dependencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#external-dependencies">External dependencies</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tophat2">Tophat2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bowtie">Bowtie</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#featurecounts">featureCounts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Installation</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/installation.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="using-conda-recommended">
+<h2>Using conda (recommended)<a class="headerlink" href="#using-conda-recommended" title="Permalink to this headline">¶</a></h2>
+<p>The recommended way to install IM-Fusion is using conda, as this allows us to
+install IM-Fusion together with its external dependencies (tophat2, bowtie and
+subread) into an isolated environment using a single command:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">imfusion</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="o">-</span><span class="n">c</span> <span class="n">r</span> <span class="n">im</span><span class="o">-</span><span class="n">fusion</span>
+</pre></div>
+</div>
+<p>Note that this uses the bioconda channel to install the external
+dependencies (tophat2, bowtie and subread) and the r channel to install R
+and rpy2.</p>
+<p>Alternatively, IM-Fusion can be installed in an existing environent using:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="o">-</span><span class="n">c</span> <span class="n">r</span> <span class="n">im</span><span class="o">-</span><span class="n">fusion</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-pip">
+<h2>Using pip<a class="headerlink" href="#using-pip" title="Permalink to this headline">¶</a></h2>
+<p>IM-Fusion can also be installed using pip:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">jrderuiter</span><span class="o">/</span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<p>Note that in this case, rpy2 is not installed by default as it can be
+difficult to install and is only required for the single-sample differential
+expression test. To use the test, ensure a working version of rpy2 is installed or install the required rpy2 dependencies using:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">jrderuiter</span><span class="o">/</span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span><span class="o">.</span><span class="n">git</span><span class="p">[</span><span class="n">de_single</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>To also install the development dependencies of IM-Fusion use:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">jrderuiter</span><span class="o">/</span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span><span class="o">.</span><span class="n">git</span><span class="p">[</span><span class="n">dev</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="python-dependencies">
+<h3>Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h3>
+<p>IM-Fusion is compatible with both Python 2.7 and Python 3.4+. However,
+identifying insertions only works in Python 3.4+ if a Python
+3 compatible version of Tophat2 is installed. Such a version can be obtained
+from bioconda or by applying the 2to3 conversion to Tophats scripts.</p>
+<p>IM-Fusion was tested using the following versions for its dependencies:</p>
+<ul class="simple">
+<li>future &#8211; 0.15.2</li>
+<li>toolz &#8211; 0.7.4</li>
+<li>pandas &#8211; 0.18</li>
+<li>numexpr &#8211; 2.5</li>
+<li>scipy &#8211; 0.17</li>
+<li>seaborn &#8211; 0.7</li>
+<li>pysam &#8211; 0.8.4</li>
+<li>intervaltree &#8211; 2.1.0</li>
+</ul>
+<p>The following additional dependencies are required for running tests
+and building the docs:</p>
+<ul class="simple">
+<li>pytest</li>
+<li>pytest-mock</li>
+<li>pytest-datafiles</li>
+<li>pytest-helpers-namespace</li>
+<li>sphinx</li>
+</ul>
+</div>
+<div class="section" id="external-dependencies">
+<h3>External dependencies<a class="headerlink" href="#external-dependencies" title="Permalink to this headline">¶</a></h3>
+<p>IM-Fusion has three external dependencies:</p>
+<ul class="simple">
+<li>Tophat2 &#8211; for the alignment and detection of gene fusions</li>
+<li>Bowtie1 &#8211; used by Tophat2 for the alignment</li>
+<li>featureCounts &#8211; for generating expression counts</li>
+</ul>
+<p>These tools must be available in the current PATH for the insertion
+detection to work properly. For help with their installation, see below.</p>
+<div class="section" id="tophat2">
+<h4>Tophat2<a class="headerlink" href="#tophat2" title="Permalink to this headline">¶</a></h4>
+<p>Tophat2 is a RNA-seq read aligner that also includes Tophat-Fusion,
+an aligner that can identify gene fusions from single- and paired-end
+RNA-sequencing data. A binary version of Tophat2 can be downloaded from the
+Tophat <a class="reference external" href="https://ccb.jhu.edu/software/tophat/index.shtml">website</a>.
+After unpacking, make sure that the binary <em>Tophat2</em> is available in PATH.</p>
+<p>Alternatively, Tophat2 can also be installed using bioconda, or using
+<a class="reference external" href="http://brew.sh">homebrew</a> or <a class="reference external" href="http://linuxbrew.sh">linuxbrew</a>. For
+homebrew/linuxbrew, first install homebrew or linuxbrew and then install
+Tophat2 using:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">update</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">tophat</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="bowtie">
+<h4>Bowtie<a class="headerlink" href="#bowtie" title="Permalink to this headline">¶</a></h4>
+<p>Bowtie can be installed in the same fashion as Tophat, by downloading a binary
+version from the <a class="reference external" href="http://bowtie-bio.sourceforge.net/index.shtml">bowtie website</a> and ensuring that bowtie
+is available in PATH. Bowtie can also be installed using bioconda or using
+homebrew/linuxbrew:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">update</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">bowtie</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="featurecounts">
+<h4>featureCounts<a class="headerlink" href="#featurecounts" title="Permalink to this headline">¶</a></h4>
+<p>featureCounts is an efficient tool for generating expression counts from
+RNA-seq alignments. It is part of the subread package, which can be downloaded
+from <a class="reference external" href="http://subread.sourceforge.net">sourceforge</a>. After downloading and
+unpacking the correct binary version for your machine, make sure the binary
+featureCounts is available in PATH.</p>
+<p>Subread can also be installed using bioconda, or by using
+<a class="reference external" href="http://brew.sh">homebrew</a> or <a class="reference external" href="http://linuxbrew.sh">linuxbrew</a>
+with a custom tap:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">jrderuiter</span><span class="o">/</span><span class="n">tap</span>
+<span class="n">brew</span> <span class="n">update</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">subread</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting started" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="home.html" class="btn btn-neutral" title="Home" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1+1.g9b7cc62',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

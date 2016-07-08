@@ -1,0 +1,353 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.util.insertions &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imfusion.util.insertions</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.util.insertions</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Module containing functions for filtering insertions.&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=W0622,W0614,W0401</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=W0622,W0614,W0401</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.util.tabix</span> <span class="kn">import</span> <span class="n">GtfFile</span>
+
+
+<div class="viewcode-block" id="filter_invalid_insertions"><a class="viewcode-back" href="../../../api.html#imfusion.util.insertions.filter_invalid_insertions">[docs]</a><span class="k">def</span> <span class="nf">filter_invalid_insertions</span><span class="p">(</span><span class="n">insertions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Filters invalid insertions.</span>
+
+<span class="sd">    Main function for filtering invalid insertions. Effectively applies</span>
+<span class="sd">    both the `filter_wrong_orientation` and `filter_unexpected_sites` filters</span>
+<span class="sd">    to filter insertions that have the wrong orientation (w.r.t the transposon</span>
+<span class="sd">    feature and the annotated gene) or involve features of the transposon</span>
+<span class="sd">    that we are not interested in (typically non-splice acceptor/donor</span>
+<span class="sd">    features).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertions : List[Insertion]</span>
+<span class="sd">        Insertions to filter.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    Insertion</span>
+<span class="sd">        Next filtered insertion.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Filter fusions based on characteristics that</span>
+    <span class="c1"># reflect implausible or unwanted situations.</span>
+    <span class="n">insertions</span> <span class="o">=</span> <span class="n">filter_wrong_orientation</span><span class="p">(</span><span class="n">insertions</span><span class="p">)</span>
+    <span class="n">insertions</span> <span class="o">=</span> <span class="n">filter_unexpected_sites</span><span class="p">(</span><span class="n">insertions</span><span class="p">)</span>
+
+    <span class="c1"># Yield remaining fusions.</span>
+    <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertions</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">ins</span></div>
+
+
+<div class="viewcode-block" id="filter_wrong_orientation"><a class="viewcode-back" href="../../../api.html#imfusion.util.insertions.filter_wrong_orientation">[docs]</a><span class="k">def</span> <span class="nf">filter_wrong_orientation</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">drop_na</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Filters insertions with wrong feature orientations w.r.t. their genes.</span>
+
+<span class="sd">    This filter removes any insertions with a transposon feature that is</span>
+<span class="sd">    in the wrong orientation with respect to the annotated gene. This is</span>
+<span class="sd">    based on the premise that, for example, a splice acceptor can only</span>
+<span class="sd">    splice to a gene that is in the same orientation as the acceptor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertions : List[Insertion]</span>
+<span class="sd">        Insertions to filter.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    Insertion</span>
+<span class="sd">        Next filtered insertion.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertions</span><span class="p">:</span>
+        <span class="n">feat_ori</span> <span class="o">=</span> <span class="n">ins</span><span class="o">.</span><span class="n">strand</span> <span class="o">*</span> <span class="n">ins</span><span class="o">.</span><span class="n">feature_strand</span>
+
+        <span class="k">if</span> <span class="n">feat_ori</span> <span class="o">==</span> <span class="n">ins</span><span class="o">.</span><span class="n">gene_strand</span><span class="p">:</span>
+            <span class="c1"># Correct orientation, yield.</span>
+            <span class="k">yield</span> <span class="n">ins</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">drop_na</span> <span class="ow">and</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">feat_ori</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ins</span><span class="o">.</span><span class="n">gene_strand</span><span class="p">)):</span>
+            <span class="c1"># Keeping NaN cases, so yield.</span>
+            <span class="k">yield</span> <span class="n">ins</span></div>
+
+
+<div class="viewcode-block" id="filter_unexpected_sites"><a class="viewcode-back" href="../../../api.html#imfusion.util.insertions.filter_unexpected_sites">[docs]</a><span class="k">def</span> <span class="nf">filter_unexpected_sites</span><span class="p">(</span><span class="n">insertions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Filters insertions that have non splice-acceptor/donor features.</span>
+
+<span class="sd">    This filter removes any insertions that splice to tranposon features</span>
+<span class="sd">    that aren&#39;t splice-acceptors or splice-donors. This is based on the</span>
+<span class="sd">    premise that these other sites are unlikely to be involved in any</span>
+<span class="sd">    splicing and that therefore these insertions are likely to be false</span>
+<span class="sd">    positives of the fusion identification.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertions : List[Insertion]</span>
+<span class="sd">        Insertions to filter.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    Insertion</span>
+<span class="sd">        Next filtered insertion.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ins</span><span class="o">.</span><span class="n">feature_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;SA&#39;</span><span class="p">)</span> <span class="ow">or</span> \
+                <span class="n">ins</span><span class="o">.</span><span class="n">feature_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;SD&#39;</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">ins</span></div>
+
+
+<div class="viewcode-block" id="filter_blacklist"><a class="viewcode-back" href="../../../api.html#imfusion.util.insertions.filter_blacklist">[docs]</a><span class="k">def</span> <span class="nf">filter_blacklist</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_ids</span><span class="p">,</span> <span class="n">reference_gtf</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">filter_overlap</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Filters insertions for blacklisted genes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertions : List[Insertion]</span>
+<span class="sd">        Insertions to filter.</span>
+<span class="sd">    gene_ids : set[str]</span>
+<span class="sd">        IDs of the blacklisted genes.</span>
+<span class="sd">    reference_gtf : GtfFile</span>
+<span class="sd">        GtfFile instance containing reference gene features.</span>
+<span class="sd">        (Only needed if filter_overlap is True).</span>
+<span class="sd">    filter_overlap : bool</span>
+<span class="sd">        Whether to filter any insertions overlapping with the listed genes.</span>
+<span class="sd">        If False (default), only genes explicitly splicing to the</span>
+<span class="sd">        gene are filtered.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    Insertion</span>
+<span class="sd">        Next filtered insertion.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">reference_gtf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reference_gtf</span><span class="p">,</span> <span class="n">GtfFile</span><span class="p">):</span>
+        <span class="n">reference_gtf</span> <span class="o">=</span> <span class="n">GtfFile</span><span class="p">(</span><span class="n">reference_gtf</span><span class="p">)</span>
+
+    <span class="c1"># Filter insertions that are directly splicing.</span>
+    <span class="n">filtered</span> <span class="o">=</span> <span class="p">(</span><span class="n">ins</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertions</span>
+                <span class="k">if</span> <span class="n">ins</span><span class="o">.</span><span class="n">gene_id</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span>
+                <span class="n">ins</span><span class="o">.</span><span class="n">gene_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gene_ids</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">filter_overlap</span><span class="p">:</span>
+        <span class="c1"># Check if gtf is given.</span>
+        <span class="k">if</span> <span class="n">reference_gtf</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Gtf must be given if filter_overlap is True&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Filter overlapping insertions.</span>
+        <span class="k">for</span> <span class="n">gene_id</span> <span class="ow">in</span> <span class="n">gene_ids</span><span class="p">:</span>
+            <span class="n">gene</span> <span class="o">=</span> <span class="n">reference_gtf</span><span class="o">.</span><span class="n">get_gene</span><span class="p">(</span><span class="n">gene_id</span><span class="p">)</span>
+            <span class="n">filtered</span> <span class="o">=</span> <span class="n">_filter_overlap</span><span class="p">(</span><span class="n">filtered</span><span class="p">,</span> <span class="n">gene</span><span class="o">=</span><span class="n">gene</span><span class="p">)</span>
+
+    <span class="c1"># Yield remaining insertions.</span>
+    <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">filtered</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">ins</span></div>
+
+
+<span class="k">def</span> <span class="nf">_filter_overlap</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Filters insertions overlapping gene.&quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">ins</span><span class="o">.</span><span class="n">seqname</span> <span class="o">==</span> <span class="n">gene</span><span class="o">.</span><span class="n">contig</span> <span class="ow">and</span>
+                <span class="n">ins</span><span class="o">.</span><span class="n">position</span> <span class="o">&gt;=</span> <span class="n">gene</span><span class="o">.</span><span class="n">start</span> <span class="ow">and</span>
+                <span class="n">ins</span><span class="o">.</span><span class="n">position</span> <span class="o">&lt;=</span> <span class="n">gene</span><span class="o">.</span><span class="n">end</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">ins</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1+1.g9b7cc62',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

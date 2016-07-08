@@ -1,0 +1,633 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.expression.de_test.test &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imfusion.expression.de_test.test</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.expression.de_test.test</h1><div class="highlight"><pre>
+<span></span><span class="c1"># pylint: disable=W0622,W0614,W0401</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=W0622,W0614,W0401</span>
+
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="kn">import</span> <span class="n">native_str</span><span class="p">,</span> <span class="n">native</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pathlib2</span> <span class="kn">as</span> <span class="nn">pathlib</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="kn">as</span> <span class="nn">sns</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">mannwhitneyu</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.util.tabix</span> <span class="kn">import</span> <span class="n">GtfFile</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">read_exon_counts</span>
+<span class="kn">from</span> <span class="nn">.norm</span> <span class="kn">import</span> <span class="n">estimate_size_factors</span>
+<span class="kn">from</span> <span class="nn">.stats</span> <span class="kn">import</span> <span class="n">NegativeBinomial</span>
+
+
+<span class="c1"># Exon tests #</span>
+
+<div class="viewcode-block" id="de_exon"><a class="viewcode-back" href="../../../../api.html#imfusion.expression.de_test.de_exon">[docs]</a><span class="k">def</span> <span class="nf">de_exon</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_id</span><span class="p">,</span> <span class="n">dexseq_gtf</span><span class="p">,</span> <span class="n">exon_counts</span><span class="p">,</span>
+            <span class="n">pos_samples</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">neg_samples</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs the groupwise exon-level differential expression test.</span>
+
+<span class="sd">    Tests if the expression of exons after the insertion site(s) in a</span>
+<span class="sd">    gene is significantly increased or decreased in samples with an</span>
+<span class="sd">    insertion (pos_samples) compared to samples without an insertion</span>
+<span class="sd">    (neg_samples). The test is performed by comparing normalized counts</span>
+<span class="sd">    after the insertion sites between samples with and without an insertion</span>
+<span class="sd">    in the gene, using the non-parametric Mann-Whitney-U test.</span>
+
+<span class="sd">    Note that the before/after split for the groupwise test is taken as the</span>
+<span class="sd">    common set of before/after exons over all samples with an insertion. In</span>
+<span class="sd">    cases where either set is empty, for example due to insertions before the</span>
+<span class="sd">    first exon of the gene, we attempt to drop samples that prevent a proper</span>
+<span class="sd">    split and perform the test without these samples.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertions : pandas.DataFrame</span>
+<span class="sd">        DataFrame containing all insertions.</span>
+<span class="sd">    gene_id : str</span>
+<span class="sd">        ID of the gene of interest. Should correspond with a</span>
+<span class="sd">        gene in the DEXSeq gtf file.</span>
+<span class="sd">    dexseq_gtf : GtfFile</span>
+<span class="sd">        Gtf file containing exon features generated using DEXSeq. Can either</span>
+<span class="sd">        be given as a GtfFile object or as a string specifying the path to</span>
+<span class="sd">        the gtf file.</span>
+<span class="sd">    exon_counts : pandas.DataFrame or pathlib.Path</span>
+<span class="sd">        DataFrame containing exon counts. The DataFrame is expected</span>
+<span class="sd">        to contain samples as columns, and have a multi-index containing</span>
+<span class="sd">        the chromosome, start, end and strand of the exon. This index</span>
+<span class="sd">        should correspond with the annotation in the DEXSeq gtf. The</span>
+<span class="sd">        samples should correspond with samples in the insertions frame.</span>
+<span class="sd">        If a Path is given, it should point to a TSV file containing the counts.</span>
+<span class="sd">    pos_samples : set[str]</span>
+<span class="sd">        Set of positive samples (with insertion) to use in the test. Defaults</span>
+<span class="sd">        to all samples with an insertion in the gene of interest.</span>
+<span class="sd">    neg_samples : set[str]</span>
+<span class="sd">        Set of negative samples (without insertion) to use in the test.</span>
+<span class="sd">        Defaults to all samples not in the positive set.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DeExonResult</span>
+<span class="sd">        Result of the differential expression test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Lookup gene.</span>
+    <span class="c1"># TODO: speed-up using chromosome from insertions?</span>
+    <span class="n">gene</span> <span class="o">=</span> <span class="n">dexseq_gtf</span><span class="o">.</span><span class="n">get_gene</span><span class="p">(</span><span class="n">gene_id</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">=</span><span class="s1">&#39;aggregate_gene&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exon_counts</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">native_str</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)):</span>
+        <span class="n">exon_counts</span> <span class="o">=</span> <span class="n">read_exon_counts</span><span class="p">(</span><span class="n">exon_counts</span><span class="p">,</span> <span class="n">gene_id</span><span class="o">=</span><span class="n">gene</span><span class="o">.</span><span class="n">gene_id</span><span class="p">)</span>
+
+    <span class="c1"># Subset insertions for gene.</span>
+    <span class="n">ins_gene</span> <span class="o">=</span> <span class="n">insertions</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">insertions</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">gene</span><span class="o">.</span><span class="n">gene_id</span><span class="p">]</span>
+
+    <span class="c1"># Calculate before/after expression for gene.</span>
+    <span class="n">sums</span><span class="p">,</span> <span class="n">exon_split</span><span class="p">,</span> <span class="n">dropped_samples</span> <span class="o">=</span> \
+        <span class="n">_exon_sums</span><span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="n">ins_gene</span><span class="p">,</span> <span class="n">dexseq_gtf</span><span class="p">,</span> <span class="n">exon_counts</span><span class="p">)</span>
+
+    <span class="c1"># Define pos/neg sample groups.</span>
+    <span class="k">if</span> <span class="n">pos_samples</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">pos_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ins_gene</span><span class="p">[</span><span class="s1">&#39;sample_id&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">neg_samples</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">neg_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">-</span> <span class="n">pos_samples</span>
+
+    <span class="n">pos_samples</span> <span class="o">-=</span> <span class="n">dropped_samples</span>
+    <span class="n">neg_samples</span> <span class="o">-=</span> <span class="n">dropped_samples</span>
+
+    <span class="c1"># Check for missing samples.</span>
+    <span class="n">missing_samples</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos_samples</span> <span class="o">|</span> <span class="n">neg_samples</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_samples</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Missing samples in counts ({})&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_samples</span><span class="p">)))</span>
+
+    <span class="c1"># Calculate p-value between groups.</span>
+    <span class="n">pos_sums</span> <span class="o">=</span> <span class="n">sums</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">pos_samples</span><span class="p">][</span><span class="s1">&#39;after&#39;</span><span class="p">]</span>
+    <span class="n">neg_sums</span> <span class="o">=</span> <span class="n">sums</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">neg_samples</span><span class="p">][</span><span class="s1">&#39;after&#39;</span><span class="p">]</span>
+
+    <span class="n">p_value</span> <span class="o">=</span> <span class="n">mannwhitneyu</span><span class="p">(</span><span class="n">pos_sums</span><span class="p">,</span> <span class="n">neg_sums</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">direction</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">pos_sums</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">neg_sums</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># Return result.</span>
+    <span class="k">return</span> <span class="n">DeExonResult</span><span class="p">(</span><span class="n">sums</span><span class="p">,</span> <span class="p">(</span><span class="n">pos_samples</span><span class="p">,</span> <span class="n">neg_samples</span><span class="p">),</span>
+                        <span class="n">exon_split</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">p_value</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_exon_sums</span><span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="n">insertions</span><span class="p">,</span> <span class="n">exons</span><span class="p">,</span> <span class="n">exon_counts</span><span class="p">):</span>
+    <span class="c1"># Split exons into exons before/after insertions.</span>
+    <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">dropped_samples</span> <span class="o">=</span> \
+        <span class="n">split_exons_common</span><span class="p">(</span><span class="n">exons</span><span class="p">,</span> <span class="n">gene</span><span class="p">,</span> <span class="n">insertions</span><span class="p">)</span>
+    <span class="n">before</span><span class="p">,</span> <span class="n">after</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">_to_count_index</span><span class="p">,</span> <span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">))</span>
+
+    <span class="c1"># Convert to native types.</span>
+    <span class="n">before</span> <span class="o">=</span> <span class="n">native</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+    <span class="n">after</span> <span class="o">=</span> <span class="n">native</span><span class="p">(</span><span class="n">after</span><span class="p">)</span>
+
+    <span class="c1"># Normalize counts using before exons.</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">exon_counts</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">gene</span><span class="o">.</span><span class="n">gene_id</span><span class="p">]</span>
+
+    <span class="n">size_factors</span> <span class="o">=</span> <span class="n">estimate_size_factors</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">before</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">norm_counts</span> <span class="o">=</span> <span class="n">counts</span> <span class="o">/</span> <span class="n">size_factors</span>
+
+    <span class="c1"># Calculate before/after sums.</span>
+    <span class="n">sums</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+            <span class="s1">&#39;before&#39;</span><span class="p">:</span> <span class="n">norm_counts</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">before</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+            <span class="s1">&#39;after&#39;</span><span class="p">:</span> <span class="n">norm_counts</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">after</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="p">},</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;before&#39;</span><span class="p">,</span> <span class="s1">&#39;after&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sums</span><span class="p">,</span> <span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">),</span> <span class="n">dropped_samples</span>
+
+
+<div class="viewcode-block" id="de_exon_single"><a class="viewcode-back" href="../../../../api.html#imfusion.expression.de_test.de_exon_single">[docs]</a><span class="k">def</span> <span class="nf">de_exon_single</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_id</span><span class="p">,</span> <span class="n">insertion_id</span><span class="p">,</span> <span class="n">dexseq_gtf</span><span class="p">,</span> <span class="n">exon_counts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs the single-sample exon-level differential expression test.</span>
+
+<span class="sd">    Tests if the expression of exons after the insertion site of the</span>
+<span class="sd">    given sample is significantly increased or decreased compared to samples</span>
+<span class="sd">    without an insertion. This test is performed by comparing the (normalized)</span>
+<span class="sd">    after count of the given sample to a background distribution of normalized</span>
+<span class="sd">    counts of samples without an insertion, which is modeled using a</span>
+<span class="sd">    negative binomial distribution.</span>
+
+<span class="sd">    Note: this function requires Rpy2 to be installed, as R functions</span>
+<span class="sd">    are used to fit the negative binomial distribution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertions : pandas.DataFrame</span>
+<span class="sd">        DataFrame containing all insertions.</span>
+<span class="sd">    gene_id : str</span>
+<span class="sd">        ID of the gene of interest. Should correspond with a</span>
+<span class="sd">        gene in the DEXSeq gtf file.</span>
+<span class="sd">    insertion_id : str</span>
+<span class="sd">        ID of the insertion of interest. Should correspond with</span>
+<span class="sd">        an insertion in the list of insertions.</span>
+<span class="sd">    dexseq_gtf : GtfFile</span>
+<span class="sd">        Gtf file containing exon features generated using DEXSeq. Can either</span>
+<span class="sd">        be given as a GtfFile object or as a string specifying the path to</span>
+<span class="sd">        the gtf file.</span>
+<span class="sd">    exon_counts : pandas.DataFrame</span>
+<span class="sd">        DataFrame containing exon counts. The DataFrame is expected</span>
+<span class="sd">        to contain samples as columns, and have a multi-index containing</span>
+<span class="sd">        the chromosome, start, end and strand of the exon. This index</span>
+<span class="sd">        should correspond with the annotation in the DEXSeq gtf. The</span>
+<span class="sd">        samples should correspond with samples in the insertions frame.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DeExonResult</span>
+<span class="sd">        Result of the differential expression test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="c1"># Calculate before/after expression for gene.</span>
+    <span class="n">sums</span><span class="p">,</span> <span class="n">exon_split</span> <span class="o">=</span> <span class="n">_exon_sums</span><span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">insertion</span><span class="p">]),</span>
+                                  <span class="n">exons</span><span class="p">,</span> <span class="n">exon_counts</span><span class="p">)</span>
+
+    <span class="c1"># Split samples into positive/negative samples.</span>
+    <span class="n">pos_sample</span> <span class="o">=</span> <span class="n">insertion</span><span class="p">[</span><span class="s1">&#39;sample_id&#39;</span><span class="p">]</span>
+
+    <span class="n">insertions_gene</span> <span class="o">=</span> <span class="n">insertions</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">insertions</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">gene</span><span class="o">.</span><span class="n">gene_id</span><span class="p">]</span>
+    <span class="n">neg_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">insertions_gene</span><span class="p">[</span><span class="s1">&#39;sample_id&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Fit model and calculate p-value.</span>
+    <span class="n">nb_fit</span> <span class="o">=</span> <span class="n">NegativeBinomial</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">sums</span><span class="p">[</span><span class="s1">&#39;after&#39;</span><span class="p">][</span><span class="n">neg_samples</span><span class="p">])</span>
+
+    <span class="n">cdf</span> <span class="o">=</span> <span class="n">nb_fit</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">sums</span><span class="p">[</span><span class="s1">&#39;after&#39;</span><span class="p">][</span><span class="n">pos_sample</span><span class="p">])</span>
+    <span class="n">sf</span> <span class="o">=</span> <span class="n">nb_fit</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">sums</span><span class="p">[</span><span class="s1">&#39;after&#39;</span><span class="p">][</span><span class="n">pos_sample</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">cdf</span> <span class="o">&gt;</span> <span class="n">sf</span><span class="p">:</span>
+        <span class="n">p_value</span><span class="p">,</span> <span class="n">direction</span> <span class="o">=</span> <span class="n">sf</span><span class="p">,</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">p_value</span><span class="p">,</span> <span class="n">direction</span> <span class="o">=</span> <span class="n">cdf</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># Return result.</span>
+    <span class="k">return</span> <span class="n">DeExonResult</span><span class="p">(</span><span class="n">sums</span><span class="p">,</span> <span class="p">([</span><span class="n">pos_sample</span><span class="p">],</span> <span class="n">neg_samples</span><span class="p">),</span>
+                        <span class="n">exon_split</span><span class="p">,</span> <span class="n">nb_fit</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">p_value</span><span class="p">)</span></div>
+
+
+<span class="c1"># Result classes #</span>
+
+<div class="viewcode-block" id="DeExonResult"><a class="viewcode-back" href="../../../../api.html#imfusion.expression.de_test.DeExonResult">[docs]</a><span class="k">class</span> <span class="nc">DeExonResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class embodying the results of the groupwise exon-level DE test.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sums : pandas.DataFrame</span>
+<span class="sd">        DataFrame of before/after expression counts for all samples.</span>
+<span class="sd">    sample_split : tuple(List[str], List[str])</span>
+<span class="sd">        Split of samples into positive/negative samples.</span>
+<span class="sd">    exon_split : tuple</span>
+<span class="sd">        Split of exons into before/after groups.</span>
+<span class="sd">    direction : int</span>
+<span class="sd">        Direction of the differential expression (1 = positive, -1 = negative).</span>
+<span class="sd">    p_value : float</span>
+<span class="sd">        P-value of the differential expression test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sums</span><span class="p">,</span> <span class="n">sample_split</span><span class="p">,</span> <span class="n">exon_split</span><span class="p">,</span>
+                 <span class="n">direction</span><span class="p">,</span> <span class="n">p_value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sums</span> <span class="o">=</span> <span class="n">sums</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sample_split</span> <span class="o">=</span> <span class="n">sample_split</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exon_split</span> <span class="o">=</span> <span class="n">exon_split</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="n">direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_value</span> <span class="o">=</span> <span class="n">p_value</span>
+
+<div class="viewcode-block" id="DeExonResult.plot_boxplot"><a class="viewcode-back" href="../../../../api.html#imfusion.expression.de_test.DeExonResult.plot_boxplot">[docs]</a>    <span class="k">def</span> <span class="nf">plot_boxplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">show_points</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots boxplot of &#39;after&#39; expression for samples with/without</span>
+<span class="sd">        insertions in the gene.&quot;&quot;&quot;</span>
+
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span> <span class="ow">or</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Log transform data if needed.</span>
+        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sums</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sums</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Plot using Seaborn.</span>
+        <span class="n">pos_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_split</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;insertion&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="ow">in</span> <span class="n">pos_samples</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+
+        <span class="n">sns</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s1">&#39;insertion&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;after&#39;</span><span class="p">,</span>
+                    <span class="n">showfliers</span><span class="o">=</span><span class="ow">not</span> <span class="n">show_points</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="p">[</span><span class="bp">False</span><span class="p">,</span> <span class="bp">True</span><span class="p">],</span>
+                    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show_points</span><span class="p">:</span>
+            <span class="n">sns</span><span class="o">.</span><span class="n">stripplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s1">&#39;insertion&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;after&#39;</span><span class="p">,</span>
+                          <span class="n">order</span><span class="o">=</span><span class="p">[</span><span class="bp">False</span><span class="p">,</span> <span class="bp">True</span><span class="p">],</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
+                          <span class="n">size</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">jitter</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Has insertion&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Normalized expression after&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ax</span></div>
+
+<div class="viewcode-block" id="DeExonResult.plot_sums"><a class="viewcode-back" href="../../../../api.html#imfusion.expression.de_test.DeExonResult.plot_sums">[docs]</a>    <span class="k">def</span> <span class="nf">plot_sums</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots the distribution of before/after counts for the samples.&quot;&quot;&quot;</span>
+        <span class="n">sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sums</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">log</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">sums</span>
+        <span class="k">return</span> <span class="n">plot_sums</span><span class="p">(</span><span class="n">sums</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_split</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">sample_split</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="DeExonSingleResult"><a class="viewcode-back" href="../../../../api.html#imfusion.expression.de_test.DeExonSingleResult">[docs]</a><span class="k">class</span> <span class="nc">DeExonSingleResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class containing the results of the single-sample exon-level DE test.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sums : pandas.DataFrame</span>
+<span class="sd">        DataFrame of before/after expression counts for all samples.</span>
+<span class="sd">    sample_split : tuple(List[str], List[str])</span>
+<span class="sd">        Split of samples into positive/negative samples.</span>
+<span class="sd">    exon_split : tuple</span>
+<span class="sd">        Split of exons into before/after groups.</span>
+<span class="sd">    nb_fit : imfusion.expression.de_test.stats.NegativeBinomial</span>
+<span class="sd">        Fit negative-binomial background distribution.</span>
+<span class="sd">    direction : int</span>
+<span class="sd">        Direction of the differential expression (1 = positive, -1 = negative).</span>
+<span class="sd">    p_value : float</span>
+<span class="sd">        P-value of the differential expression test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sums</span><span class="p">,</span> <span class="n">sample_split</span><span class="p">,</span> <span class="n">exon_split</span><span class="p">,</span>
+                 <span class="n">nb_fit</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">p_value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sums</span> <span class="o">=</span> <span class="n">sums</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sample_split</span> <span class="o">=</span> <span class="n">sample_split</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exon_split</span> <span class="o">=</span> <span class="n">exon_split</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_fit</span> <span class="o">=</span> <span class="n">nb_fit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="n">direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_value</span> <span class="o">=</span> <span class="n">p_value</span>
+
+<div class="viewcode-block" id="DeExonSingleResult.plot_fit"><a class="viewcode-back" href="../../../../api.html#imfusion.expression.de_test.DeExonSingleResult.plot_fit">[docs]</a>    <span class="k">def</span> <span class="nf">plot_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots the sample expression on the background distribution.&quot;&quot;&quot;</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span> <span class="ow">or</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sums</span><span class="p">[</span><span class="s1">&#39;after&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_split</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                <span class="n">bins</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">normed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">sums</span><span class="p">[</span><span class="s1">&#39;after&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_split</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">(),</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">*</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">())</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_fit</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ax</span></div>
+
+<div class="viewcode-block" id="DeExonSingleResult.plot_sums"><a class="viewcode-back" href="../../../../api.html#imfusion.expression.de_test.DeExonSingleResult.plot_sums">[docs]</a>    <span class="k">def</span> <span class="nf">plot_sums</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots the distribution of before/after counts for the samples.&quot;&quot;&quot;</span>
+        <span class="n">sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sums</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">log</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">sums</span>
+        <span class="k">return</span> <span class="n">plot_sums</span><span class="p">(</span><span class="n">sums</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_split</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">sample_split</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># Splitting code #</span>
+
+<span class="k">def</span> <span class="nf">split_exons</span><span class="p">(</span><span class="n">exons</span><span class="p">,</span> <span class="n">gene</span><span class="p">,</span> <span class="n">insertion</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">insertion</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">gene</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Retrieve exons for gene.</span>
+    <span class="n">gene_exons</span> <span class="o">=</span> <span class="n">exons</span><span class="o">.</span><span class="n">get_region</span><span class="p">(</span>
+        <span class="n">gene</span><span class="o">.</span><span class="n">contig</span><span class="p">,</span> <span class="n">gene</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">gene</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+        <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;feature&#39;</span><span class="p">:</span> <span class="s1">&#39;exonic_part&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;gene_id&#39;</span><span class="p">:</span> <span class="n">gene</span><span class="o">.</span><span class="n">gene_id</span><span class="p">})</span>
+
+    <span class="c1"># Split into exons before/after.</span>
+    <span class="n">before_exons</span> <span class="o">=</span> <span class="n">gene_exons</span><span class="o">.</span><span class="n">get_region</span><span class="p">(</span>
+        <span class="n">gene</span><span class="o">.</span><span class="n">contig</span><span class="p">,</span> <span class="n">gene</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">insertion</span><span class="o">.</span><span class="n">position</span><span class="p">,</span>
+        <span class="n">incl_left</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">incl_right</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="n">after_exons</span> <span class="o">=</span> <span class="n">gene_exons</span><span class="o">.</span><span class="n">get_region</span><span class="p">(</span>
+        <span class="n">gene</span><span class="o">.</span><span class="n">contig</span><span class="p">,</span> <span class="n">insertion</span><span class="o">.</span><span class="n">position</span><span class="p">,</span> <span class="n">gene</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+        <span class="n">incl_left</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">incl_right</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c1"># Mirror for genes on reverse strand.</span>
+    <span class="k">if</span> <span class="n">gene</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+        <span class="n">before_exons</span><span class="p">,</span> <span class="n">after_exons</span> <span class="o">=</span> <span class="n">after_exons</span><span class="p">,</span> <span class="n">before_exons</span>
+
+    <span class="k">return</span> <span class="n">before_exons</span><span class="p">,</span> <span class="n">after_exons</span>
+
+
+<span class="k">def</span> <span class="nf">split_exons_common</span><span class="p">(</span><span class="n">exons</span><span class="p">,</span> <span class="n">gene</span><span class="p">,</span> <span class="n">insertions</span><span class="p">):</span>
+    <span class="c1"># Select insertions for gene.</span>
+    <span class="n">insertions</span> <span class="o">=</span> <span class="n">insertions</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">insertions</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">gene</span><span class="o">.</span><span class="n">gene_id</span><span class="p">]</span>
+
+    <span class="c1"># Generate each split, tagged with sample name.</span>
+    <span class="n">sample_splits</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ins</span><span class="p">[</span><span class="s1">&#39;sample_id&#39;</span><span class="p">],</span> <span class="n">split_exons</span><span class="p">(</span><span class="n">exons</span><span class="p">,</span> <span class="n">gene</span><span class="p">,</span> <span class="n">ins</span><span class="p">))</span>
+                     <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertions</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()]</span>
+
+    <span class="c1"># Check for samples with improper splits.</span>
+    <span class="n">improper_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">sample</span><span class="p">,</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">sample_splits</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">improper_samples</span> <span class="o">|=</span> <span class="p">{</span><span class="n">sample</span><span class="p">}</span>
+
+    <span class="c1"># Drop any splits belonging to improper samples.</span>
+    <span class="n">splits</span> <span class="o">=</span> <span class="p">[</span><span class="n">split</span> <span class="k">for</span> <span class="n">sample</span><span class="p">,</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">sample_splits</span>
+              <span class="k">if</span> <span class="n">sample</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">improper_samples</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Reduce remaining splits into common features.</span>
+        <span class="n">before</span><span class="p">,</span> <span class="n">after</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">splits</span><span class="p">)</span>
+        <span class="n">common_before</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">before</span><span class="p">)</span>
+        <span class="n">common_after</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">after</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Raise error if we have no samples to split by.</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No proper samples to split by&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">common_before</span><span class="p">,</span> <span class="n">common_after</span><span class="p">,</span> <span class="n">improper_samples</span>
+
+
+<span class="c1"># Count lookup #</span>
+
+<span class="k">def</span> <span class="nf">_to_count_index</span><span class="p">(</span><span class="n">exons</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">exons</span><span class="p">[</span><span class="s1">&#39;contig&#39;</span><span class="p">],</span> <span class="n">exons</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">],</span>
+                    <span class="n">exons</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">],</span> <span class="n">exons</span><span class="p">[</span><span class="s1">&#39;strand&#39;</span><span class="p">]))</span>
+
+
+<span class="c1"># Sum plot #</span>
+
+<span class="k">def</span> <span class="nf">plot_sums</span><span class="p">(</span><span class="n">sums</span><span class="p">,</span> <span class="n">pos_samples</span><span class="p">,</span> <span class="n">neg_samples</span><span class="p">,</span>
+              <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Plot lines for positive and negative samples.</span>
+    <span class="c1"># We keep track of plotted lines for mpld3.</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">neg_samples</span><span class="p">:</span>
+        <span class="n">lines</span><span class="p">[</span><span class="n">sample</span><span class="p">]</span> <span class="o">=</span> <span class="n">_plot_sums_sample</span><span class="p">(</span>
+            <span class="n">ax</span><span class="p">,</span> <span class="n">sums</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">sample</span><span class="p">],</span> <span class="n">width</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightgrey&#39;</span><span class="p">)</span>
+
+    <span class="n">palette</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">sample</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pos_samples</span><span class="p">,</span> <span class="n">palette</span><span class="p">):</span>
+        <span class="n">lines</span><span class="p">[</span><span class="n">sample</span><span class="p">]</span> <span class="o">=</span> <span class="n">_plot_sums_sample</span><span class="p">(</span>
+            <span class="n">ax</span><span class="p">,</span> <span class="n">sums</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">sample</span><span class="p">],</span> <span class="n">width</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+
+    <span class="c1"># Set ticks.</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="s1">&#39;Before&#39;</span><span class="p">,</span> <span class="s1">&#39;After&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Set axis limits/labels.</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Location (relative to integration)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Expression&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span>
+
+
+<span class="k">def</span> <span class="nf">_plot_sums_sample</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">width</span> <span class="o">/=</span> <span class="mi">2</span>
+
+    <span class="n">l1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="n">width</span><span class="p">,</span> <span class="n">width</span><span class="p">],</span> <span class="p">[</span><span class="n">sample</span><span class="o">.</span><span class="n">before</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">l2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="n">width</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">width</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="n">sample</span><span class="o">.</span><span class="n">after</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">l3</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">width</span><span class="p">,</span> <span class="o">-</span><span class="n">width</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="n">sample</span><span class="o">.</span><span class="n">before</span><span class="p">,</span> <span class="n">sample</span><span class="o">.</span><span class="n">after</span><span class="p">],</span>
+                 <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">,</span> <span class="n">l3</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.1+1.g9b7cc62',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

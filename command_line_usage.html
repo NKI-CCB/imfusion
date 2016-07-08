@@ -1,0 +1,857 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Command-line usage &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="index.html"/>
+        <link rel="next" title="API" href="api.html"/>
+        <link rel="prev" title="Getting started" href="getting_started.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Command-line usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#im-fusion-build">im-fusion build</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#description">Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#arguments">Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#im-fusion-insertions">im-fusion insertions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#im-fusion-expression">im-fusion expression</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#im-fusion-merge">im-fusion merge</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#im-fusion-ctg">im-fusion ctg</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Command-line usage</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/command_line_usage.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="command-line-usage">
+<h1>Command-line usage<a class="headerlink" href="#command-line-usage" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="im-fusion-build">
+<span id="imfusion-build-usage"></span><h2>im-fusion build<a class="headerlink" href="#im-fusion-build" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="description">
+<h3>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h3>
+<p><strong>im-fusion build</strong> is used to create the augmented reference genome that is
+required to identify gene-transposon fusions using Tophat2.</p>
+</div>
+<div class="section" id="arguments">
+<h3>Arguments<a class="headerlink" href="#arguments" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--reference_seq</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Path to the reference sequence (in Fasta</div>
+<div class="line">format).</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--reference_gtf</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Path to the reference gtf file. (Expected to</div>
+<div class="line">conform to Ensembls GTF file struture.)</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--transposon_seq</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Path to the transposon sequence (in Fasta</div>
+<div class="line">format). This file should typically contain</div>
+<div class="line">a single sequence.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--output</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Output path for the augmented reference.</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--blacklist_regions</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Regions of the reference to blacklist. Should</div>
+<div class="line">be specified as &#8216;chromosome:start-end&#8217;.</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--blacklist_genes</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Genes to blacklist. Should be specified as</div>
+<div class="line">gene IDs (Ensembl IDs for Ensembl gtfs).</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--no_index</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Suppresses building of the bowtie index.</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--no_transcriptome_index</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Suppresses building of the transcriptome index.</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--force_overwrite</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Overwrite any existing files.</div>
+</div>
+</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<p>Basic:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">build</span> <span class="o">--</span><span class="n">reference_sequence</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
+                <span class="o">--</span><span class="n">reference_gtf</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
+                <span class="o">--</span><span class="n">transposon_sequence</span> <span class="o">./</span><span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
+                <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">augmented</span><span class="o">.</span><span class="n">fa</span>
+</pre></div>
+</div>
+<p>With blacklisted region:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">build</span> <span class="o">--</span><span class="n">reference_sequence</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
+                <span class="o">--</span><span class="n">reference_gtf</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
+                <span class="o">--</span><span class="n">transposon_sequence</span> <span class="o">./</span><span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
+                <span class="o">--</span><span class="n">blacklist_regions</span> <span class="mi">13</span><span class="p">:</span><span class="mi">31623816</span><span class="o">-</span><span class="mi">31633406</span> \
+                <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">augmented</span><span class="o">.</span><span class="n">fa</span>
+</pre></div>
+</div>
+<p>With blacklisted gene:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">build</span> <span class="o">--</span><span class="n">reference_sequence</span> <span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
+                <span class="o">--</span><span class="n">reference_gtf</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
+                <span class="o">--</span><span class="n">transposon_seq</span> <span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
+                <span class="o">--</span><span class="n">blacklist_genes</span> <span class="n">ENSMUSG00000039095</span> \
+                <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">augmented</span><span class="o">.</span><span class="n">fa</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="im-fusion-insertions">
+<span id="imfusion-insertions-usage"></span><h2>im-fusion insertions<a class="headerlink" href="#im-fusion-insertions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Description<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p><strong>im-fusion insertions</strong> identifies insertions in a sample by
+using Tophat2 to identify gene-transposon fusions in RNA-sequencing data. To
+do so, the command first calls Tophat2 to align reads to the augmented
+reference genome and to identify gene fusions. It then parses the fusions
+identified by Tophat (from Tophat&#8217;s <em>fusion.out</em> output file) and selects
+fusions between the endogeneous reference and the transposon sequence. These
+gene-tranposon fusions are annotated to identify the involved gene(s) and
+transposon feature(s) and converted to insertions with an (approximate) genomic
+location. Insertions are written to a tab-separated file (insertions.txt) in
+the output directory.</p>
+</div>
+<div class="section" id="id2">
+<h3>Arguments<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>Basic arguments</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--fastq</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Path(s) to the samples fastq files.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--fastq2</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Paths to the second pair fastq files</div>
+<div class="line">(for paired-end sequencing data). Should be</div>
+<div class="line">given in the same order as for fastq.</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--reference_index</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Path to the index of the augmented reference</div>
+<div class="line">generated by <strong>im-fusion build</strong>.</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--reference_gtf</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Path to the reference gtf file. Typically the</div>
+<div class="line">same file as used in <strong>im-fusion build</strong>.</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--transposon_name</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Name of the transposon sequence in the augmented</div>
+<div class="line">reference. Should reflect the name used for the</div>
+<div class="line">transposon sequence in the transposon.fa</div>
+<div class="line">file that was used in <strong>im-fusion build</strong>.</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--transposon_features</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Path to a tab-separated file containing the</div>
+<div class="line">description of the transposon features (splice</div>
+<div class="line">acceptors/donors etc.). The file should contain</div>
+<div class="line">the columns name, start, end, strand and type.</div>
+<div class="line">Start, end and strand are used to define</div>
+<div class="line">the position and orientation of the features.</div>
+<div class="line">The type column indicates whether a feature</div>
+<div class="line">represents a splice acceptor or donor feature and</div>
+<div class="line">should contain only SA, SD or empty values. See</div>
+<div class="line">the data directory on Github for examples.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--output_dir</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">The samples output directory.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--sample_id</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Sample id to use for the given sample. Defaults</div>
+<div class="line">to the basename of the output directory.</div>
+</div>
+</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Filtering options</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--blacklist</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">IDs of genes for which insertions</div>
+<div class="line">should be filtered (typically genes that share</div>
+<div class="line">homologous sequences with the transposon).</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--min_flank</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Minimum required size of aligned sequences on</div>
+<div class="line">either side of the fusion (default = 20).</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--min_support</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Minimum number of reads that should support</div>
+<div class="line">any identfied fusions (default = 2).</div>
+</div>
+</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Tophat options</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--transcriptome_index</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Path to the transcriptome index. Only needs to</div>
+<div class="line">be provided if the transcriptome index location</div>
+<div class="line">differs from the default relative path used by</div>
+<div class="line"><strong>im-fusion build</strong>.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--tophat_args</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">String with extra commandline arguments that</div>
+<div class="line">should be passed to Tophat2 for the alignment.</div>
+</div>
+</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="id3">
+<h3>Examples<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>For single-end data:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">insertions</span> <span class="o">--</span><span class="n">fastq</span> <span class="n">s1</span><span class="o">.</span><span class="n">R1</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
+                     <span class="o">--</span><span class="n">reference_seq</span> <span class="n">augmented</span> \
+                     <span class="o">--</span><span class="n">reference_gtf</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
+                     <span class="o">--</span><span class="n">transposon_name</span> <span class="n">T2Onc2</span> \
+                     <span class="o">--</span><span class="n">transposon_features</span> <span class="n">T2Onc2</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">txt</span> \
+                     <span class="o">--</span><span class="n">output_dir</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">s1</span> \
+                     <span class="o">--</span><span class="n">sample_id</span> <span class="n">s1</span>
+</pre></div>
+</div>
+<p>For paired-end data add the fastq2 argument:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">insertions</span> <span class="o">--</span><span class="n">fastq</span> <span class="n">s1</span><span class="o">.</span><span class="n">R1</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
+                     <span class="o">--</span><span class="n">fastq2</span> <span class="n">s1</span><span class="o">.</span><span class="n">R2</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
+                     <span class="o">--</span><span class="n">reference_seq</span> <span class="n">augmented</span> \
+                     <span class="o">--</span><span class="n">reference_gtf</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
+                     <span class="o">--</span><span class="n">transposon_name</span> <span class="n">T2Onc2</span> \
+                     <span class="o">--</span><span class="n">transposon_features</span> <span class="n">T2Onc2</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">txt</span> \
+                     <span class="o">--</span><span class="n">output_dir</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">s1</span> \
+                     <span class="o">--</span><span class="n">sample_id</span> <span class="n">s1</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="im-fusion-expression">
+<span id="imfusion-expression-usage"></span><h2>im-fusion expression<a class="headerlink" href="#im-fusion-expression" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id4">
+<h3>Description<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p><strong>im-fusion expression</strong> generates exon expression counts for an individual
+sample using the alignment generated by <strong>im-fusion insertions</strong>. The counts
+are generated using the <em>featureCounts</em> tool, which must be available in PATH.
+The generated counts are written to the samples output directory as the
+tab-separated file &#8216;exon_counts.txt&#8217;.</p>
+</div>
+<div class="section" id="id5">
+<h3>Arguments<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--sample_dir</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Path to the sample directory. Effectively the</div>
+<div class="line">same as output_dir in <strong>im-fusion insertions</strong>.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--exon_gtf</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Path to the exon gtf file, which contains</div>
+<div class="line">a flattened representation of the exons in</div>
+<div class="line">the previously used reference gtf.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--sample_id</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Sample id to use in the generated counts file.</div>
+<div class="line">Should reflect the same sample id as used by</div>
+<div class="line"><strong>im-fusion insertions</strong>. Defaults to the name</div>
+<div class="line">of the input directory.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--paired</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Generate counts by counting fragments instead of</div>
+<div class="line">reads (for paired-end data).</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--stranded</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Perform strand-specific read counting. Possible</div>
+<div class="line">values: 0 (unstranded), 1 (stranded) and 2</div>
+<div class="line">(reversely stranded). 0 by default.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--threads</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Number of threads to use in featureCounts.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--extra_kwargs</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Extra command line options to pass to</div>
+<div class="line">featureCounts.</div>
+</div>
+</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The easiest way to generate the required exon gtf file is to generate it from
+the previously used reference.gtf file using the
+dexseq_prepare_annotation.py script from <a class="reference external" href="http://bioconductor.org/packages/release/bioc/html/DEXSeq.html">DEXSeq</a>. After
+extracting the script from the DEXSeq package, the exon gtf can be generated
+using the following command:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">dexseq_prepare_annotation</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">aggr</span> <span class="n">no</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> <span class="n">exons</span><span class="o">.</span><span class="n">gtf</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id6">
+<h3>Examples<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<p>For single-end data:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">expression</span> <span class="o">--</span><span class="n">sample_dir</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">s1</span> \
+                     <span class="o">--</span><span class="n">exon_gtf</span> <span class="n">exons</span><span class="o">.</span><span class="n">gtf</span> \
+                     <span class="o">--</span><span class="n">sample_id</span> <span class="n">s1</span>
+</pre></div>
+</div>
+<p>For paired-end data:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">expression</span> <span class="o">--</span><span class="n">sample_dir</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">s1</span> \
+                     <span class="o">--</span><span class="n">exon_gtf</span> <span class="n">exons</span><span class="o">.</span><span class="n">gtf</span> \
+                     <span class="o">--</span><span class="n">sample_id</span> <span class="n">s1</span> \
+                     <span class="o">--</span><span class="n">paired</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="im-fusion-merge">
+<span id="imfusion-merge-usage"></span><h2>im-fusion merge<a class="headerlink" href="#im-fusion-merge" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h3>Description<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<p><strong>im-fusion merge</strong> merges individual samples into a combined dataset that
+can be used in the CTG analysis. The command effectively concatenates the
+individual results into a combined <em>insertions.txt</em> file and a combined
+<em>exon_counts.txt</em> file.</p>
+</div>
+<div class="section" id="id8">
+<h3>Arguments<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--base_dir</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Path to a base directory that contains outputs</div>
+<div class="line">for individual samples as sub-directories.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--output_base</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Base name of the merged output files.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--samples</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">IDs of samples to subset the output to.</div>
+</div>
+</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="id9">
+<h3>Examples<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<p>Without subsetting:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">merge</span> <span class="o">--</span><span class="n">base_dir</span> <span class="o">./</span><span class="n">output</span> \
+                <span class="o">--</span><span class="n">output_base</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span>
+</pre></div>
+</div>
+<p>With subsetting:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">merge</span> <span class="o">--</span><span class="n">base_dir</span> <span class="o">./</span><span class="n">output</span> \
+                <span class="o">--</span><span class="n">output_base</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span> \
+                <span class="o">--</span><span class="n">samples</span> <span class="n">s1</span> <span class="n">s2</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="im-fusion-ctg">
+<span id="imfusion-ctg-usage"></span><h2>im-fusion ctg<a class="headerlink" href="#im-fusion-ctg" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id10">
+<h3>Description<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<p><strong>im-fusion ctg</strong> uses the combined insertions/expression dataset to identify
+genes that are recurrently mutated across samples AND differentially expressed
+by their insertions. To do so, the command performs two distinct significance
+tests. The first test compares the number of insertions within a gene to what
+would be expected by chance (modeled using a Poisson distribution). Genes with
+significant p-values are selected as Commonly Targeted Genes (CTGs).</p>
+<p>The second test is a differential expression test that compares the ratio of
+expression before/after insertions in a CTG between samples with/without
+insertions in the CTG. A CTG is considered to be differentially expressed if
+samples with an insertion in the gene show a significant increase/decrease in
+expression after the insertion site compared to samples without an insertion.
+Genes that pass both tests are written to an output file.</p>
+<p>Note that the differential expression test can be ommitted by not providing
+the expression file as an argument. In this case, only the CTG test is
+performed.</p>
+<p>For more details on the implementation of the tests, please see our publication.</p>
+</div>
+<div class="section" id="id11">
+<h3>Arguments<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<p>Basic arguments</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--insertions</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Path to the merged insertions file from</div>
+<div class="line"><strong>im-fusion merge</strong>.</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--reference_seq</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Path to the reference genome sequence (in</div>
+<div class="line">fasta format). Can either be the augmented</div>
+<div class="line">reference genome or the original reference.</div>
+</div>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--reference_gtf</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><div class="first last line-block">
+<div class="line">Path to the reference gtf file. Typically the</div>
+<div class="line">same file as used in <strong>im-fusion build</strong>.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--output</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Path for the output CTG file.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--threshold</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Minimum corrected p-value for CTGs.</div>
+<div class="line">(Default = 0.05).</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--pattern</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Regular expression reflecting the nucleotide</div>
+<div class="line">sequence at which the use transposon typically</div>
+<div class="line">integrates (if any). Used to correct for</div>
+<div class="line">sequence integration biases along the genome.</div>
+<div class="line">For example the pattern (AT|TA) is used for</div>
+<div class="line">the T2onc2 transposon, which is biased towards</div>
+<div class="line">integrations as TA sites.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--window</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Window around the gene within which we test</div>
+<div class="line">a given gene for enrichment in insertions.</div>
+</div>
+</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Insertion selection</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--chromosomes</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Chromosomes to consider. Used to omit</div>
+<div class="line">specific chromosomes from the CTG analysis.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--min_depth</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Minimum supporting number of reads for insertions</div>
+<div class="line">to be included in the CTG analysis. Can be used</div>
+<div class="line">to omit insertions with low support for more</div>
+<div class="line">confidence in the analysis.</div>
+</div>
+</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Differential expression</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--expression</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Path to the merged expression file from</div>
+<div class="line"><strong>im-fusion merge</strong>.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--exon_gtf</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Path to the exon gtf file. Typically the</div>
+<div class="line">same file as used in <strong>im-fusion expression</strong>.</div>
+</div>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--de_threshold</span></kbd></td>
+<td><div class="first last line-block">
+<div class="line">Minimum p-value for a CTG to be considered</div>
+<div class="line">as differentially expressed.</div>
+</div>
+</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="id12">
+<h3>Examples<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<p>With differential expression:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
+              <span class="o">--</span><span class="n">expression</span> <span class="o">./</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span> \
+              <span class="o">--</span><span class="n">reference_seq</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
+              <span class="o">--</span><span class="n">reference_gtf</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
+              <span class="o">--</span><span class="n">exon_gtf</span> <span class="o">./</span><span class="n">exons</span><span class="o">.</span><span class="n">gtf</span> \
+              <span class="o">--</span><span class="n">output</span> <span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>Without differential expression:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
+              <span class="o">--</span><span class="n">reference_seq</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
+              <span class="o">--</span><span class="n">reference_gtf</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
+              <span class="o">--</span><span class="n">output</span> <span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>With non-default significance thresholds:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
+              <span class="o">--</span><span class="n">expression</span> <span class="o">./</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span> \
+              <span class="o">--</span><span class="n">reference_seq</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
+              <span class="o">--</span><span class="n">reference_gtf</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
+              <span class="o">--</span><span class="n">exon_gtf</span> <span class="o">./</span><span class="n">exons</span><span class="o">.</span><span class="n">gtf</span> \
+              <span class="o">--</span><span class="n">output</span> <span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span>
+              <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.01</span>
+              <span class="o">--</span><span class="n">de_threshold</span> <span class="mf">0.1</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting_started.html" class="btn btn-neutral" title="Getting started" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1+1.g9b7cc62',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
