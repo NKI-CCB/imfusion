@@ -1,0 +1,88 @@
+from os import path
+import pandas as pd
+
+def get_fastq_path(sample_path, wildcards):
+    sample_def = pd.read_csv(sample_path, sep='\t', index_col='name')
+    return sample_def.ix[wildcards.sample, 'source']
+
+def get_samples(sample_path):
+    sample_def = pd.read_csv(sample_path, sep='\t')
+    names = set(sample_def['name'])
+    return [n.split('.')[0] for n in names]
+
+configfile: 'tophat2.yml'
+
+rule all:
+    input: path.join(config['output_dir'], 'ctgs.txt')
+
+rule identify_insertions:
+    input:
+        fastq=lambda wildcards: get_fastq_path(config['samples'], wildcards),
+    output:
+        insertions=path.join(config['output_dir'], '{sample}/insertions.txt'),
+        alignment=path.join(config['output_dir'], '{sample}/alignment.bam')
+    params:
+        index=config['insertions']['reference_index'],
+        ref_gtf=config['insertions']['reference_gtf'],
+        tr_name=config['insertions']['transposon_name'],
+        tr_features=config['insertions']['transposon_features'],
+        options=config['insertions']['options'] or '',
+        output_dir=path.join(config['output_dir'], '{sample}')
+    resources:
+        memory=6
+    threads: config['insertions']['threads']
+    log: path.join(config['output_dir'], '{sample}/logs/insertions.log')
+    shell:
+        'im-fusion insertions tophat2'
+        ' --fastq {input.fastq}'
+        ' --reference_index {params.index}'
+        ' --reference_gtf {params.ref_gtf}'
+        ' --transposon_name {params.tr_name}'
+        ' --transposon_features {params.tr_features}'
+        ' --output_dir {params.output_dir}'
+        ' --tophat_threads {threads}'
+        ' --assemble'
+        ' --assemble_threads {threads}'
+        ' {params.options} > {log} 2>&1'
+
+rule quantify_expression:
+    input: path.join(config['output_dir'], '{sample}/alignment.bam'),
+    output: path.join(config['output_dir'], '{sample}/expression.txt')
+    params:
+        sample_dir=path.join(config['output_dir'], '{sample}'),
+        exon_gtf=config['expression']['exon_gtf'],
+        options=''
+    shell:
+        'im-fusion expression'
+        ' --bam {input}'
+        ' --output {output}'
+        ' --exon_gtf {params.exon_gtf}'
+        ' {params.options}'
+
+rule merge_insertions:
+    input:
+        ins=expand(path.join(config['output_dir'], '{sample}/insertions.txt'),
+                   sample=get_samples(config['samples'])),
+        expr=expand(path.join(config['output_dir'], '{sample}/expression.txt'),
+                    sample=get_samples(config['samples']))
+    output:
+        insertions=path.join(config['output_dir'], 'merged.insertions.txt'),
+        expression=path.join(config['output_dir'], 'merged.expression.txt')
+    shell:
+        'im-fusion merge --insertions {input.ins} --expression {input.expr}'
+
+rule call_ctgs:
+    input:
+        ins=path.join(config['output_dir'], 'merged.insertions.txt'),
+        expr=path.join(config['output_dir'], 'merged.expression.txt')
+    output: path.join(config['output_dir'], 'ctgs.txt')
+    params:
+        reference_seq=config['ctgs']['reference_seq'],
+        reference_gtf=config['ctgs']['reference_gtf']
+    shell:
+        'im-fusion ctg'
+        ' --insertions {input.ins}'
+        ' --reference_seq {params.reference_seq}'
+        ' --reference_gtf {params.reference_gtf}'
+        ' --expression {input.expr}'
+        ' --output {output}'

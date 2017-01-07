@@ -1,0 +1,7 @@
+X	StringTie	transcript	143093529	143105317	1000	+	.	gene_id "STRG.14160"; transcript_id "STRG.14160.1"; cov "74.666862"; FPKM "204.806595"; TPM "572.965027";
+X	StringTie	exon	143093529	143094044	1000	+	.	gene_id "STRG.14160"; transcript_id "STRG.14160.1"; exon_number "1"; cov "50.117264";
+X	StringTie	exon	143099520	143103580	1000	+	.	gene_id "STRG.14160"; transcript_id "STRG.14160.1"; exon_number "2"; cov "77.335426";
+X	StringTie	exon	143104181	143105317	1000	+	.	gene_id "STRG.14160"; transcript_id "STRG.14160.1"; exon_number "3"; cov "76.276848";
+X	StringTie	transcript	143099594	143104297	1000	+	.	gene_id "STRG.14160"; transcript_id "STRG.14160.2"; reference_id "ENSMUST00000165829"; ref_gene_id "ENSMUSG00000085584"; ref_gene_name "Rgag1"; cov "0.000000"; FPKM "0.000000"; TPM "0.000000";
+X	StringTie	exon	143099594	143103580	1000	+	.	gene_id "STRG.14160"; transcript_id "STRG.14160.2"; exon_number "1"; reference_id "ENSMUST00000165829"; ref_gene_id "ENSMUSG00000085584"; ref_gene_name "Rgag1"; cov "0.000000";
+X	StringTie	exon	143104181	143104297	1000	+	.	gene_id "STRG.14160"; transcript_id "STRG.14160.2"; exon_number "2"; reference_id "ENSMUST00000165829"; ref_gene_id "ENSMUSG00000085584"; ref_gene_name "Rgag1"; cov "0.000000";

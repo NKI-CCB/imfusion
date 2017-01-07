@@ -1,34 +1,37 @@
 name: imfusion-dev
 channels:
-  - jrderuiter
-  - bioconda
-  - r
+    - r
+    - bioconda
+    - jrderuiter
 dependencies:
-  - python
+    # Python dependencies.
+    - python =3.5.2
+    - future =0.16
+    - intervaltree
+    - frozendict
+    - pandas =0.19.2
+    - numexpr
+    - pysam >=0.8.4
+    - toolz
+    - scipy
+    - seaborn
+    - pyfaidx
+    - intervaltree
+    - pathlib2 # [py27]
+    - r =3.3.1
+    - rpy2 >=2.7.4
 
-  # Basic dependencies.
-  - intervaltree
-  - future
-  - pandas
-  - numexpr
-  - pysam ==0.8.4
-  - toolz
-  - scipy
-  - seaborn
-  - pyfaidx
-  - intervaltree
-  - pathlib2 # [py27]
-  - r
-  - rpy2
+    # External dependencies.
+    - star
+    - subread
+    - stringtie
 
-  # Bioconda dependencies.
-  - tophat
-  - bowtie
-  - subread
-
-  # Test dependencies.
-  - mock
-  - pytest
-  - pytest-datafiles
-  - pytest-mock
-  - pytest-helpers-namespace
+    # Development dependencies.
+    - sphinx
+    - pytest
+    - pytest-mock
+    - pytest-datafiles
+    - pytest-cov
+    - pytest-helpers-namespace
+    - pylint
+    - yapf

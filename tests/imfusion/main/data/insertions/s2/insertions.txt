@@ -1,3 +1,0 @@
-id	seqname	position	strand	gene_id	gene_name	gene_strand	orientation	feature_name	feature_type	feature_strand	anchor_genome	anchor_transposon	flank_genome	flank_transposon	spanning_reads	supporting_mates	spanning_mates	sample_id
-INS_1	11	51991373	-1	ENSMUSG00000020390	Ube2b		sense	CbASA	SA	1	51991393	851	29	36	1	0	0	s2
-INS_2	12	102757520	-1	ENSMUSG00000091931	AK010878		sense	CbASA	SA	1	102757540	851	42	23	1	0	1	s2

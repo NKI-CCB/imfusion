@@ -1,9 +1,9 @@
 package:
-  name: im-fusion
-  version: {{ environ.get('GIT_DESCRIBE_TAG', '')[1:] }}
+  name: imfusion
+  version: 0.2.0.dev0
 
 build:
-  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
+  number: 0
 
 source:
   path: ../
@@ -12,12 +12,13 @@ requirements:
   build:
     - setuptools
 
-    # Basic dependencies.
+    # Python dependencies.
     - python
     - future
+    - frozendict
     - pandas
     - numexpr
-    - pysam ==0.8.4
+    - pysam >=0.8.4
     - toolz
     - scipy
     - seaborn
@@ -25,16 +26,17 @@ requirements:
     - intervaltree
     - pathlib2 # [py27]
     - r
-    - rpy2
+    - rpy2 >=2.7.4
 
   run:
-    # Basic dependencies.
+    # Python dependencies.
     - python
     - intervaltree
     - future
+    - frozendict
     - pandas
     - numexpr
-    - pysam ==0.8.4
+    - pysam >=0.8.4
     - toolz
     - scipy
     - seaborn
@@ -42,22 +44,22 @@ requirements:
     - intervaltree
     - pathlib2 # [py27]
     - r
-    - rpy2
+    - rpy2 >=2.7.4
 
-    # Bioconda dependencies.
-    - tophat
-    - bowtie
+    # External dependencies.
+    - star
     - subread
+    - stringtie
 
 test:
   imports:
     - imfusion
 
   commands:
-    - im-fusion -h
-    - tophat --version
+    - imfusion-build -h
+    - STAR --version
     - featureCounts -v
-    - py.test $SRC_DIR
+    # - py.test $SRC_DIR
 
   requires:
     - mock

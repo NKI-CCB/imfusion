@@ -10,7 +10,11 @@
 IM-Fusion
 =========
 
-IM-Fusion is a tool for identifying transposon insertion sites in insertional mutagenesis screens using single- and paired-end RNA-sequencing data. It essentially identifies insertion sites from gene-transposon fusions in the RNA-sequencing data, which represent splicing events between the transposon and endogeneous genes.
+IM-Fusion is a tool for identifying transposon insertion sites in insertional
+mutagenesis screens using single- and paired-end RNA-sequencing data. It
+essentially identifies insertion sites from gene-transposon fusions in the
+RNA-sequencing data, which represent splicing events between the
+transposon and endogeneous genes.
 
 IM-Fusion also identifies candidate genes for a given screen using a
 statistical test (based on the Poisson distribution) that selects Commonly
@@ -25,7 +29,8 @@ IM-Fusion has the following key features:
 - It identifies transposon insertion sites from both single- and paired-end
   RNA-sequencing data, without having any special sequencing requirements.
 - Its gene-centric approach – both in the identification of insertions and in
-  testing for differential expression of identified candidate genes – greatly reduces the number of false positive candidate genes.
+  testing for differential expression of identified candidate genes – greatly
+  reduces the number of false positive candidate genes.
 - Its differential expression tests provide detailed insight into the effects
   of insertions on the expression of their target gene(s). By providing both a
   groupwise and a single-sample version of the test, IM-Fusion can identify

@@ -1,0 +1,6 @@
+[BASIC]
+good-names=i,j,k,ex,Run,_,pk,x,y,ax,df,mu
+
+[TYPECHECK]
+ignored-modules=numpy,pandas
+generated-members=pytest.*,pandas.*,pysam.*
