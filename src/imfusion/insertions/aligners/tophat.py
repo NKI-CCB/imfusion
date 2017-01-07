@@ -142,8 +142,12 @@ class TophatAligner(Aligner):
 
     def _extract_fusions(self, fusion_path):
         fusion_data = read_fusion_out(fusion_path)
-        yield from extract_transposon_fusions(
+
+        fusions = extract_transposon_fusions(
             fusion_data, transposon_name=self._reference.transposon_name)
+
+        for fusion in fusions:
+            yield fusion
 
     @classmethod
     def configure_args(cls, parser):

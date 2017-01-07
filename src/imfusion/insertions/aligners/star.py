@@ -1,7 +1,5 @@
-# pylint: disable=W0622,W0614,W0401
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
 
 import collections
 import operator
@@ -130,7 +128,8 @@ class StarAligner(Aligner):
             orientation=self._filter_orientation,
             blacklist=self._filter_blacklist)
 
-        yield from insertions
+        for insertion in insertions:
+            yield insertion
 
     def _align(self, read_paths, output_dir):
         # Put output into subdirectory, we will symlink the
@@ -179,12 +178,15 @@ class StarAligner(Aligner):
         chimeric_data = read_chimeric_junctions(fusion_path)
 
         # Extract transposon fusions.
-        yield from extract_transposon_fusions(
+        fusions = extract_transposon_fusions(
             chimeric_data,
             self._reference.transposon_name,
             merge_junction_dist=self._merge_junction_dist,
             max_spanning_dist=self._max_spanning_dist,
             max_junction_dist=self._max_junction_dist)
+
+        for fusion in fusions:
+            yield fusion
 
     @classmethod
     def configure_args(cls, parser):
@@ -486,12 +488,8 @@ def extract_transposon_fusions(chimeric_data,
     fusions = itertools.chain.from_iterable([junctions, spanning])
 
     # Convert to transposon fusions.
-    tr_fusions = [
-        TransposonFusion.from_fusion(fusion, transposon_name)
-        for fusion in fusions
-    ]
-
-    yield from tr_fusions
+    for fusion in fusions:
+        yield TransposonFusion.from_fusion(fusion, transposon_name)
 
 
 def extract_junction_fusions(chimeric_data, merge_dist=None):
@@ -529,7 +527,8 @@ def extract_junction_fusions(chimeric_data, merge_dist=None):
         if merge_dist is not None:
             fusions = Fusion.merge(fusions, max_dist=merge_dist)
 
-        yield from fusions
+        for fusion in fusions:
+            yield fusion
 
 
 def _flank_sizes(row):

@@ -199,7 +199,8 @@ def extract_insertions(fusions,
     insertions = Insertion.from_transposon_fusions(
         annotated, id_fmt_str='INS_{}')
 
-    yield from insertions
+    for insertion in insertions:
+        yield insertion
 
 
 def annotate_fusions_for_genes(fusions, reference):
@@ -382,7 +383,8 @@ def filter_insertions(insertions,
     if orientation:
         insertions = filter_wrong_orientation(insertions)
 
-    yield from insertions
+    for insertion in insertions:
+        yield insertion
 
 
 def filter_unexpected_features(insertions):

@@ -42,13 +42,14 @@ def main():
 
     ctgs = test_ctgs(
         insertions,
-        reference_seq=reference.fasta_path,
-        reference_gtf=reference.gtf_path,
-        gene_ids=,
+        reference=reference,
+        gene_ids=args.gene_ids,
         chromosomes=args.chromosomes,
         pattern=args.pattern,
-        window=args.window,
-        threshold=args.threshold)
+        window=args.window)
+
+    if args.threshold is not None:
+        ctgs = ctgs.query('q_value <= {}'.format(args.threshold))
 
     # If expression is given, test for differential expression.
     if args.expression is not None:
@@ -84,14 +85,13 @@ def _parser_args():
         'reference genome or the original reference.')
 
     base_group.add_argument(
-        '--reference_gtf',
-        required=True,
-        type=Path,
-        help='Path to the reference gtf file. Typically '
-        'the same file as used in im-fusion build.')
+        '--gene_ids', default=None, nargs='+', help='IDs of genes to test.')
 
     base_group.add_argument(
-        '--output', type=Path, help='Path for the output CTG file.')
+        '--output',
+        type=Path,
+        help='Path for the output CTG file.',
+        required=True)
 
     base_group.add_argument(
         '--threshold',

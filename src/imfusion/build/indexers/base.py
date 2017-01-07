@@ -3,13 +3,16 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=W0622,W0614,W0401
 
+# pylint: disable=W0611
+
 import logging
 import shutil
+from typing import Type, Tuple
 
 try:
-    from pathlib import Path
+    import pathlib
 except ImportError:
-    from pathlib2 import Path
+    import pathlib2 as pathlib
 
 import pyfaidx
 
@@ -21,11 +24,13 @@ _indexer_registry = {}
 
 
 def register_indexer(name, indexer):
+    # type: (str, Type[Indexer]) -> None
     """Registers indexer under given name."""
     _indexer_registry[name] = indexer
 
 
 def get_indexers():
+    # type: (...) -> Dict[str, Type[Indexer]]
     """Returns dict of available indexers."""
     return dict(_indexer_registry)
 
@@ -37,12 +42,12 @@ class Indexer(object):
         self._logger = logger or logging.getLogger()
 
     @property
-    def _reference_class(self):
+    def _reference_class(self):  # type: (...) -> Type[Reference]
         """Reference class to use for this indexer."""
         return Reference
 
     @property
-    def dependencies(self):
+    def dependencies(self):  # type: (...) -> List[str]
         """External dependencies required by Indexer."""
         return []
 
@@ -50,14 +55,16 @@ class Indexer(object):
         """Checks if all required external dependencies are available."""
         shell.check_dependencies(self.dependencies)
 
-    def build(self,
-              refseq_path,
-              gtf_path,
-              transposon_path,
-              transposon_features_path,
-              output_dir,
-              blacklist_regions=None,
-              blacklist_genes=None):
+    def build(
+            self,
+            refseq_path,  # type: pathlib.Path
+            gtf_path,  # type: pathlib.Path
+            transposon_path,  # type: pathlib.Path
+            transposon_features_path,  # type: pathlib.Path
+            output_dir,  # type: pathlib.Path
+            blacklist_regions=None,  # type: List[Tuple[str, int, int]]
+            blacklist_genes=None  # type: List[str]
+    ):  # type: (...) -> None
         """Builds an indexed reference containing the transposon sequence."""
 
         # Create output directory.
@@ -135,29 +142,30 @@ class Indexer(object):
 
         base_group.add_argument(
             '--reference_seq',
-            type=Path,
+            type=pathlib.Path,
             required=True,
             help='Path to the reference sequence (in Fasta format).')
 
         base_group.add_argument(
             '--reference_gtf',
-            type=Path,
+            type=pathlib.Path,
             required=True,
             help='Path to the reference gtf file.')
 
         base_group.add_argument(
             '--transposon_seq',
-            type=Path,
+            type=pathlib.Path,
             required=True,
             help='Path to the transposon sequence (in Fasta format).')
 
         base_group.add_argument(
             '--transposon_features',
-            type=Path,
+            type=pathlib.Path,
             required=True,
             help='Path to the transposon features (tsv).')
 
-        base_group.add_argument('--output_dir', type=Path, required=True)
+        base_group.add_argument(
+            '--output_dir', type=pathlib.Path, required=True)
 
         # Optional blacklist arguments.
         blacklist_group = parser.add_argument_group('Blacklist arguments')

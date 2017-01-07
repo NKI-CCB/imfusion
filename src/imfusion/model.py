@@ -43,8 +43,11 @@ class FrameMixin(object):
     @classmethod
     def from_csv(cls, file_path, **kwargs):
         """Reads objects from a csv file."""
+
         df = cls.read_csv(file_path, **kwargs)
-        yield from cls.from_frame(df)
+
+        for obj in cls.from_frame(df):
+            yield obj
 
     @classmethod
     def from_frame(cls, df):
@@ -377,4 +380,5 @@ class Insertion(MetadataFrameMixin, _Insertion):
             insertions = (cls.from_transposon_fusion(
                 fusion, drop_metadata=drop_metadata) for fusion in fusions)
 
-        yield from insertions
+        for insertion in insertions:
+            yield insertion
