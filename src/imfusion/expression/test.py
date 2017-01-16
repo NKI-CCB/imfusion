@@ -1,10 +1,13 @@
-# pylint: disable=W0622,W0614,W0401
+"""Module containing functions for testing for differential expression."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import bisect
 import itertools
+from typing import Iterable, Tuple
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -13,15 +16,17 @@ from scipy.stats import mannwhitneyu
 import seaborn as sns
 import toolz
 
+from imfusion.model import Insertion
 from .counts import estimate_size_factors
 
 
-# Exon tests
-def de_exon(insertions,
-            exon_counts,
-            gene_id,
-            pos_samples=None,
-            neg_samples=None):
+def de_exon(
+        insertions,  # type: Iterable[Insertion]
+        exon_counts,  # type: pd.DataFrame
+        gene_id,  # type: str
+        pos_samples=None,  # type: Set[str]
+        neg_samples=None  # type: Set[str]
+):  # type: (...) -> DeExonResult
     """Performs the groupwise exon-level differential expression test.
 
     Tests if the expression of exons after the insertion site(s) in a
@@ -105,7 +110,12 @@ def de_exon(insertions,
                         dropped_samples, direction, p_value)
 
 
-def split_counts(counts, insertions, min_before=1, min_after=1):
+def split_counts(
+        counts,  # type: pd.DataFrame,
+        insertions,  # type: List[Insertion]
+        min_before=1,  # type: int
+        min_after=1  # type: int
+):  # type: (...) -> Tuple[pd.DataFrame, pd.DataFrame, Set[str]]
     """Splits count frame for exons before and after insertion sites.
 
     Parameters
@@ -148,7 +158,7 @@ def split_counts(counts, insertions, min_before=1, min_after=1):
     max_after = len(exons) - min_after
 
     # Search for common split.
-    dropped = set()
+    dropped = set()  # type: Set[str]
 
     curr_min, curr_max = len(exons), 0
     for insertion in insertions:
@@ -179,6 +189,7 @@ def split_counts(counts, insertions, min_before=1, min_after=1):
 
 
 def _get_exons(counts):
+    # type: (pd.DataFrame) -> pd.DataFrame
     """Extracts exon position information from given count frame."""
 
     exons = pd.DataFrame.from_records(

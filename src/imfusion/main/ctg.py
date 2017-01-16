@@ -38,7 +38,7 @@ def main():
     if args.window is not None:
         logger.info('- Using window (%d, %d)', *args.window)
 
-    reference = Reference(args.reference_path)
+    reference = Reference(args.reference)
 
     ctgs = test_ctgs(
         insertions,

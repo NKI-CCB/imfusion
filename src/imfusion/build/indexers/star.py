@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=W0622,W0614,W0401
 
+from typing import Any
+
 import toolz
 
 from imfusion.util import shell
@@ -14,6 +16,7 @@ class StarIndexer(Indexer):
     """Indexer that builds indexes for the STAR aligner."""
 
     def __init__(self, logger=None, overhang=100):
+        # type: (Any, int) -> None
         super().__init__(logger=logger)
         self.overhang = overhang
 
@@ -28,6 +31,8 @@ class StarIndexer(Indexer):
         return ['STAR']
 
     def _build_indices(self, reference):
+        # type: (StarReference) -> None
+
         # Create index directory.
         index_dir = reference.index_path
         index_dir.mkdir(exist_ok=False)

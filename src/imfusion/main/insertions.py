@@ -23,16 +23,12 @@ def main():
 
     args = parse_args()
 
-    # Prepare fastqs (use fastq2 for paired-end).
-    if args.fastq2 is not None:
-        fastqs = list(zip(args.fastq, args.fastq2))
-    else:
-        fastqs = args.fastq
-
     # Construct aligner.
     aligner = args.aligner.from_args(args)
     insertions = aligner.identify_insertions(
-        read_paths=fastqs, output_dir=args.output_dir)
+        fastq_path=args.fastq,
+        output_dir=args.output_dir,
+        fastq2_path=args.fastq2)
 
     # Convert to dataframe.
     insertion_frame = Insertion.to_frame(insertions)
@@ -52,11 +48,7 @@ def parse_args():
     subparsers.required = True
 
     # Register pipelines.
-    aligners = get_aligners()
-
-    for aligner_name in sorted(aligners.keys()):
-        aligner_class = aligners[aligner_name]
-
+    for aligner_name, aligner_class in sorted(get_aligners().items()):
         aligner_parser = subparsers.add_parser(aligner_name)
         aligner_class.configure_args(aligner_parser)
         aligner_parser.set_defaults(aligner=aligner_class)

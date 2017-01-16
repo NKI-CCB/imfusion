@@ -6,6 +6,11 @@ from builtins import *
 import tempfile
 import shutil
 
+try:
+    import pathlib
+except ImportError:
+    import pathlib2 as pathlib
+
 from imfusion.util import shell
 
 from .base import Indexer, register_indexer, Reference
@@ -27,6 +32,8 @@ class TophatIndexer(Indexer):
         return ['bowtie-build', 'tophat2']
 
     def _build_indices(self, reference):
+        # type: (TophatReference) -> None
+
         # Build bowtie index.
         self._logger.info('Building bowtie index')
 
@@ -44,7 +51,11 @@ class TophatIndexer(Indexer):
                                         transcriptome_log_path)
 
     @staticmethod
-    def _build_bowtie_index(reference_path, output_base_path, log_path=None):
+    def _build_bowtie_index(
+            reference_path,  # type: pathlib.Path
+            output_base_path,  # type: pathlib.Path
+            log_path=None  # type: pathlib.Path
+    ):
         """
         Builds a bowtie index for a reference genome.
 
@@ -67,10 +78,12 @@ class TophatIndexer(Indexer):
             shell.run_command(args=cmdline_args, stdout=log_file)
 
     @staticmethod
-    def _build_transcriptome_index(index_path,
-                                   gtf_path,
-                                   output_base_path,
-                                   log_path=None):
+    def _build_transcriptome_index(
+            index_path,  # type: pathlib.Path
+            gtf_path,  # type: pathlib.Path
+            output_base_path,  # type: pathlib.Path
+            log_path=None  # type: pathlib.Path
+    ):  # type:  (...) -> None
         """
         Builds a transcriptome index for a reference genome.
 
@@ -110,5 +123,6 @@ class TophatReference(Reference):
 
     @property
     def transcriptome_path(self):
+        # type: (...) -> pathlib.Path
         """Path to transcriptome index."""
         return self._reference / 'transcriptome'

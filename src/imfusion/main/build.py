@@ -1,7 +1,7 @@
-# pylint: disable=W0622,W0614,W0401
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import argparse
 import logging
@@ -38,11 +38,7 @@ def parse_args():
     subparsers.required = True
 
     # Register pipelines.
-    indexers = get_indexers()
-
-    for indexer_name in sorted(indexers.keys()):
-        indexer_class = indexers[indexer_name]
-
+    for indexer_name, indexer_class in sorted(get_indexers().items()):
         indexer_parser = subparsers.add_parser(indexer_name)
         indexer_class.configure_args(indexer_parser)
         indexer_parser.set_defaults(indexer=indexer_class)

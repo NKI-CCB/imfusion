@@ -19,8 +19,8 @@ def insertions():
             seqname='1',
             position=3207327,
             strand=1,
-            junction_support=1,
-            spanning_support=1,
+            support_junction=1,
+            support_spanning=1,
             support=2,
             metadata=frozendict({
                 'gene_id': 'ENSMUSG00000051951',
@@ -32,8 +32,8 @@ def insertions():
             seqname='1',
             position=3214491,
             strand=-1,
-            junction_support=1,
-            spanning_support=1,
+            support_junction=1,
+            support_spanning=1,
             support=2,
             metadata=frozendict({
                 'gene_id': 'ENSMUSG00000051951',

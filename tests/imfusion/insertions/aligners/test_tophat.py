@@ -18,7 +18,7 @@ from imfusion.model import Insertion
 @pytest.fixture
 def read_paths():
     """Example read paths."""
-    return [(Path('a.fastq.gz'), Path('b.fastq.gz'))]
+    return (Path('a.fastq.gz'), Path('b.fastq.gz'))
 
 
 @pytest.fixture
@@ -84,14 +84,21 @@ class TestTophatAligner(object):
 
         # Mock star_align call.
         tophat_mock = mocker.patch.object(tophat, 'tophat2_align')
+        mocker.patch.object(tophat.util, 'count_lines', return_value=8e6)
 
         # Call identify insertions.
+        fastq, fastq2 = read_paths
+
         aligner = tophat.TophatAligner(tophat_reference)
-        ins = list(aligner.identify_insertions(read_paths, tophat_output_dir))
+        ins = list(
+            aligner.identify_insertions(
+                fastq, tophat_output_dir, fastq2_path=fastq2))
 
         # Check call to star_align.
+
         tophat_mock.assert_called_once_with(
-            read_paths,
+            fastq_path=fastq,
+            fastq2_path=fastq2,
             output_dir=tophat_output_dir / '_tophat',
             index_path=tophat_reference.index_path,
             extra_args={
@@ -107,23 +114,23 @@ class TestTophatAligner(object):
         # Check result, including specific Cblb insertion.
         assert len(ins) == 7
 
-        assert ins[2] == Insertion(
-            id='INS_4',
-            seqname='16',
-            position=52141093,
-            strand=-1,
-            junction_support=462,
-            spanning_support=103,
-            support=565,
-            metadata=frozendict({
-                'transposon_anchor': 1539,
-                'gene_name': 'Cblb',
-                'feature_name': 'En2SA',
-                'gene_strand': 1,
-                'feature_type': 'SA',
-                'orientation': 'antisense',
-                'feature_strand': -1
-            }))
+        assert ins[2].id == 'INS_4'
+        assert ins[2].seqname == '16'
+        assert ins[2].position == 52141093
+        assert ins[2].strand == -1
+        assert ins[2].support_junction == 462
+        assert ins[2].support_spanning == 103
+        assert ins[2].support == 565
+        assert ins[2].metadata['gene_id'] == 'ENSMUSG00000022637'
+        assert ins[2].metadata['transposon_anchor'] == 1539
+        assert ins[2].metadata['feature_name'] == 'En2SA'
+        assert ins[2].metadata['gene_name'] == 'Cblb'
+        assert ins[2].metadata['feature_type'] == 'SA'
+        assert ins[2].metadata['gene_strand'] == 1
+        assert ins[2].metadata['orientation'] == 'antisense'
+        assert ins[2].metadata['ffpm_junction'] == 231.0
+        assert ins[2].metadata['ffpm_spanning'] == 51.5
+        assert ins[2].metadata['ffpm'] == 282.5
 
     def test_from_args_basic(self, cmdline_args):
         """Tests creation with minimal arguments."""
@@ -137,8 +144,8 @@ class TestTophatAligner(object):
         aligner = tophat.TophatAligner.from_args(args)
 
         # Check args.
-        assert args.fastq == [Path('a.fastq.gz')]
-        assert args.fastq2 == [Path('b.fastq.gz')]
+        assert args.fastq == Path('a.fastq.gz')
+        assert args.fastq2 == Path('b.fastq.gz')
         assert args.output_dir == Path('/path/to/out')
 
         # Check aligner.
@@ -171,8 +178,8 @@ class TestTophatAligner(object):
         aligner = tophat.TophatAligner.from_args(args)
 
         # Check args.
-        assert args.fastq == [Path('a.fastq.gz')]
-        assert args.fastq2 == [Path('b.fastq.gz')]
+        assert args.fastq == Path('a.fastq.gz')
+        assert args.fastq2 == Path('b.fastq.gz')
         assert args.output_dir == Path('/path/to/out')
 
         # Check aligner.
@@ -191,8 +198,9 @@ class TestTophatAligner(object):
 def tophat_align_kws(tmpdir):
     """Example tophat2_align keyword arguments."""
     return {
-        'fastqs': [('in.R1.fastq.gz', 'in.R2.fastq.gz')],
-        'index_path': '/path/to/index',
+        'fastq_path': Path('in.R1.fastq.gz'),
+        'fastq2_path': Path('in.R2.fastq.gz'),
+        'index_path': Path('/path/to/index'),
         'output_dir': Path(str(tmpdir / '_tophat')),
         'extra_args': None
     }
@@ -216,8 +224,8 @@ class TestTophat2Align(object):
         mock_align.assert_called_once_with(
             args=[
                 'tophat2', '--output-dir', str(tophat_align_kws['output_dir']),
-                '/path/to/index', str(tophat_align_kws['fastqs'][0][0]),
-                str(tophat_align_kws['fastqs'][0][1])
+                '/path/to/index', str(tophat_align_kws['fastq_path']),
+                str(tophat_align_kws['fastq2_path'])
             ],
             stdout=None,
             stderr=None,
@@ -246,23 +254,10 @@ class TestTophat2Align(object):
     def test_unpaired(self, tophat_align_kws, mocker):
         """Test single end case."""
 
-        tophat_align_kws['fastqs'] = ['in.fastq.gz']
+        tophat_align_kws['fastq2_path'] = None
 
         mock_align = mocker.patch.object(tophat.shell, 'run_command')
         tophat.tophat2_align(**tophat_align_kws)
 
         args = pytest.helpers.mock_call(mock_align)[1]['args']
-        assert args[-1] == 'in.fastq.gz'
-
-    def test_multiple(self, tophat_align_kws, mocker):
-        """Test case with multiple fastq files."""
-
-        tophat_align_kws['fastqs'] = [('in1.R1.fastq.gz', 'in1.R2.fastq.gz'),
-                                      ('in2.R1.fastq.gz', 'in2.R2.fastq.gz')]
-
-        mock_align = mocker.patch.object(tophat.shell, 'run_command')
-        tophat.tophat2_align(**tophat_align_kws)
-
-        args = pytest.helpers.mock_call(mock_align)[1]['args']
-        assert args[-2] == 'in1.R1.fastq.gz,in2.R1.fastq.gz'
-        assert args[-1] == 'in1.R2.fastq.gz,in2.R2.fastq.gz'
+        assert args[-1] == str(tophat_align_kws['fastq_path'])

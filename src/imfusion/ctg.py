@@ -152,7 +152,7 @@ def _apply_gene_window(
         gene,  # type: pysam.ctabixproxies.GTFProxy
         window=None  # type: Tuple[int, int]
 ):  # type: (...) -> Tuple[str, int, int]
-    print(type(gene))
+
     if window is None:
         return gene.contig, gene.start, gene.end,
     else:

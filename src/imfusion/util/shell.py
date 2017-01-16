@@ -1,15 +1,19 @@
-# pylint: disable=W0622,W0614,W0401
+"""Functionality for interacting with shell calls and arguments."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import os
 import subprocess
+from typing import Any, Iterable, Optional
 
 import pyparsing as pp
 
 
 def run_command(args, stdout=None, stderr=None, logger=None, **kwargs):
+    # type(List[str], Any, Any, Any, **Any) -> None
     """Runs command using subprocess.check_call, with extra logging options."""
     if logger is not None:
         logger.info('Running command: %s', ' '.join(args))
@@ -17,6 +21,7 @@ def run_command(args, stdout=None, stderr=None, logger=None, **kwargs):
 
 
 def parse_arguments(arg_str):
+    # type: (List[str]) -> Dict[str, Iterable[str]]
     """Parses command line arguments from a string."""
 
     parser = _setup_parser()
@@ -45,15 +50,12 @@ def _setup_parser():
 
 
 def flatten_arguments(arg_dict):
+    # type: (Dict[str, Iterable[Any]]) -> List[str]
     """Flattens a dict of arguments into a list for subprocess."""
 
-    args = []
+    args = []  # type: List[str]
 
-    arg_names = sorted(arg_dict.keys())
-
-    for arg_name in arg_names:
-        arg_value = arg_dict[arg_name]
-
+    for arg_name, arg_value in sorted(arg_dict.items()):
         if isinstance(arg_value, bool):
             args += [arg_name]
         elif hasattr(arg_value, '__iter__') and not isinstance(arg_value, str):
@@ -65,6 +67,7 @@ def flatten_arguments(arg_dict):
 
 
 def which(program):
+    # type: (str) -> Optional[str]
     """Determine the location of given executable, if present."""
 
     def _is_execuable(fpath):
@@ -85,6 +88,7 @@ def which(program):
 
 
 def check_dependencies(programs):
+    # type: (Iterable[str]) -> None
     """Checks if listed executables are all available in PATH."""
 
     missing = [prog for prog in programs if which(prog) is None]

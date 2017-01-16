@@ -1,11 +1,19 @@
-# pylint: disable=W0622,W0614,W0401
+"""Functionality for creating and dealing with tabix-indexed files."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import contextlib
 import itertools
 import subprocess
+from typing import Callable, Iterable, Any
+
+try:
+    import pathlib
+except ImportError:
+    import pathlib2 as pathlib
 
 from future.utils import native_str
 import pysam
@@ -15,10 +23,11 @@ class GtfIterator(object):
     """Iterator that iterates over records in a GTF file using pysam."""
 
     def __init__(self, gtf_path):
+        # type: (pathlib.Path) -> None
         self._gtf_path = gtf_path
 
     @contextlib.contextmanager
-    def _open_file(self):
+    def _open_file(self):  # type: (...) -> pysam.TabixFile
         # Open gtf file.
         gtf_file = pysam.TabixFile(
             native_str(self._gtf_path), parser=pysam.asGTF())
@@ -30,13 +39,19 @@ class GtfIterator(object):
             gtf_file.close()
 
     @property
-    def contigs(self):
+    def contigs(self):  # type: (...) -> List[str]
         """Contigs present in the gtf file."""
 
         with self._open_file() as gtf_file:
             return gtf_file.contigs
 
-    def fetch(self, reference=None, start=None, end=None, filters=None):
+    def fetch(
+            self,
+            reference=None,  # type: str
+            start=None,  # type: int
+            end=None,  # type: int
+            filters=None  # type: Iterable[Callable]
+    ):  # type (...) -> Iterable[pysam.ctabixproxies.GTFProxy]
         """Fetches gtf records (gtf rows) from the gtf file."""
 
         with self._open_file() as gtf_file:
@@ -60,6 +75,7 @@ class GtfIterator(object):
                 yield record
 
     def fetch_genes(self, gene_ids=None, **kwargs):
+        # type: (List[str], **Any) -> Iterable[pysam.ctabixproxies.GTFProxy]
         """Fetches gene records from the GTF file."""
 
         # Fetch gene records.
@@ -90,6 +106,7 @@ class GtfIterator(object):
 
 
 def index_gtf(file_path, output_path):
+    # type: (pathlib.Path, pathlib.Path) -> None
     """Compresses and indexes a gtf file using bgzip and tabix."""
 
     # Sort file before compressing and indexing.
@@ -105,6 +122,7 @@ def index_gtf(file_path, output_path):
 
 
 def sort_gtf(file_path, output_path):
+    # type: (pathlib.Path, pathlib.Path) -> None
     """Sorts a gtf file by position, required for indexing by tabix."""
     with open(str(output_path), 'w') as out_file:
         cmd = '(grep ^"#" {0}; grep -v ^"#" {0} | sort -k1,1 -k4,4n)'
@@ -113,6 +131,7 @@ def sort_gtf(file_path, output_path):
 
 
 def _append_suffix(path_obj, suffix):
+    # type: (pathlib.Path, str) -> pathlib.Path
     if len(path_obj.suffixes) == 0:
         return path_obj.with_suffix(suffix)
     else:
@@ -120,6 +139,7 @@ def _append_suffix(path_obj, suffix):
 
 
 def bgzip(file_path, output_path=None):
+    # type: (pathlib.Path, pathlib.Path) -> None
     """Uses bgzip to compress given file."""
 
     output_path = str(output_path)
@@ -132,5 +152,6 @@ def bgzip(file_path, output_path=None):
 
 
 def tabix(file_path, preset):
+    # type: (pathlib.Path, str) -> None
     """Uses tabix to index given file."""
     subprocess.check_call(['tabix', '-p', preset, str(file_path)])

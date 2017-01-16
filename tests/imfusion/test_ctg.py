@@ -24,8 +24,8 @@ def _insertion(id,
                seqname,
                position,
                strand,
-               junction_support=1,
-               spanning_support=1,
+               support_junction=1,
+               support_spanning=1,
                metadata=None):
     """Helper function for building an Insertion instance."""
     return Insertion(
@@ -33,9 +33,9 @@ def _insertion(id,
         seqname=seqname,
         position=position,
         strand=strand,
-        junction_support=junction_support,
-        spanning_support=spanning_support,
-        support=junction_support + spanning_support,
+        support_junction=support_junction,
+        support_spanning=support_spanning,
+        support=support_junction + support_spanning,
         metadata=frozendict(metadata or {}))
 
 

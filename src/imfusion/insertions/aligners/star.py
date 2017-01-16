@@ -1,10 +1,13 @@
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import collections
 import operator
 import itertools
 import sys
+from typing import Any
 import re
 
 from intervaltree import IntervalTree
@@ -23,21 +26,25 @@ CIGAR_MATCH_REGEX = re.compile(r'(\d+)M')
 
 
 class StarAligner(Aligner):
-    def __init__(self,
-                 reference,
-                 assemble=False,
-                 assemble_args=None,
-                 min_flank=12,
-                 threads=1,
-                 external_sort=False,
-                 extra_args=None,
-                 logger=None,
-                 merge_junction_dist=10,
-                 max_spanning_dist=300,
-                 max_junction_dist=10000,
-                 filter_features=True,
-                 filter_orientation=True,
-                 filter_blacklist=None):
+    """STAR aligner."""
+
+    def __init__(
+            self,
+            reference,  # type: StarReference
+            assemble=False,  # type: bool
+            assemble_args=None,  # type: Dict[str, Any]
+            min_flank=12,  # type: int
+            threads=1,  # type: int
+            external_sort=False,  # type: bool
+            extra_args=None,  # type: Dict[str, Any]
+            logger=None,  # type: Any
+            merge_junction_dist=10,  # type: int
+            max_spanning_dist=300,  # type: int
+            max_junction_dist=10000,  # type: int
+            filter_features=True,  # type: bool
+            filter_orientation=True,  # type: bool
+            filter_blacklist=None  # type: List[str]
+    ):  # type: (...) -> None
 
         super().__init__(reference=reference, logger=logger)
 
@@ -72,7 +79,7 @@ class StarAligner(Aligner):
 
         return programs
 
-    def identify_insertions(self, read_paths, output_dir):
+    def identify_insertions(self, fastq_path, output_dir, fastq2_path=None):
         """Identifies insertions from given reads."""
 
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -81,7 +88,7 @@ class StarAligner(Aligner):
         alignment_path = output_dir / 'alignment.bam'
         if not alignment_path.exists():
             self._logger.info('Performing alignment')
-            self._align(read_paths, output_dir)
+            self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
         else:
             self._logger.info('Using existing alignment')
 
@@ -119,6 +126,7 @@ class StarAligner(Aligner):
                 gtf_path=self._reference.indexed_gtf_path,
                 features_path=self._reference.features_path,
                 assembled_gtf_path=assembled_path,
+                ffpm_fastq_path=fastq_path,
                 chromosomes=None))
 
         self._logger.info('Filtering insertions')
@@ -131,7 +139,7 @@ class StarAligner(Aligner):
         for insertion in insertions:
             yield insertion
 
-    def _align(self, read_paths, output_dir):
+    def _align(self, fastq_path, output_dir, fastq2_path=None):
         # Put output into subdirectory, we will symlink the
         # expected outputs from STAR later.
         star_dir = output_dir / '_star'
@@ -149,7 +157,8 @@ class StarAligner(Aligner):
         }
 
         star_align(
-            read_paths,
+            fastq_path=fastq_path,
+            fastq2_path=fastq2_path,
             index_path=self._reference.index_path,
             output_dir=star_dir,
             extra_args=toolz.merge(args, self._extra_args),
@@ -166,8 +175,9 @@ class StarAligner(Aligner):
             unsorted_bam_path.unlink()
 
         # Symlink fusions and alignment into expected location.
+        dest_bam_path = output_dir / 'alignment.bam'
         path.symlink_relative(
-            src_path=sorted_bam_path, dest_path=output_dir / 'alignment.bam')
+            src_path=sorted_bam_path, dest_path=dest_bam_path)
 
         path.symlink_relative(
             src_path=star_dir / 'Chimeric.out.junction',
@@ -280,9 +290,10 @@ def build_star_index(reference_path,
     shell.run_command(args=cmdline_args, stdout=stdout, stderr=stderr)
 
 
-def star_align(fastqs,
+def star_align(fastq_path,
                index_path,
                output_dir,
+               fastq2_path=None,
                extra_args=None,
                stdout=None,
                stderr=None,
@@ -294,28 +305,23 @@ def star_align(fastqs,
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
-    # Extract fastq paths and concatenate into single str.
-    if isinstance(fastqs[0], tuple):
-        fastqs_1, fastqs_2 = zip(*fastqs)
-    else:
-        fastqs_1, fastqs_2 = fastqs, None
-
-    fastqs = [','.join(str(fp) for fp in fastqs_1)]
-
-    if fastqs_2 is not None:
-        fastqs += [','.join((str(fp) for fp in fastqs_2))]
-
     # Check if files are gzipped.
-    if str(fastqs_1[0]).endswith('gz'):
+    if fastq_path.suffixes[-1] == '.gz':
         extra_args['--readFilesCommand'] = ('gunzip', '-c')
 
-    # Run STAR.
+    # Assemble arguments.
+    if fastq2_path is None:
+        fastq_args = [str(fastq_path)]
+    else:
+        fastq_args = [str(fastq_path), str(fastq2_path)]
+
     cmdline_args = [
-        'STAR', '--genomeDir', index_path, '--outFileNamePrefix',
+        'STAR', '--genomeDir', str(index_path), '--outFileNamePrefix',
         str(output_dir) + '/', '--readFilesIn'
-    ] + fastqs
-    cmdline_args += shell.flatten_arguments(extra_args or {})
-    cmdline_args = [str(arg) for arg in cmdline_args]
+    ] + fastq_args
+    cmdline_args += [
+        str(arg) for arg in shell.flatten_arguments(extra_args or {})
+    ]
 
     shell.run_command(
         args=cmdline_args, stdout=stdout, stderr=stderr, logger=logger)
@@ -515,8 +521,8 @@ def extract_junction_fusions(chimeric_data, merge_dist=None):
             'flank_a': 'max',
             'flank_b': 'max',
             'read_name': 'nunique'
-        }).reset_index().assign(spanning_support=0)
-                      .rename(columns={'read_name': 'junction_support'}))
+        }).reset_index().assign(support_spanning=0)
+                      .rename(columns={'read_name': 'support_junction'}))
 
         # Transform to Fusions.
         fusions = (Fusion(**toolz.keyfilter(lambda k: k not in {'Index'},
@@ -585,7 +591,7 @@ def assign_spanning_reads(junctions, chimeric_data, max_dist_left,
     # Augment junctions.
     new_juncs = [
         junc._replace(
-            spanning_support=junc.spanning_support + len(assignments[junc]))
+            support_spanning=junc.support_spanning + len(assignments[junc]))
         for junc in junctions
     ]
 
@@ -690,8 +696,8 @@ def extract_spanning_fusions(chimeric_data, max_dist):
             seqname_b=first.seqname_b,
             location_b=agg_acc(grp.location_b),
             strand_b=first.strand_b,
-            junction_support=0,
-            spanning_support=len(grp),
+            support_junction=0,
+            support_spanning=len(grp),
             flank_a=0,
             flank_b=0)
 

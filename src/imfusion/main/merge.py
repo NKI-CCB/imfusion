@@ -20,7 +20,7 @@ def main():
     args = _parse_args()
 
     # Use directory names to name samples if no names given.
-    names = args.names or [fp.parent.name for fp in args.sample_dirs]
+    names = args.names or [fp.name for fp in args.sample_dirs]
 
     # Merge samples into single dataset.
     merged_ins, merged_expr = merge_samples(

@@ -1,4 +1,4 @@
-id	seqname	position	strand	junction_support	spanning_support	support	feature_name	feature_strand	feature_type	gene_name	gene_strand	novel_transcript	orientation	transposon_anchor
+id	seqname	position	strand	support_junction	support_spanning	support	feature_name	feature_strand	feature_type	gene_name	gene_strand	novel_transcript	orientation	transposon_anchor
 INS_133	16	52141095	-1	380	118	498	En2SA	-1	SA	Cblb	1.0		antisense	1541
 INS_87	11	100808534	-1	169	0	169	SD	1	SD	Stat5b	-1.0		sense	1043
 INS_22	15	78957205	1	129	35	164	SA	1	SA	Triobp	1.0		sense	420

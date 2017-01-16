@@ -124,7 +124,7 @@ class MetadataFrameMixin(FrameMixin):
 
 _Fusion = collections.namedtuple('Fusion', [
     'seqname_a', 'location_a', 'strand_a', 'seqname_b', 'location_b',
-    'strand_b', 'flank_a', 'flank_b', 'junction_support', 'spanning_support'
+    'strand_b', 'flank_a', 'flank_b', 'support_junction', 'support_spanning'
 ])
 
 
@@ -136,7 +136,7 @@ class Fusion(FrameMixin, _Fusion):
     @property
     def support(self):
         """Support score for the fusion."""
-        return self.junction_support + self.spanning_support
+        return self.support_junction + self.support_spanning
 
     def normalize(self, seqname=None):
         """Normalizes fusions so that the side whose seqname has the
@@ -185,13 +185,13 @@ class Fusion(FrameMixin, _Fusion):
             if len(grp) == 1:
                 yield grp[0]
             else:
-                get_support = operator.attrgetter('junction_support')
+                get_support = operator.attrgetter('support_junction')
                 sorted_grp = sorted(grp, key=get_support)
 
                 yield sorted_grp[-1]._replace(
-                    junction_support=sum(f.junction_support
+                    support_junction=sum(f.support_junction
                                          for f in sorted_grp),
-                    spanning_support=sum(f.spanning_support
+                    support_spanning=sum(f.support_spanning
                                          for f in sorted_grp),
                     flank_a=max(f.flank_a for f in sorted_grp),
                     flank_b=max(f.flank_b for f in sorted_grp))
@@ -233,7 +233,7 @@ class Fusion(FrameMixin, _Fusion):
 _TransposonFusion = collections.namedtuple('TransposonFusion', [
     'seqname', 'anchor_genome', 'anchor_transposon', 'strand_genome',
     'strand_transposon', 'flank_genome', 'flank_transposon',
-    'junction_support', 'spanning_support', 'metadata'
+    'support_junction', 'support_spanning', 'metadata'
 ])
 
 
@@ -245,7 +245,7 @@ class TransposonFusion(MetadataFrameMixin, _TransposonFusion):
     @property
     def support(self):
         """Support score for the fusion."""
-        return self.junction_support + self.spanning_support
+        return self.support_junction + self.support_spanning
 
     @property
     def genome_region(self):
@@ -296,14 +296,14 @@ class TransposonFusion(MetadataFrameMixin, _TransposonFusion):
             strand_transposon=getattr(fusion, 'strand_' + tr_key),
             flank_genome=gen_flank,
             flank_transposon=tr_flank,
-            junction_support=fusion.junction_support,
-            spanning_support=fusion.spanning_support,
+            support_junction=fusion.support_junction,
+            support_spanning=fusion.support_spanning,
             metadata=frozendict(metadata or {}))
 
 
 _Insertion = collections.namedtuple('Insertion', [
-    'id', 'seqname', 'position', 'strand', 'junction_support',
-    'spanning_support', 'support', 'metadata'
+    'id', 'seqname', 'position', 'strand', 'support_junction',
+    'support_spanning', 'support', 'metadata'
 ])
 
 
@@ -358,8 +358,8 @@ class Insertion(MetadataFrameMixin, _Insertion):
             seqname=fusion.seqname,
             position=fusion.anchor_genome,
             strand=strand,
-            junction_support=fusion.junction_support,
-            spanning_support=fusion.spanning_support,
+            support_junction=fusion.support_junction,
+            support_spanning=fusion.support_spanning,
             support=fusion.support,
             metadata=frozendict(ins_metadata))
 
