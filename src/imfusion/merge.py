@@ -1,4 +1,5 @@
-"""Functions for merging insertions/expression counts from multiple samples."""
+# -*- coding: utf-8 -*-
+"""Implements functions for merging datasets from multiple samples."""
 
 # pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function

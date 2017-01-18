@@ -1,4 +1,5 @@
-"""Functionality for creating and dealing with tabix-indexed files."""
+# -*- coding: utf-8 -*-
+"""Provides functionality for creating and dealing with tabix-indexed files."""
 
 # pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function

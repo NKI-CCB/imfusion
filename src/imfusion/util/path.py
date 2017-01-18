@@ -1,10 +1,10 @@
-"""Functionality for interacting with files and file paths."""
+# -*- coding: utf-8 -*-
+"""Provides functionality for interacting with files and file paths."""
 
 # pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
-
 
 try:
     import pathlib

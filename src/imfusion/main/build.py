@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""Script for building references using available indexers."""
+
 # pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *

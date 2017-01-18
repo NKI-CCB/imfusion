@@ -1,4 +1,10 @@
-"""Tests for the imfusion.expression.counts module."""
+# -*- coding: utf-8 -*-
+"""Tests for imfusion.expression.counts module."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
+from __future__ import absolute_import, division, print_function
+from builtins import *
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import shutil
 

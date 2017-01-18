@@ -1,4 +1,5 @@
-"""Module containing functions for generating expression counts."""
+# -*- coding: utf-8 -*-
+"""Contains functions for generating and reading expression counts."""
 
 # pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
@@ -232,8 +233,7 @@ def _read_counts(file_path, prefix=None, **kwargs):
         counts = pd.read_csv(str(file_path),
                              **read_csv_kws)  # type: pd.DataFrame
     else:
-        counts = _read_csv_startswith(
-            file_path, prefix=prefix, **read_csv_kws)
+        counts = _read_csv_startswith(file_path, prefix=prefix, **read_csv_kws)
 
     return counts
 

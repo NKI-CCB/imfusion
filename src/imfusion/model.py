@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 """Module containing model classes for fusions and insertions."""
 
-# pylint: disable=W0622,W0614,W0401
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import collections
 import itertools
@@ -119,7 +120,7 @@ class MetadataFrameMixin(FrameMixin):
 
         metadata.pop('Index', None)
 
-        return cls(metadata=metadata, **record_dict)
+        return cls(metadata=frozendict(metadata), **record_dict)
 
 
 _Fusion = collections.namedtuple('Fusion', [

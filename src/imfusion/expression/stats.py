@@ -1,7 +1,10 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Implements a statistical models used for DE tests."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import numpy as np
 
@@ -14,15 +17,14 @@ try:
     # Note robject_translations is no longer needed in Rpy2 2.6+,
     # but is kept for compatibility with older Rpy2 versions.
     r_mass = importr('MASS')
-    r_stats = importr('stats',
-                      robject_translations={'format_perc': '_format_perc'})
+    r_stats = importr(
+        'stats', robject_translations={'format_perc': '_format_perc'})
 except ImportError:
     r_mass = None
     r_stats = None
 
 
 class NegativeBinomial(object):
-
     """ Models a negative binomial distribution.
 
     NegativeBinomial class that wraps functionality from the R MASS
@@ -51,18 +53,19 @@ class NegativeBinomial(object):
 
     def pdf(self, x, log=False):
         self._check_if_fit()
-        return np.array(r_stats.dnbinom(x=x, mu=self._mu,
-                                        size=self._size, log=log))
+        return np.array(
+            r_stats.dnbinom(
+                x=x, mu=self._mu, size=self._size, log=log))
 
     def cdf(self, q, log_p=False):
         self._check_if_fit()
-        return self._pnbinom(q, mu=self._mu, size=self._size,
-                             lower_tail=True, log_p=log_p)
+        return self._pnbinom(
+            q, mu=self._mu, size=self._size, lower_tail=True, log_p=log_p)
 
     def sf(self, q, log_p=False):
         self._check_if_fit()
-        return self._pnbinom(q, mu=self._mu, size=self._size,
-                             lower_tail=False, log_p=log_p)
+        return self._pnbinom(
+            q, mu=self._mu, size=self._size, lower_tail=False, log_p=log_p)
 
     def _check_if_fit(self):
         if self._mu is None or self._size is None:

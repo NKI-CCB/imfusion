@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""Tests for imfusion.insertions.aligners.tophat module."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
+from __future__ import absolute_import, division, print_function
+from builtins import *
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
+
 import argparse
 import shutil
 

@@ -1,4 +1,10 @@
-"""Tests for the imfusion.util.shell module."""
+# -*- coding: utf-8 -*-
+"""Tests for imfusion.util.shell module."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
+from __future__ import absolute_import, division, print_function
+from builtins import *
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import pytest
 

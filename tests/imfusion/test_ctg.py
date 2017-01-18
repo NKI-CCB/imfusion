@@ -1,7 +1,10 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Tests for imfusion.ctg module."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 from collections import namedtuple
 
@@ -127,9 +130,9 @@ def insertions():
 
     return [
         _insertion(id='1', seqname='1', position=9, strand=1,
-                   metadata=frozendict({'gene_id': 'GeneA', 'sample': 'S1'})),
-       _insertion(id='2', seqname='1', position=15, strand=-1,
-                  metadata=frozendict({'gene_id': 'GeneB', 'sample': 'S2'}))
+                   metadata=frozendict({'gene_id': 'gene_a', 'sample': 'S1'})),
+        _insertion(id='2', seqname='1', position=15, strand=-1,
+                   metadata=frozendict({'gene_id': 'gene_b', 'sample': 'S2'}))
     ] # yapf: disable
 
 
@@ -205,6 +208,15 @@ class TestSubsetToWindows(object):
         windows = {'gene_a': ('2', 100, 120), 'gene_b': ('2', 10, 20)}
         assert len(ctg._subset_to_windows(insertions, windows)) == 0
 
+    def test_subset_insertions_wrong_gene(self, insertions):
+        """Test example."""
+
+        windows = {'gene_a': ('1', 8, 12), 'gene_c': ('1', 10, 20)}
+        subset = ctg._subset_to_windows(insertions, windows)
+
+        assert len(subset) == 1
+        assert subset[0].seqname == '1'
+
 
 class TestCollapsePerSample(object):
     """Tests for collapse_per_sample function."""
@@ -213,7 +225,7 @@ class TestCollapsePerSample(object):
         """Tests example with collapsing."""
 
         insertions[1] = insertions[1]._replace(
-            metadata={'gene_id': 'GeneA',
+            metadata={'gene_id': 'gene_a',
                       'sample': 'S1'})
         merged = list(ctg._collapse_per_sample(insertions))
 
@@ -264,6 +276,7 @@ class TestTestCtgs(object):
 
         # Do CTG test.
         result = ctg.test_ctgs(ctg_insertions, ctg_reference, per_sample=False)
+        result = result.set_index('gene_id')
 
         # Check results.
         assert len(result) == 3
@@ -276,6 +289,7 @@ class TestTestCtgs(object):
 
         # Do CTG test.
         result = ctg.test_ctgs(ctg_insertions, ctg_reference, per_sample=True)
+        result = result.set_index('gene_id')
 
         # Check results.
         assert len(result) == 3
@@ -291,7 +305,7 @@ class TestTestCtgs(object):
             ctg_insertions, ctg_reference, chromosomes=['1'], per_sample=True)
 
         assert len(result) == 2
-        assert set(result.index) == {'gene_a', 'gene_b'}
+        assert set(result['gene_id']) == {'gene_a', 'gene_b'}
 
     def test_example_with_window(self, ctg_insertions, ctg_reference):
         """Tests applying a gene window."""
@@ -301,6 +315,7 @@ class TestTestCtgs(object):
         # Do CTG test.
         result = ctg.test_ctgs(
             ctg_insertions, ctg_reference, window=(-4, 0), per_sample=False)
+        result = result.set_index('gene_id')
 
         # Check result.
         assert result.ix['gene_a', 'p_value'] < 0.05

@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""Tests for imfusion.expression.test module."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
+from __future__ import absolute_import, division, print_function
+from builtins import *
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
+
 import pytest
 
 from frozendict import frozendict
@@ -118,13 +126,13 @@ def test_exon_counts():
     return read_exon_counts(file_path)
 
 
-class TestDeExon(object):
-    """Tests for de_exon function."""
+class TestTestDe(object):
+    """Tests for test_de function."""
 
     def test_pos_example_trp53bp2(self, test_insertions, test_exon_counts):
         """Tests positive example of DE in Trp53bp2 in the SB dataset."""
 
-        result = test.de_exon(
+        result = test.test_de(
             test_insertions, test_exon_counts, gene_id='ENSMUSG00000026510')
 
         assert result.p_value < 0.01
@@ -133,7 +141,7 @@ class TestDeExon(object):
     def test_neg_example_nf1(self, test_insertions, test_exon_counts):
         """Tests negative example of DE in Nf1 in the SB dataset."""
 
-        result = test.de_exon(
+        result = test.test_de(
             test_insertions, test_exon_counts, gene_id='ENSMUSG00000020716')
 
         assert result.p_value > 0.05
@@ -142,13 +150,13 @@ class TestDeExon(object):
     def test_plot_boxplot(self, test_insertions, test_exon_counts):
         """Exercises plotting of boxplot."""
 
-        result = test.de_exon(
+        result = test.test_de(
             test_insertions, test_exon_counts, gene_id='ENSMUSG00000026510')
         result.plot_boxplot()
 
     def test_plot_sums(self, test_insertions, test_exon_counts):
         """Exercises plotting of sums."""
 
-        result = test.de_exon(
+        result = test.test_de(
             test_insertions, test_exon_counts, gene_id='ENSMUSG00000026510')
         result.plot_sums()

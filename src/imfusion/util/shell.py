@@ -1,4 +1,5 @@
-"""Functionality for interacting with shell calls and arguments."""
+# -*- coding: utf-8 -*-
+"""Provides functionality for interacting with shell calls and arguments."""
 
 # pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
