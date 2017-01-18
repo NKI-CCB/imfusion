@@ -28,8 +28,10 @@ logging.basicConfig(format=FORMAT, level=logging.INFO)
 
 # pylint: disable=E1101
 def main():
+    """Main for imfusion-ctg."""
+
     logger = logging.getLogger()
-    args = _parser_args()
+    args = parse_args()
 
     # Read insertions and filter for depth.
     insertions = list(Insertion.from_csv(args.insertions, sep='\t'))
@@ -72,18 +74,28 @@ def main():
         de_results = de_results.rename(
             columns={'direction': 'de_direction',
                      'p_value': 'de_pvalue'})
-
         ctgs = pd.merge(ctgs, de_results, on='gene_id', how='left')
 
         if args.de_threshold is not None:
-            ctgs = ctgs.query('de_pvalue < {}'.format(args.de_threshold))
+            # Filter for non-significant genes, keeping nans.
+            ctgs = ctgs.ix[~(ctgs['de_pvalue'] > args.de_threshold)]
+
+    # Annotate with gene_name if possible.
+    if 'gene_name' in insertions[0].metadata:
+        name_map = {
+            ins.metadata['gene_id']: ins.metadata['gene_name']
+            for ins in insertions
+        }
+        ctgs.insert(1, 'gene_name', ctgs['gene_id'].map(name_map))
 
     # Write outputs.
     logger.info('Writing outputs')
     ctgs.to_csv(str(args.output), sep='\t', index=False)
 
 
-def _parser_args():
+def parse_args():
+    """Parses arguments for imfusion-expression."""
+
     parser = argparse.ArgumentParser()
 
     base_group = parser.add_argument_group('Basic arguments')
@@ -171,7 +183,7 @@ def _parser_args():
 
     de_group.add_argument(
         '--de_threshold',
-        default=0.05,
+        default=None,
         type=float,
         help='Minimum p-value for a CTG to be considered '
         'as differentially expressed.')

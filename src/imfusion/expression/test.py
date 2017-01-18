@@ -22,7 +22,7 @@ from .counts import estimate_size_factors
 
 
 def test_de(
-        insertions,  # type: Iterable[Insertion]
+        insertions,  # type: List[Insertion]
         exon_counts,  # type: pd.DataFrame
         gene_id,  # type: str
         pos_samples=None,  # type: Set[str]
@@ -55,10 +55,10 @@ def test_de(
     gene_id : str
         ID of the gene of interest. Should correspond with a
         gene in the count matrix.
-    pos_samples : Optional[Set[str]]
+    pos_samples : Set[str]
         Set of positive samples (with insertion) to use in the test. Defaults
         to all samples with an insertion in the gene of interest.
-    neg_samples : Optional[Set[str]]
+    neg_samples : Set[str]
         Set of negative samples (without insertion) to use in the test.
         Defaults to all samples not in the positive set.
 
@@ -112,19 +112,43 @@ def test_de(
 
 
 def test_de_genes(insertions, counts, gene_ids):
-    """Performs DE test for multiple genes and summarizes in table."""
+    # type: (List[Insertion], pd.DataFrame, List[str]) -> pd.DataFrame
+    """Performs DE test for multiple genes and summarizes in table.
 
-    results = {
-        g_id: test_de(
-            insertions, counts, gene_id=g_id)
-        for g_id in gene_ids
-    }
+    Parameters
+    ----------
+    insertions : List[Insertion]
+        Insertions to use for test.
+    counts : pd.DataFrame
+        Exon expression counts to use for test. Expected to conform to
+        the format returned by the `read_exon_counts` function.
+    gene_ids : List[str]
+        IDs of genes to test for differential expression. Expected to conform
+        with gene_ids used for the insertions and the expression counts.
 
-    rows = ((g_id, result.p_value, result.direction)
-            for g_id, result in results.items())
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame summarizing the results of the DE tests. Contains three
+        columns: 'gene_id', 'p_value' and 'direction'. The p-value indicates
+        the significance of the differential expression for the given gene,
+        whilst the direction indicates whether the expression goes up (=1)
+        in samples with an insertion or goes down (=-1).
+    """
+
+    def _test_de(gene_id):
+        try:
+            # Determine p-value and direction.
+            result = test_de(insertions, counts, gene_id=gene_id)
+            p_value, direction = result.p_value, result.direction
+        except ValueError:
+            # Failed to find split, record as nans.
+            p_value, direction = np.nan, np.nan
+        return (gene_id, p_value, direction)
 
     return pd.DataFrame.from_records(
-        rows, columns=['gene_id', 'p_value', 'direction'])
+        (_test_de(gene_id) for gene_id in gene_ids),
+        columns=['gene_id', 'p_value', 'direction'])
 
 
 def split_counts(
