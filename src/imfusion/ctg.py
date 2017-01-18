@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""Implements functions for testing for Commonly Targeted Genes (CTGs)."""
+
 # pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
@@ -82,7 +85,7 @@ def test_ctgs(
     """
 
     # Determine gene windows using GTF.
-    logging.info('Identifying gene windows')
+    logging.info('Generating gene windows')
     gene_windows = _build_gene_windows(
         reference.indexed_gtf_path, window=window, chromosomes=chromosomes)
 
@@ -107,6 +110,9 @@ def test_ctgs(
 
     # Calculate p-values for each gene.
     logging.info('Calculating significance for genes')
+    insertion_trees = GenomicIntervalTree.from_objects_position(
+        insertions, chrom_attr='seqname')
+
     p_values = {
         gene_id: test_region(
             insertions=insertions,
@@ -114,14 +120,14 @@ def test_ctgs(
             region=gene_windows[gene_id],
             total=total,
             pattern=pattern,
-            filters=[lambda ins, gid=gene_id: ins.metadata['gene_id'] == gid])
+            filters=[lambda ins, gid=gene_id: ins.metadata['gene_id'] == gid],
+            insertion_trees=insertion_trees)
         for gene_id in gene_ids
     }
 
     # Build result frame.
     result = pd.DataFrame.from_records(
         iter(p_values.items()), columns=['gene_id', 'p_value'])
-    result.set_index('gene_id', inplace=True)
 
     # Calculate corrected p-value using bonferroni correction.
     result['q_value'] = (result['p_value'] * len(result)).clip_upper(1.0)
@@ -183,20 +189,25 @@ def _subset_to_windows(
             sorted(gene_windows.values()), operator.itemgetter(0))
     }
 
-    # Determine which insertions overlap trees.
+    # Determine which insertions overlap tree intervals and
+    # correspond to genes with known gene window.
     def _in_windows(ins, trees):
         try:
             return trees[ins.seqname].overlaps(ins.position)
         except KeyError:
             return False
 
-    return [ins for ins in insertions if _in_windows(ins, trees)]
+    return [
+        ins for ins in insertions
+        if ins.metadata['gene_id'] in gene_windows and _in_windows(ins, trees)
+    ]
 
 
 def _collapse_per_sample(insertions):
     # Type: (List[Insertion]) -> Generator
     def _keyfunc(insertion):
-        return (insertion.metadata['sample'], insertion.metadata['gene_id'])
+        return (insertion.metadata['sample'],
+                str(insertion.metadata['gene_id']))
 
     grouped = itertools.groupby(sorted(insertions, key=_keyfunc), key=_keyfunc)
 

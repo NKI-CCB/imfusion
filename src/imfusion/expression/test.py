@@ -1,4 +1,5 @@
-"""Module containing functions for testing for differential expression."""
+# -*- coding: utf-8 -*-
+"""Contains functions that test for differential expression."""
 
 # pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
@@ -20,7 +21,7 @@ from imfusion.model import Insertion
 from .counts import estimate_size_factors
 
 
-def de_exon(
+def test_de(
         insertions,  # type: Iterable[Insertion]
         exon_counts,  # type: pd.DataFrame
         gene_id,  # type: str
@@ -108,6 +109,22 @@ def de_exon(
     # Return result.
     return DeExonResult(before, after, pos_samples, neg_samples,
                         dropped_samples, direction, p_value)
+
+
+def test_de_genes(insertions, counts, gene_ids):
+    """Performs DE test for multiple genes and summarizes in table."""
+
+    results = {
+        g_id: test_de(
+            insertions, counts, gene_id=g_id)
+        for g_id in gene_ids
+    }
+
+    rows = ((g_id, result.p_value, result.direction)
+            for g_id, result in results.items())
+
+    return pd.DataFrame.from_records(
+        rows, columns=['gene_id', 'p_value', 'direction'])
 
 
 def split_counts(

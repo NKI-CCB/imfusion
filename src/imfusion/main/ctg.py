@@ -1,7 +1,10 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Script for testing for CTGs."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import argparse
 import logging
@@ -15,8 +18,12 @@ import pandas as pd
 
 from imfusion.build import Reference
 from imfusion.ctg import test_ctgs
-from imfusion.expression.test import de_exon
+from imfusion.expression.counts import read_exon_counts
+from imfusion.expression.test import test_de_genes
 from imfusion.model import Insertion
+
+FORMAT = "[%(asctime)-15s] %(message)s"
+logging.basicConfig(format=FORMAT, level=logging.INFO)
 
 
 # pylint: disable=E1101
@@ -48,16 +55,28 @@ def main():
         pattern=args.pattern,
         window=args.window)
 
+    # Filter using given threshold.
     if args.threshold is not None:
         ctgs = ctgs.query('q_value <= {}'.format(args.threshold))
 
     # If expression is given, test for differential expression.
     if args.expression is not None:
-        raise NotImplementedError()
-        # logger.info('Testing for differential expression')
-        # de_results = _test_de(ins_frame, args.expression, args.exon_gtf,
-        #                       ctgs['gene_id'])
-        # ctgs = pd.merge(ctgs, de_results, on='gene_id', how='left')
+        logger.info('Testing for differential expression')
+
+        # Perform DE tests.
+        exon_counts = read_exon_counts(args.expression)
+        de_results = test_de_genes(
+            insertions, exon_counts, gene_ids=ctgs['gene_id'])
+
+        # Combine with CTG result.
+        de_results = de_results.rename(
+            columns={'direction': 'de_direction',
+                     'p_value': 'de_pvalue'})
+
+        ctgs = pd.merge(ctgs, de_results, on='gene_id', how='left')
+
+        if args.de_threshold is not None:
+            ctgs = ctgs.query('de_pvalue < {}'.format(args.de_threshold))
 
     # Write outputs.
     logger.info('Writing outputs')
