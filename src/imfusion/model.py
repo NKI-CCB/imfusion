@@ -10,10 +10,11 @@ import collections
 import itertools
 import operator
 
-from frozendict import frozendict
 import numpy as np
 import pandas as pd
 import toolz
+
+from imfusion.util.frozendict import frozendict
 
 
 class FrameMixin(object):
@@ -32,7 +33,7 @@ class FrameMixin(object):
     @classmethod
     def read_csv(cls, file_path, **kwargs):
         """Reads objects from a csv file into a pandas DataFrame."""
-        df = pd.read_csv(file_path, **kwargs)
+        df = pd.read_csv(str(file_path), **kwargs)
         return cls.format_frame(df)
 
     @classmethod

@@ -264,11 +264,13 @@ def _read_csv_startswith(file_path, prefix, **kwargs):
     return data
 
 
-def normalize(counts):
+def normalize_counts(counts):
     # type: (pd.DataFrame) -> pd.DataFrame
     """Normalizes counts for sequencing depth using the median-of-ratios."""
-    size_factors = estimate_size_factors(counts)
-    return counts / size_factors
+
+    with np.errstate(divide='ignore'):
+        size_factors = estimate_size_factors(counts)
+        return counts / size_factors
 
 
 def estimate_size_factors(counts):

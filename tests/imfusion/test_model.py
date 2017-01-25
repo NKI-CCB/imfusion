@@ -8,9 +8,8 @@ from builtins import *
 
 import pytest
 
-from frozendict import frozendict
-
 from imfusion.model import Fusion, TransposonFusion, Insertion
+from imfusion.util.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name
 

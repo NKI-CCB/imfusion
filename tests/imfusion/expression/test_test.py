@@ -8,11 +8,11 @@ from builtins import *
 
 import pytest
 
-from frozendict import frozendict
-
 from imfusion.expression.counts import read_exon_counts
 from imfusion.expression import test
 from imfusion.model import Insertion
+
+from imfusion.util.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name
 
@@ -126,13 +126,13 @@ def test_exon_counts():
     return read_exon_counts(file_path)
 
 
-class TestTestDe(object):
+class TestTestDeExon(object):
     """Tests for test_de function."""
 
     def test_pos_example_trp53bp2(self, test_insertions, test_exon_counts):
         """Tests positive example of DE in Trp53bp2 in the SB dataset."""
 
-        result = test.test_de(
+        result = test.test_de_exon(
             test_insertions, test_exon_counts, gene_id='ENSMUSG00000026510')
 
         assert result.p_value < 0.01
@@ -141,7 +141,7 @@ class TestTestDe(object):
     def test_neg_example_nf1(self, test_insertions, test_exon_counts):
         """Tests negative example of DE in Nf1 in the SB dataset."""
 
-        result = test.test_de(
+        result = test.test_de_exon(
             test_insertions, test_exon_counts, gene_id='ENSMUSG00000020716')
 
         assert result.p_value > 0.05
@@ -150,13 +150,13 @@ class TestTestDe(object):
     def test_plot_boxplot(self, test_insertions, test_exon_counts):
         """Exercises plotting of boxplot."""
 
-        result = test.test_de(
+        result = test.test_de_exon(
             test_insertions, test_exon_counts, gene_id='ENSMUSG00000026510')
         result.plot_boxplot()
 
     def test_plot_sums(self, test_insertions, test_exon_counts):
         """Exercises plotting of sums."""
 
-        result = test.test_de(
+        result = test.test_de_exon(
             test_insertions, test_exon_counts, gene_id='ENSMUSG00000026510')
         result.plot_sums()

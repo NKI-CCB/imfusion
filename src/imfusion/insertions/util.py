@@ -17,7 +17,7 @@ try:
 except ImportError:
     import pathlib2 as pathlib
 
-from frozendict import frozendict
+from future.utils import native
 import numpy as np
 import pysam
 import toolz
@@ -26,6 +26,7 @@ from intervaltree import IntervalTree
 
 from imfusion.model import MetadataFrameMixin, Insertion, Fusion
 from imfusion.util import shell, tabix
+from imfusion.util.frozendict import frozendict
 
 
 def extract_insertions(
@@ -222,7 +223,7 @@ class TranscriptReference(object):
         """Builds an Reference instance from the given GTF file."""
 
         # Open gtf file.
-        gtf = pysam.TabixFile(str(gtf_path), parser=pysam.asGTF())
+        gtf = pysam.TabixFile(native(str(gtf_path)), parser=pysam.asGTF())
 
         if chromosomes is None:
             chromosomes = gtf.contigs
