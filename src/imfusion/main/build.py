@@ -22,8 +22,8 @@ def main():
 
     # Construct aligner.
     indexer = args.indexer.from_args(args)
-    indexer.build_index(
-        reference_path=args.reference_seq,
+    indexer.build(
+        refseq_path=args.reference_seq,
         gtf_path=args.reference_gtf,
         transposon_path=args.transposon_seq,
         transposon_features_path=args.transposon_features,

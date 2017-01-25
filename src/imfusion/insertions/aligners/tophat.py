@@ -11,13 +11,13 @@ try:
 except ImportError:
     from pathlib2 import Path
 
-from frozendict import frozendict
 import pandas as pd
 import toolz
 
 from imfusion.build.indexers.tophat import TophatReference
 from imfusion.model import TransposonFusion
-from imfusion.util import shell, path
+from imfusion.util import shell, path, tabix
+from imfusion.util.frozendict import frozendict
 
 from .base import Aligner, register_aligner
 from .. import util
@@ -72,14 +72,20 @@ class TophatAligner(Aligner):
 
         # Assemble transcripts if requested.
         if self._assemble:
-            assembled_path = output_dir / 'assembled_gtf'
+            assembled_path = output_dir / 'assembled.gtf.gz'
             if not assembled_path.exists():
                 self._logger.info('Assembling transcripts')
 
+                # Generate assembled GTF.
+                stringtie_out_path = assembled_path.with_suffix('')
                 util.stringtie_assemble(
                     alignment_path,
                     gtf_path=self._reference.gtf_path,
-                    output_path=assembled_path)
+                    output_path=stringtie_out_path)
+
+                # Compress and index.
+                tabix.index_gtf(stringtie_out_path, output_path=assembled_path)
+                stringtie_out_path.unlink()
             else:
                 self._logger.info('Using existing assembly')
         else:
