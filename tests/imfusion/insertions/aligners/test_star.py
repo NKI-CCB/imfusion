@@ -16,11 +16,12 @@ except ImportError:
 
 import pytest
 
-from frozendict import frozendict
+from future.utils import native_str
 import pandas as pd
 
 from imfusion.insertions.aligners import star
 from imfusion.model import Fusion, TransposonFusion, Insertion
+from imfusion.util.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name
 
@@ -189,7 +190,7 @@ def star_align_kws(tmpdir):
         'fastq_path': Path('in.R1.fastq.gz'),
         'fastq2_path': Path('in.R2.fastq.gz'),
         'index_path': Path('/path/to/index'),
-        'output_dir': Path(str(tmpdir / '_star')),
+        'output_dir': Path(native_str(tmpdir / '_star')),
         'extra_args': None
     }
 
@@ -285,7 +286,7 @@ def star_reference():
 def star_output_dir(tmpdir, chimeric_junctions_path):
     """Simulated star output directory."""
     # Create directories.
-    output_dir = Path(str(tmpdir / 'out'))
+    output_dir = Path(native_str(tmpdir / 'out'))
 
     star_dir = output_dir / '_star'
     star_dir.mkdir(parents=True)
@@ -304,7 +305,7 @@ def cmdline_args(tmpdir):
     """Example command line arguments."""
     return [
         '--fastq', 'a.fastq.gz', '--fastq2', 'b.fastq.gz', '--reference',
-        str(tmpdir), '--output_dir', '/path/to/out'
+        native_str(tmpdir), '--output_dir', '/path/to/out'
     ]
 
 

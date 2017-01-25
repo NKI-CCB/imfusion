@@ -14,11 +14,12 @@ try:
 except ImportError:
     from pathlib2 import Path
 
-from frozendict import frozendict
+from future.utils import native_str
 import pytest
 
 from imfusion.insertions.aligners import tophat
 from imfusion.model import Insertion
+from imfusion.util.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name
 
@@ -47,14 +48,14 @@ def tophat_output_dir(tmpdir, tophat_path):
     """Simulates Tophat2 output directory."""
 
     # Create directories.
-    output_dir = Path(str(tmpdir / 'out'))
+    output_dir = Path(native_str(tmpdir / 'out'))
 
     tophat_dir = output_dir / '_tophat'
     tophat_dir.mkdir(parents=True)
 
     # Copy / simulate aligner output files.
-    shutil.copy(str(tophat_path),
-                str(tophat_dir / 'fusions.out'))  # yapf: disable
+    shutil.copy(native_str(tophat_path),
+                native_str(tophat_dir / 'fusions.out'))  # yapf: disable
 
     pytest.helpers.touch(tophat_dir / 'Aligned.sortedByCoord.out.bam')
 
@@ -66,7 +67,7 @@ def cmdline_args(tmpdir):
     """Example command line arguments."""
     return [
         '--fastq', 'a.fastq.gz', '--fastq2', 'b.fastq.gz', '--reference',
-        str(tmpdir), '--output_dir', '/path/to/out'
+        native_str(tmpdir), '--output_dir', '/path/to/out'
     ]
 
 
@@ -112,7 +113,7 @@ class TestTophatAligner(object):
             extra_args={
                 '--fusion-search': (),
                 '--transcriptome-index':
-                (str(tophat_reference.transcriptome_path), ),
+                (native_str(tophat_reference.transcriptome_path), ),
                 '--num-threads': (1, ),
                 '--bowtie1': (),
                 '--fusion-anchor-length': (12, )
@@ -209,7 +210,7 @@ def tophat_align_kws(tmpdir):
         'fastq_path': Path('in.R1.fastq.gz'),
         'fastq2_path': Path('in.R2.fastq.gz'),
         'index_path': Path('/path/to/index'),
-        'output_dir': Path(str(tmpdir / '_tophat')),
+        'output_dir': Path(native_str(tmpdir / '_tophat')),
         'extra_args': None
     }
 
@@ -231,9 +232,10 @@ class TestTophat2Align(object):
         # readFilesCommand is added for the gzipped files.
         mock_align.assert_called_once_with(
             args=[
-                'tophat2', '--output-dir', str(tophat_align_kws['output_dir']),
-                '/path/to/index', str(tophat_align_kws['fastq_path']),
-                str(tophat_align_kws['fastq2_path'])
+                'tophat2', '--output-dir',
+                native_str(tophat_align_kws['output_dir']), '/path/to/index',
+                native_str(tophat_align_kws['fastq_path']),
+                native_str(tophat_align_kws['fastq2_path'])
             ],
             stdout=None,
             stderr=None,
@@ -268,4 +270,4 @@ class TestTophat2Align(object):
         tophat.tophat2_align(**tophat_align_kws)
 
         args = pytest.helpers.mock_call(mock_align)[1]['args']
-        assert args[-1] == str(tophat_align_kws['fastq_path'])
+        assert args[-1] == native_str(tophat_align_kws['fastq_path'])
