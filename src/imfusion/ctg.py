@@ -71,7 +71,7 @@ def test_ctgs(
         are counted multiple times.
     window : Tuple[int, int]
         Window to include around gene (in bp). Specified as (upstream_dist,
-        downstream_dist). For example: (-2000, 2000) specifies in a 2KB
+        downstream_dist). For example: (2000, 2000) specifies in a 2KB
         window around each gene.
 
     Returns
@@ -135,6 +135,20 @@ def test_ctgs(
     # Sort by q-value and p-value.
     result.sort_values(by=['q_value', 'p_value'], inplace=True)
 
+    # Annotate with gene_name if possible.
+    if 'gene_name' in insertions[0].metadata:
+        name_map = {
+            ins.metadata['gene_id']: ins.metadata['gene_name']
+            for ins in insertions
+        }
+        result.insert(1, 'gene_name', result['gene_id'].map(name_map))
+
+    # Annotate with frequency.
+    frequency = (Insertion.to_frame(insertions)
+                 .groupby('gene_id')['sample'].nunique()
+                 .reset_index(name='n_samples'))
+    result = pd.merge(result, frequency, on='gene_id', how='left')
+
     return result
 
 
@@ -166,9 +180,9 @@ def _apply_gene_window(
 
         if gene.strand == '-':
             start = gene.start - downstream_offset
-            end = gene.end - upstream_offset
+            end = gene.end + upstream_offset
         elif gene.strand == '+':
-            start = gene.start + upstream_offset
+            start = gene.start - upstream_offset
             end = gene.end + downstream_offset
         else:
             raise ValueError('Unknown value for strand')

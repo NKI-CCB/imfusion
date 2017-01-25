@@ -8,13 +8,13 @@ from builtins import *
 
 from collections import namedtuple
 
-from frozendict import frozendict
 import pyfaidx
 import pytest
 
 from imfusion import ctg
 from imfusion.build import Reference
 from imfusion.model import Insertion
+from imfusion.util.frozendict import frozendict
 
 Sequence = namedtuple('Sequence', ['seq'])
 Gene = namedtuple('Gene', ['contig', 'start', 'end', 'strand'])
@@ -157,7 +157,7 @@ class TestApplyWindow(object):
         """Tests example on forward strand."""
 
         new_window = ctg._apply_gene_window(
-            Gene('1', 100, 120, '+'), window=(-80, 50))
+            Gene('1', 100, 120, '+'), window=(80, 50))
 
         assert new_window == ('1', 20, 170)
 
@@ -165,7 +165,7 @@ class TestApplyWindow(object):
         """Tests example on reverse strand."""
 
         new_window = ctg._apply_gene_window(
-            Gene('1', 100, 120, '-'), window=(-80, 50))
+            Gene('1', 100, 120, '-'), window=(80, 50))
 
         assert new_window == ('1', 50, 200)
 
@@ -181,7 +181,7 @@ class TestApplyWindow(object):
         """Tests example without proper strand."""
 
         with pytest.raises(ValueError):
-            ctg._apply_gene_window(Gene('1', 100, 120, None), window=(-80, 50))
+            ctg._apply_gene_window(Gene('1', 100, 120, None), window=(80, 50))
 
 
 class TestSubsetToWindows(object):
@@ -314,7 +314,7 @@ class TestTestCtgs(object):
 
         # Do CTG test.
         result = ctg.test_ctgs(
-            ctg_insertions, ctg_reference, window=(-4, 0), per_sample=False)
+            ctg_insertions, ctg_reference, window=(4, 0), per_sample=False)
         result = result.set_index('gene_id')
 
         # Check result.
