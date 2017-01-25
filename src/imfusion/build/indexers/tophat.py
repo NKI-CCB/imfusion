@@ -77,8 +77,11 @@ class TophatIndexer(Indexer):
             'bowtie-build', str(reference_path), str(output_base_path)
         ]
 
-        with log_path.open('w') as log_file:
-            shell.run_command(args=cmdline_args, stdout=log_file)
+        if log_path is not None:
+            with log_path.open('w') as log_file:
+                shell.run_command(args=cmdline_args, stdout=log_file)
+        else:
+            shell.run_command(args=cmdline_args)
 
     @staticmethod
     def _build_transcriptome_index(
@@ -113,7 +116,11 @@ class TophatIndexer(Indexer):
                 '--bowtie1', '--output-dir', str(tmp_dir), str(index_path)
             ]
 
-            shell.run_command(args=cmdline_args, stderr=log_path)
+            if log_path is not None:
+                with log_path.open('w') as log_file:
+                    shell.run_command(args=cmdline_args, stdout=log_file)
+            else:
+                shell.run_command(args=cmdline_args)
         finally:
             shutil.rmtree(tmp_dir)
 
@@ -129,3 +136,9 @@ class TophatReference(Reference):
         # type: (...) -> pathlib.Path
         """Path to transcriptome index."""
         return self._reference / 'transcriptome'
+
+    @property
+    def index_path(self):
+        # type: (...) -> pathlib.Path
+        """Path to index."""
+        return self._reference / 'reference'
