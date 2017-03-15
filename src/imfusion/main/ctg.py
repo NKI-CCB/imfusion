@@ -70,9 +70,11 @@ def main():
         de_results = test_de(insertions, exon_counts, gene_ids=ctgs['gene_id'])
 
         # Combine with CTG result.
-        de_results = de_results.rename(
-            columns={'direction': 'de_direction',
-                     'p_value': 'de_pvalue'})
+        de_results = de_results.rename(columns={
+            'direction': 'de_direction',
+            'p_value': 'de_pvalue',
+            'test_type': 'de_test'
+        })
         ctgs = pd.merge(ctgs, de_results, on='gene_id', how='left')
 
         if args.de_threshold is not None:

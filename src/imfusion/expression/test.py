@@ -64,10 +64,12 @@ def test_de(
         except ValueError:
             # Failed to find split.
             if fallback_to_gene:
+                logging.warning('Using gene test for %s', gene_id)
+
                 # Fallback to gene test.
                 if gene_counts is None:
                     logging.warning('Using summed exon counts to approximate '
-                                    'gene counts in gene DE test')
+                                    'gene counts for gene DE test')
                     gene_counts = exon_counts.groupby(level=0).sum()
 
                 # Use helper function to avoid nesteed try/except.
@@ -708,129 +710,3 @@ class DeGeneResult(object):
         ax.set_xticklabels(['Without\ninsertion', 'With\ninsertion'])
 
         ax.set_ylabel('Expression' + (' (log2)' if log else ''))
-
-
-# def de_exon_single(insertions, gene_id, insertion_id, dexseq_gtf, exon_counts):
-#     """Performs the single-sample exon-level differential expression test.
-
-#     Tests if the expression of exons after the insertion site of the
-#     given sample is significantly increased or decreased compared to samples
-#     without an insertion. This test is performed by comparing the (normalized)
-#     after count of the given sample to a background distribution of normalized
-#     counts of samples without an insertion, which is modeled using a
-#     negative binomial distribution.
-
-#     Note: this function requires Rpy2 to be installed, as R functions
-#     are used to fit the negative binomial distribution.
-
-#     Parameters
-#     ----------
-#     insertions : pandas.DataFrame
-#         DataFrame containing all insertions.
-#     gene_id : str
-#         ID of the gene of interest. Should correspond with a
-#         gene in the DEXSeq gtf file.
-#     insertion_id : str
-#         ID of the insertion of interest. Should correspond with
-#         an insertion in the list of insertions.
-#     dexseq_gtf : GtfFile
-#         Gtf file containing exon features generated using DEXSeq. Can either
-#         be given as a GtfFile object or as a string specifying the path to
-#         the gtf file.
-#     exon_counts : pandas.DataFrame
-#         DataFrame containing exon counts. The DataFrame is expected
-#         to contain samples as columns, and have a multi-index containing
-#         the chromosome, start, end and strand of the exon. This index
-#         should correspond with the annotation in the DEXSeq gtf. The
-#         samples should correspond with samples in the insertions frame.
-
-#     Returns
-#     -------
-#     DeExonResult
-#         Result of the differential expression test.
-
-#     """
-
-#     raise NotImplementedError()
-
-#     # Calculate before/after expression for gene.
-#     sums, exon_split = _exon_sums(gene,
-#                                   pd.DataFrame([insertion]), exons,
-#                                   exon_counts)
-
-#     # Split samples into positive/negative samples.
-#     pos_sample = insertion['sample']
-
-#     insertions_gene = insertions.ix[insertions['gene_id'] == gene.gene_id]
-#     neg_samples = set(exon_counts.columns) - set(insertions_gene['sample'])
-
-#     # Fit model and calculate p-value.
-#     nb_fit = NegativeBinomial(data=sums['after'][neg_samples])
-
-#     cdf = nb_fit.cdf(sums['after'][pos_sample])
-#     sf = nb_fit.sf(sums['after'][pos_sample])
-
-#     if cdf > sf:
-#         p_value, direction = sf, 1
-#     else:
-#         p_value, direction = cdf, -1
-
-#     # Return result.
-#     return DeExonResult(sums, ([pos_sample], neg_samples), exon_split, nb_fit,
-#                         direction, p_value)
-
-# class DeExonSingleResult(object):
-#     """Class containing the results of the single-sample exon-level DE test.
-
-#     Attributes
-#     ----------
-#     sums : pandas.DataFrame
-#         DataFrame of before/after expression counts for all samples.
-#     sample_split : tuple(List[str], List[str])
-#         Split of samples into positive/negative samples.
-#     exon_split : tuple
-#         Split of exons into before/after groups.
-#     nb_fit : imfusion.expression.de_test.stats.NegativeBinomial
-#         Fit negative-binomial background distribution.
-#     direction : int
-#         Direction of the differential expression (1 = positive, -1 = negative).
-#     p_value : float
-#         P-value of the differential expression test.
-
-#     """
-
-#     def __init__(self, sums, sample_split, exon_split, nb_fit, direction,
-#                  p_value):
-#         self.sums = sums
-#         self.sample_split = sample_split
-#         self.exon_split = exon_split
-#         self.nb_fit = nb_fit
-#         self.direction = direction
-#         self.p_value = p_value
-
-#     def plot_fit(self, ax=None):
-#         """Plots the sample expression on the background distribution."""
-#         ax = ax or plt.subplots()[1]
-
-#         ax.hist(
-#             self.sums['after'][self.sample_split[1]],
-#             bins=25,
-#             normed=True,
-#             alpha=0.6)
-
-#         ax.plot(
-#             [self.sums['after'][self.sample_split[0]]] * 2,
-#             ax.get_ylim(),
-#             linestyle='dashed',
-#             color='red')
-
-#         x = np.arange(*ax.get_xlim())
-#         ax.plot(x, self.nb_fit.pdf(x), 'k', linewidth=2)
-
-#         return ax
-
-#     def plot_sums(self, log=False, **kwargs):
-#         """Plots the distribution of before/after counts for the samples."""
-#         sums = np.log2(self.sums + 1) if log else self.sums
-#         return _plot_sums(sums, [self.sample_split[0]], self.sample_split[1],
-#                           **kwargs)
