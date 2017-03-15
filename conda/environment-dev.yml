@@ -36,3 +36,6 @@ dependencies:
     - pytest-helpers-namespace
     - pylint
     - yapf
+
+    - pip:
+        - bumpversion
