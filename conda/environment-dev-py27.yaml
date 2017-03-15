@@ -1,4 +1,4 @@
-name: imfusion-dev
+name: imfusion-dev-py27
 channels:
     - conda-forge
     - defaults
@@ -6,7 +6,7 @@ channels:
     - bioconda
 dependencies:
     # Python dependencies.
-    - python =3.5.2
+    - python =2.7.*
     - future =0.16
     - intervaltree
     - pandas =0.19.2
@@ -31,8 +31,9 @@ dependencies:
     - sphinx
     - pytest
     - pytest-mock
-    - pytest-datafiles
     - pytest-cov
-    - pytest-helpers-namespace
     - pylint
+
     - yapf
+    - pytest-datafiles
+    - pytest-helpers-namespace

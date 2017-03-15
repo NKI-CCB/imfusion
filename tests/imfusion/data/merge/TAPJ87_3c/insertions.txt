@@ -1,4 +1,4 @@
-id	seqname	position	strand	junction_support	spanning_support	support	feature_name	feature_strand	feature_type	gene_name	gene_strand	novel_transcript	orientation	transposon_anchor
+id	seqname	position	strand	support_junction	support_spanning	support	feature_name	feature_strand	feature_type	gene_name	gene_strand	novel_transcript	orientation	transposon_anchor
 INS_195	4	101191674	-1	1944	3	1947	SD	1	SD	Jak1	-1.0		sense	1043
 INS_159	16	52142899	-1	523	147	670	En2SA	-1	SA	Cblb	1.0		antisense	1541
 INS_258	8	87904549	-1	600	0	600	SD	1	SD	Zfp423	-1.0		sense	1043

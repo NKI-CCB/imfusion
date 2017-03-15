@@ -1,15 +1,22 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Implements base indexer classes, used for building references."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
+# pylint: disable=W0611
+
+import argparse
 import logging
 import shutil
+from typing import Any, Type, Tuple
 
 try:
-    from pathlib import Path
+    import pathlib
 except ImportError:
-    from pathlib2 import Path
+    import pathlib2 as pathlib
 
 import pyfaidx
 
@@ -21,11 +28,13 @@ _indexer_registry = {}
 
 
 def register_indexer(name, indexer):
+    # type: (str, Type[Indexer]) -> None
     """Registers indexer under given name."""
     _indexer_registry[name] = indexer
 
 
 def get_indexers():
+    # type: (...) -> Dict[str, Type[Indexer]]
     """Returns dict of available indexers."""
     return dict(_indexer_registry)
 
@@ -34,15 +43,16 @@ class Indexer(object):
     """Base Indexer class."""
 
     def __init__(self, logger=None):
+        # type: (Any) -> None
         self._logger = logger or logging.getLogger()
 
     @property
-    def _reference_class(self):
+    def _reference_class(self):  # type: (...) -> Type[Reference]
         """Reference class to use for this indexer."""
         return Reference
 
     @property
-    def dependencies(self):
+    def dependencies(self):  # type: (...) -> List[str]
         """External dependencies required by Indexer."""
         return []
 
@@ -50,14 +60,16 @@ class Indexer(object):
         """Checks if all required external dependencies are available."""
         shell.check_dependencies(self.dependencies)
 
-    def build(self,
-              refseq_path,
-              gtf_path,
-              transposon_path,
-              transposon_features_path,
-              output_dir,
-              blacklist_regions=None,
-              blacklist_genes=None):
+    def build(
+            self,
+            refseq_path,  # type: pathlib.Path
+            gtf_path,  # type: pathlib.Path
+            transposon_path,  # type: pathlib.Path
+            transposon_features_path,  # type: pathlib.Path
+            output_dir,  # type: pathlib.Path
+            blacklist_regions=None,  # type: List[Tuple[str, int, int]]
+            blacklist_genes=None  # type: List[str]
+    ):  # type: (...) -> None
         """Builds an indexed reference containing the transposon sequence."""
 
         # Create output directory.
@@ -84,12 +96,14 @@ class Indexer(object):
         # Build any required indices using files.
         self._build_indices(reference)
 
-    def _build_reference(self,
-                         reference,
-                         refseq_path,
-                         transposon_path,
-                         blacklist_regions=None,
-                         blacklist_genes=None):
+    def _build_reference(
+            self,
+            reference,  # type: Reference
+            refseq_path,  # type: pathlib.Path
+            transposon_path,  # type: pathlib.Path
+            blacklist_regions=None,  # type: List[Tuple[str, int, int]]
+            blacklist_genes=None  # type: List[str]
+    ):  # type (...) -> None
 
         self._logger.info('Building augmented reference')
 
@@ -106,8 +120,13 @@ class Indexer(object):
             output_path=reference.fasta_path,
             blacklisted_regions=blacklist)
 
-    def _copy_and_index_files(self, reference, gtf_path, transposon_path,
-                              transposon_features_path):
+    def _copy_and_index_files(
+            self,
+            reference,  # type: Reference
+            gtf_path,  # type: pathlib.Path
+            transposon_path,  # type: pathlib.Path
+            transposon_features_path  # type: pathlib.Path
+    ):  # type: (...) -> None
         """Copies and indexes additional reference files (GTF, transposon)."""
 
         # Copy additional reference files.
@@ -128,6 +147,7 @@ class Indexer(object):
 
     @classmethod
     def configure_args(cls, parser):
+        # type: (argparse.ArgumentParser) -> None
         """Configures an argument parser for the Indexer."""
 
         # Basic arguments.
@@ -135,29 +155,30 @@ class Indexer(object):
 
         base_group.add_argument(
             '--reference_seq',
-            type=Path,
+            type=pathlib.Path,
             required=True,
             help='Path to the reference sequence (in Fasta format).')
 
         base_group.add_argument(
             '--reference_gtf',
-            type=Path,
+            type=pathlib.Path,
             required=True,
             help='Path to the reference gtf file.')
 
         base_group.add_argument(
             '--transposon_seq',
-            type=Path,
+            type=pathlib.Path,
             required=True,
             help='Path to the transposon sequence (in Fasta format).')
 
         base_group.add_argument(
             '--transposon_features',
-            type=Path,
+            type=pathlib.Path,
             required=True,
             help='Path to the transposon features (tsv).')
 
-        base_group.add_argument('--output_dir', type=Path, required=True)
+        base_group.add_argument(
+            '--output_dir', type=pathlib.Path, required=True)
 
         # Optional blacklist arguments.
         blacklist_group = parser.add_argument_group('Blacklist arguments')
@@ -178,11 +199,13 @@ class Indexer(object):
 
     @classmethod
     def parse_args(cls, args):
+        # type: (argparse.Namespace) -> Dict[str, Any]
         """Parses argparse argument to a dict."""
         return {}
 
     @classmethod
     def from_args(cls, args):
+        # type: (argparse.Namespace) -> Indexer
         """Constructs an Indexer instance from given arguments."""
         return cls(**cls.parse_args(args))
 
@@ -191,47 +214,56 @@ class Reference(object):
     """Reference class."""
 
     def __init__(self, reference_path):
+        # type: (pathlib.Path) -> None
         if not reference_path.exists():
             raise ValueError('Reference path does not exist')
         self._reference = reference_path
 
     @property
     def base_path(self):
+        # type: (...) -> pathlib.Path
         """Path to reference base directory."""
         return self._reference
 
     @property
     def fasta_path(self):
+        # type: (...) -> pathlib.Path
         """Path to reference sequence."""
         return self._reference / 'reference.fa'
 
     @property
     def gtf_path(self):
+        # type: (...) -> pathlib.Path
         """Path to reference gtf."""
         return self._reference / 'reference.gtf'
 
     @property
     def indexed_gtf_path(self):
+        # type: (...) -> pathlib.Path
         """Path to reference gtf."""
         return self._reference / 'reference.gtf.gz'
 
     @property
     def index_path(self):
+        # type: (...) -> pathlib.Path
         """Path to index."""
         return self._reference / 'index'
 
     @property
     def transposon_name(self):
+        # type: (...) -> str
         """Name of transposon sequence."""
         seqs = pyfaidx.Fasta(str(self.transposon_path)).keys()
         return list(seqs)[0]
 
     @property
     def transposon_path(self):
+        # type: (...) -> pathlib.Path
         """Name of transposon sequence."""
         return self._reference / 'transposon.fa'
 
     @property
     def features_path(self):
+        # type: (...) -> pathlib.Path
         """Path to transposon features."""
         return self._reference / 'features.txt'

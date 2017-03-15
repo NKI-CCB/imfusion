@@ -1,10 +1,15 @@
-"""Tests for the imfusion.model module."""
+# -*- coding: utf-8 -*-
+"""Tests for imfusion.model module."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
+from __future__ import absolute_import, division, print_function
+from builtins import *
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import pytest
 
-from frozendict import frozendict
-
 from imfusion.model import Fusion, TransposonFusion, Insertion
+from imfusion.util.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name
 
@@ -19,8 +24,8 @@ from imfusion.model import Fusion, TransposonFusion, Insertion
 #         strand_b=1,
 #         flank_a=52,
 #         flank_b=62,
-#         junction_support=2,
-#         spanning_support=0)]
+#         support_junction=2,
+#         support_spanning=0)]
 
 #     spanning_fusions = [Fusion(
 #         seqname_a='1',
@@ -31,8 +36,8 @@ from imfusion.model import Fusion, TransposonFusion, Insertion
 #         strand_b=1,
 #         flank_a=0,
 #         flank_b=0,
-#         junction_support=0,
-#         spanning_support=1)]
+#         support_junction=0,
+#         support_spanning=1)]
 
 #     return junction_fusions, spanning_fusions
 
@@ -49,8 +54,8 @@ def fusion():
         strand_b=1,
         flank_a=52,
         flank_b=62,
-        junction_support=2,
-        spanning_support=1)
+        support_junction=2,
+        support_spanning=1)
 
 
 # class TestToTransposonFusion(object):
@@ -63,8 +68,8 @@ def fusion():
 #             strand_transposon=1,
 #             flank_genome=52,
 #             flank_transposon=62,
-#             junction_support=2,
-#             spanning_support=1,
+#             support_junction=2,
+#             support_spanning=1,
 #             metadata={})
 
 #         assert fusion.to_transposon_fusion('T2onc') == expected
@@ -91,8 +96,8 @@ def tr_fusion():
         strand_transposon=1,
         flank_genome=-78,
         flank_transposon=-76,
-        junction_support=380,
-        spanning_support=118,
+        support_junction=380,
+        support_spanning=118,
         metadata=frozendict({
             'gene_strand': 1,
             'gene_name': 'Cblb',
@@ -107,7 +112,7 @@ class TestTransposonFusion(object):
 
     def test_support(self, tr_fusion):
         """Tests support property."""
-        expected = tr_fusion.junction_support + tr_fusion.spanning_support
+        expected = tr_fusion.support_junction + tr_fusion.support_spanning
         assert tr_fusion.support == expected
 
     def test_transposon_region(self, tr_fusion):
@@ -131,8 +136,8 @@ class TestTransposonFusion(object):
             strand_transposon=1,
             flank_genome=-52,
             flank_transposon=62,
-            junction_support=2,
-            spanning_support=1,
+            support_junction=2,
+            support_spanning=1,
             metadata=frozendict({}))
 
         assert tr_fusion == expected
@@ -152,8 +157,8 @@ class TestInsertion(object):
             seqname='16',
             position=52141095,
             strand=-1,
-            junction_support=380,
-            spanning_support=118,
+            support_junction=380,
+            support_spanning=118,
             support=498,
             metadata={
                 'transposon_anchor': 1541,
@@ -185,8 +190,8 @@ class TestInsertion(object):
                 seqname='16',
                 position=52141095,
                 strand=-1,
-                junction_support=380,
-                spanning_support=118,
+                support_junction=380,
+                support_spanning=118,
                 support=498,
                 metadata={
                     'transposon_anchor': 1541,

@@ -15,16 +15,16 @@ requirements:
     # Python dependencies.
     - python
     - future
-    - frozendict
     - pandas
     - numexpr
     - pysam >=0.8.4
     - toolz
     - scipy
     - seaborn
-    - pyfaidx
+    - pyfaidx >=0.4.8.1
     - intervaltree
     - pathlib2 # [py27]
+    - typing # [py27]
     - r
     - rpy2 >=2.7.4
 
@@ -33,16 +33,16 @@ requirements:
     - python
     - intervaltree
     - future
-    - frozendict
     - pandas
     - numexpr
     - pysam >=0.8.4
     - toolz
     - scipy
     - seaborn
-    - pyfaidx
+    - pyfaidx >=0.4.8.1
     - intervaltree
     - pathlib2 # [py27]
+    - typing # [py27]
     - r
     - rpy2 >=2.7.4
 
@@ -57,16 +57,12 @@ test:
 
   commands:
     - imfusion-build -h
+    - imfusion-insertions -h
+    - imfusion-expression -h
+    - imfusion-merge -h
+    - imfusion-ctg -h
     - STAR --version
     - featureCounts -v
-    # - py.test $SRC_DIR
-
-  requires:
-    - mock
-    - pytest
-    - pytest-datafiles
-    - pytest-mock
-    - pytest-helpers-namespace
 
 about:
   home: https://github.com/jrderuiter/im-fusion

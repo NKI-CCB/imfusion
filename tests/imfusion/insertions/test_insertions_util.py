@@ -1,11 +1,19 @@
+# -*- coding: utf-8 -*-
+"""Tests for imfusion.insertions.util module."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
+from __future__ import absolute_import, division, print_function
+from builtins import *
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
+
 import pytest
 
-from frozendict import frozendict
 import numpy as np
 import toolz
 
 from imfusion.insertions import util
 from imfusion.model import TransposonFusion, Insertion
+from imfusion.util.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name
 
@@ -21,8 +29,8 @@ def fusion():
         strand_transposon=1,
         flank_genome=-78,
         flank_transposon=-76,
-        junction_support=380,
-        spanning_support=118,
+        support_junction=380,
+        support_spanning=118,
         metadata=frozendict({}))
 
 
@@ -41,31 +49,30 @@ class TestExtractInsertions(object):
         insertions = util.extract_insertions([fusion], gtf_path, features_path)
         insertions = list(insertions)
 
-        expected = [
-            Insertion(
-                id='INS_1',
-                seqname='16',
-                position=52141095,
-                strand=-1,
-                junction_support=380,
-                spanning_support=118,
-                support=498,
-                metadata=frozendict({
-                    'feature_type': 'SA',
-                    'feature_name': 'En2SA',
-                    'gene_strand': 1,
-                    'orientation': 'antisense',
-                    'feature_strand': -1,
-                    'gene_name': 'Cblb',
-                    'transposon_anchor': 1541
-                }))
-        ]
+        assert len(insertions) == 1
+        assert isinstance(insertions[0].metadata, frozendict)
 
-        assert insertions == expected
+        assert insertions[0].id == 'INS_1'
+        assert insertions[0].seqname == '16'
+        assert insertions[0].position == 52141095
+        assert insertions[0].strand == -1
+        assert insertions[0].support_junction == 380
+        assert insertions[0].support_spanning == 118
+        assert insertions[0].support == 498
+        assert insertions[0].metadata['feature_type'] == 'SA'
+        assert insertions[0].metadata['feature_name'] == 'En2SA'
+        assert insertions[0].metadata['gene_strand'] == 1
+        assert insertions[0].metadata['orientation'] == 'antisense'
+        assert insertions[0].metadata['feature_strand'] == -1
+        assert insertions[0].metadata['gene_name'] == 'Cblb'
+        assert insertions[0].metadata['transposon_anchor'] == 1541
+        assert insertions[0].metadata['gene_id'] == 'ENSMUSG00000022637'
+
         assert isinstance(insertions[0].metadata, frozendict)
 
     def test_assembly_example(self, rgag1_fusion, gtf_path, features_path,
                               assembled_gtf_path):
+        """Tests example case with assembled gtf."""
 
         insertions = util.extract_insertions(
             [rgag1_fusion],
@@ -74,28 +81,24 @@ class TestExtractInsertions(object):
             assembled_gtf_path=assembled_gtf_path)
         insertions = list(insertions)
 
-        expected = [
-            Insertion(
-                id='INS_1',
-                seqname='X',
-                position=143093898,
-                strand=1,
-                junction_support=10,
-                spanning_support=0,
-                support=10,
-                metadata=frozendict({
-                    'feature_name': 'En2SA',
-                    'novel_transcript': 'STRG.14160.1',
-                    'transposon_anchor': 1541,
-                    'feature_type': 'SA',
-                    'gene_name': 'Rgag1',
-                    'gene_strand': 1,
-                    'feature_strand': -1,
-                    'orientation': 'sense'
-                }))
-        ]
+        assert len(insertions) == 1
 
-        assert insertions == expected
+        assert insertions[0].id == 'INS_1'
+        assert insertions[0].seqname == 'X'
+        assert insertions[0].position == 143093898
+        assert insertions[0].strand == 1
+        assert insertions[0].support_junction == 10
+        assert insertions[0].support_spanning == 0
+        assert insertions[0].support == 10
+        assert insertions[0].metadata['feature_type'] == 'SA'
+        assert insertions[0].metadata['feature_name'] == 'En2SA'
+        assert insertions[0].metadata['gene_strand'] == 1
+        assert insertions[0].metadata['orientation'] == 'sense'
+        assert insertions[0].metadata['feature_strand'] == -1
+        assert insertions[0].metadata['gene_name'] == 'Rgag1'
+        assert insertions[0].metadata['transposon_anchor'] == 1541
+        assert insertions[0].metadata['gene_id'] == 'ENSMUSG00000085584'
+        assert insertions[0].metadata['novel_transcript'] == 'STRG.14160.1'
 
 
 class TestAnnotateTransposon(object):
@@ -162,8 +165,8 @@ def insertion():
         seqname='16',
         position=52141095,
         strand=-1,
-        junction_support=380,
-        spanning_support=118,
+        support_junction=380,
+        support_spanning=118,
         support=498,
         metadata=frozendict({
             'feature_type': 'SA',
@@ -314,8 +317,8 @@ def rgag1_fusion():
         strand_transposon=1,
         flank_genome=-78,
         flank_transposon=-76,
-        junction_support=10,
-        spanning_support=0,
+        support_junction=10,
+        support_spanning=0,
         metadata=frozendict({}))
 
 

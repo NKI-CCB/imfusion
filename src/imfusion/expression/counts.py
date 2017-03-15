@@ -1,9 +1,10 @@
-"""Module containing functions for generating expression counts."""
+# -*- coding: utf-8 -*-
+"""Contains functions for generating and reading expression counts."""
 
-# pylint: disable=W0622,W0614,W0401
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 try:
     from io import StringIO
@@ -14,11 +15,12 @@ import itertools
 import shutil
 import subprocess
 import tempfile
+from typing import Any, Iterable
 
 try:
-    from pathlib import Path
+    import pathlib
 except ImportError:
-    from pathlib2 import Path
+    import pathlib2 as pathlib
 
 import numpy as np
 import pandas as pd
@@ -30,13 +32,14 @@ from imfusion.util.shell import flatten_arguments
 # pylint: disable=E1101
 
 
-def generate_exon_counts(bam_files,
-                         gtf_path,
-                         names=None,
-                         extra_kws=None,
-                         tmp_dir=None,
-                         keep_tmp=False,
-                         **kwargs):
+def generate_exon_counts(
+        bam_files,  # type: Iterable[pathlib.Path]
+        gtf_path,  # type: pathlib.Path
+        names=None,  # type: List[str]
+        extra_kws=None,  # type: Dict[str, Iterable[Any]]
+        tmp_dir=None,  # type: pathlib.Path
+        keep_tmp=False,  # type: bool
+):  # type: (...) -> pd.DataFrame
     """Generates exon counts for given bam files using featureCounts.
 
     This function is used to generate a m-by-n matrix (m = number of samples,
@@ -62,7 +65,6 @@ def generate_exon_counts(bam_files,
         Temp directory to use for generating counts.
     keep_tmp : bool
         Whether to keep the temp directory (default = False).
-
     **kwargs
         Any kwargs are passed to `feature_counts`.
 
@@ -87,7 +89,7 @@ def generate_exon_counts(bam_files,
 
     # Create tmpdir if needed.
     if tmp_dir is None:
-        tmp_dir = Path(tempfile.mkdtemp())
+        tmp_dir = pathlib.Path(tempfile.mkdtemp())
     elif not tmp_dir.exists():
         tmp_dir.mkdir(parents=True)
 
@@ -121,7 +123,12 @@ def generate_exon_counts(bam_files,
     return counts
 
 
-def _feature_counts(bam_files, gtf_path, output_path, extra_kws=None):
+def _feature_counts(
+        bam_files,  # type: Iterable[pathlib.Path]
+        gtf_path,  # type: pathlib.Path
+        output_path,  # type: pathlib.Path
+        extra_kws=None  # type: Dict[str, Any]
+):  # type: (...) -> None
     """Generates counts using featureCounts with given options.
 
     Main function used to run featureCounts. Used by and
@@ -160,6 +167,7 @@ def _feature_counts(bam_files, gtf_path, output_path, extra_kws=None):
 
 
 def _read_feature_count_output(file_path, names=None):
+    # type (pathlib.Path, Dict[str, str]) -> pd.DataFrame
     """Reads counts from featureCounts output.
 
     Parameters
@@ -188,6 +196,7 @@ def _read_feature_count_output(file_path, names=None):
 
 
 def read_exon_counts(file_path, gene_id=None):
+    # type: (pathlib.Path, str) -> pd.DataFrame
     """Reads exon counts from file, optionally filtering for given prefix.
 
     Parameters
@@ -213,6 +222,7 @@ def read_exon_counts(file_path, gene_id=None):
 
 
 def _read_counts(file_path, prefix=None, **kwargs):
+    # type: (pathlib.Path, str, **Any) -> pd.DataFrame
     """Reads counts from file, optionally filtering for given prefix."""
 
     # Read counts, optionally filtering for given prefix.
@@ -223,13 +233,13 @@ def _read_counts(file_path, prefix=None, **kwargs):
         counts = pd.read_csv(str(file_path),
                              **read_csv_kws)  # type: pd.DataFrame
     else:
-        counts = _read_csv_startswith(
-            file_path, prefix=prefix, **read_csv_kws)  # type: pd.DataFrame
+        counts = _read_csv_startswith(file_path, prefix=prefix, **read_csv_kws)
 
     return counts
 
 
 def _read_csv_startswith(file_path, prefix, **kwargs):
+    # type: (pathlib.Path, str, **Any) -> pd.DataFrame
     """Reads sorted csv file using only lines that start with given prefix."""
 
     with open(str(file_path), 'rt') as file_:
@@ -254,13 +264,17 @@ def _read_csv_startswith(file_path, prefix, **kwargs):
     return data
 
 
-def normalize(counts):
+def normalize_counts(counts):
+    # type: (pd.DataFrame) -> pd.DataFrame
     """Normalizes counts for sequencing depth using the median-of-ratios."""
-    size_factors = estimate_size_factors(counts)
-    return counts / size_factors
+
+    with np.errstate(divide='ignore'):
+        size_factors = estimate_size_factors(counts)
+        return counts / size_factors
 
 
 def estimate_size_factors(counts):
+    # type: (pd.DataFrame) -> np.Array
     """Calculates size factors using the median-of-ratios approach."""
 
     # Convert to float.
@@ -278,6 +292,7 @@ def estimate_size_factors(counts):
 
 
 def _estimate_size_factors_col(counts, log_geo_means):
+    # type: (pd.DataFrame, np.Array) -> np.Array
     log_counts = np.log(counts)
     mask = np.isfinite(log_geo_means) & (counts > 0)
     return np.exp(np.median((log_counts - log_geo_means)[mask]))

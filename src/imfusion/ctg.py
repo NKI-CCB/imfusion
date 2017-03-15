@@ -1,31 +1,45 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Implements functions for testing for Commonly Targeted Genes (CTGs)."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
+from typing import Tuple, Optional, Iterable, Callable, Pattern
 import itertools
 import logging
 import operator
 import re
 
+try:
+    import pathlib
+except ImportError:
+    import pathlib2 as pathlib
+
 import numpy as np
 import pandas as pd
 import pyfaidx
-
-from imfusion.util.genomic import GenomicIntervalTree
-from imfusion.util.tabix import GtfIterator
+import pysam
 
 from intervaltree import IntervalTree
 from scipy.stats import poisson
 
+from imfusion.build import Reference
+from imfusion.model import Insertion
+from imfusion.util.genomic import GenomicIntervalTree
+from imfusion.util.tabix import GtfIterator
 
-def test_ctgs(insertions,
-              reference,
-              gene_ids=None,
-              chromosomes=None,
-              pattern=None,
-              per_sample=True,
-              window=None):
+
+def test_ctgs(
+        insertions,  # type: List[Insertion]
+        reference,  # type: Reference
+        gene_ids=None,  # type: Set[str]
+        chromosomes=None,  # type: Set[str]
+        pattern=None,  # type: str
+        per_sample=True,  # type: bool
+        window=None  #type: Tuple[int, int]
+):
     """Identifies genes that are significantly enriched for insertions (CTGs).
 
     This function takes a DataFrame of insertions, coming from multiple samples,
@@ -38,13 +52,13 @@ def test_ctgs(insertions,
 
     Parameters
     ----------
-    insertions : list[Insertion]
+    insertions : List[Insertion]
         Insertions to test.
     reference : Reference
         Reference index used by the aligner to identify insertions.
-    genes : list[str]
+    genes : List[str]
         List of genes to test (defaults to all genes with an insertion).
-    chromosomes : list[str]
+    chromosomes : List[str]
         List of chromosomes to include, defaults to all chromosomes
         in the given reference GTF.
     pattern : str
@@ -55,25 +69,23 @@ def test_ctgs(insertions,
         This avoids issues in which insertions that are detected
         multiple times or that may have hopped inside the gene locus
         are counted multiple times.
-    window : tuple(int, int)
+    window : Tuple[int, int]
         Window to include around gene (in bp). Specified as (upstream_dist,
-        downstream_dist). For example: (-2000, 2000) specifies in a 2KB
+        downstream_dist). For example: (2000, 2000) specifies in a 2KB
         window around each gene.
-    threshold : float
-        Maximum p-value for selected CTGs.
 
     Returns
     -------
     pandas.DataFrame
-        Results of CTG test for tested genes. Contains three columns:
-        gene_id, p_val and p_val_corr. The last column, p_val_corr,
+        Results of CTG test for tested genes. Contains two columns:
+        p_value and q_value. The last column (q_value)
         represents the p-value of the gene after correcting for
         multiple testing using bonferroni correction.
 
     """
 
     # Determine gene windows using GTF.
-    logging.info('Identifying gene windows')
+    logging.info('Generating gene windows')
     gene_windows = _build_gene_windows(
         reference.indexed_gtf_path, window=window, chromosomes=chromosomes)
 
@@ -98,6 +110,9 @@ def test_ctgs(insertions,
 
     # Calculate p-values for each gene.
     logging.info('Calculating significance for genes')
+    insertion_trees = GenomicIntervalTree.from_objects_position(
+        insertions, chrom_attr='seqname')
+
     p_values = {
         gene_id: test_region(
             insertions=insertions,
@@ -105,14 +120,14 @@ def test_ctgs(insertions,
             region=gene_windows[gene_id],
             total=total,
             pattern=pattern,
-            filters=[lambda ins, gid=gene_id: ins.metadata['gene_id'] == gid])
+            filters=[lambda ins, gid=gene_id: ins.metadata['gene_id'] == gid],
+            insertion_trees=insertion_trees)
         for gene_id in gene_ids
     }
 
     # Build result frame.
     result = pd.DataFrame.from_records(
         iter(p_values.items()), columns=['gene_id', 'p_value'])
-    result.set_index('gene_id', inplace=True)
 
     # Calculate corrected p-value using bonferroni correction.
     result['q_value'] = (result['p_value'] * len(result)).clip_upper(1.0)
@@ -120,10 +135,28 @@ def test_ctgs(insertions,
     # Sort by q-value and p-value.
     result.sort_values(by=['q_value', 'p_value'], inplace=True)
 
+    # Annotate with gene_name if possible.
+    if 'gene_name' in insertions[0].metadata:
+        name_map = {
+            ins.metadata['gene_id']: ins.metadata['gene_name']
+            for ins in insertions
+        }
+        result.insert(1, 'gene_name', result['gene_id'].map(name_map))
+
+    # Annotate with frequency.
+    frequency = (Insertion.to_frame(insertions)
+                 .groupby('gene_id')['sample'].nunique()
+                 .reset_index(name='n_samples'))
+    result = pd.merge(result, frequency, on='gene_id', how='left')
+
     return result
 
 
-def _build_gene_windows(gtf_path, window=None, chromosomes=None):
+def _build_gene_windows(
+        gtf_path,  # type: pathlib.Path
+        window=None,  # type: Optional[Tuple[int, int]]
+        chromosomes=None  # type: Set[str]
+):
     gtf_iter = GtfIterator(gtf_path)
 
     if chromosomes is None:
@@ -135,7 +168,11 @@ def _build_gene_windows(gtf_path, window=None, chromosomes=None):
     return {rec['gene_id']: _apply_gene_window(rec, window) for rec in records}
 
 
-def _apply_gene_window(gene, window=None):
+def _apply_gene_window(
+        gene,  # type: pysam.ctabixproxies.GTFProxy
+        window=None  # type: Tuple[int, int]
+):  # type: (...) -> Tuple[str, int, int]
+
     if window is None:
         return gene.contig, gene.start, gene.end,
     else:
@@ -143,9 +180,9 @@ def _apply_gene_window(gene, window=None):
 
         if gene.strand == '-':
             start = gene.start - downstream_offset
-            end = gene.end - upstream_offset
+            end = gene.end + upstream_offset
         elif gene.strand == '+':
-            start = gene.start + upstream_offset
+            start = gene.start - upstream_offset
             end = gene.end + downstream_offset
         else:
             raise ValueError('Unknown value for strand')
@@ -153,7 +190,10 @@ def _apply_gene_window(gene, window=None):
         return gene.contig, start, end
 
 
-def _subset_to_windows(insertions, gene_windows):
+def _subset_to_windows(
+        insertions,  # type: List[Insertion]
+        gene_windows  # type: Dict[str, Tuple[str, int, int]]
+):  # type: (...) -> List[Insertion]
     """Subsets insertions for given gene windows."""
 
     # Create lookup trees.
@@ -163,19 +203,25 @@ def _subset_to_windows(insertions, gene_windows):
             sorted(gene_windows.values()), operator.itemgetter(0))
     }
 
-    # Determine which insertions overlap trees.
+    # Determine which insertions overlap tree intervals and
+    # correspond to genes with known gene window.
     def _in_windows(ins, trees):
         try:
             return trees[ins.seqname].overlaps(ins.position)
         except KeyError:
             return False
 
-    return [ins for ins in insertions if _in_windows(ins, trees)]
+    return [
+        ins for ins in insertions
+        if ins.metadata['gene_id'] in gene_windows and _in_windows(ins, trees)
+    ]
 
 
 def _collapse_per_sample(insertions):
+    # Type: (List[Insertion]) -> Generator
     def _keyfunc(insertion):
-        return (insertion.metadata['sample'], insertion.metadata['gene_id'])
+        return (insertion.metadata['sample'],
+                str(insertion.metadata['gene_id']))
 
     grouped = itertools.groupby(sorted(insertions, key=_keyfunc), key=_keyfunc)
 
@@ -189,14 +235,16 @@ def _collapse_per_sample(insertions):
             yield grp[0]
 
 
-def test_region(insertions,
-                reference_seq,
-                region,
-                pattern=None,
-                intervals=None,
-                total=None,
-                filters=None,
-                insertion_trees=None):
+def test_region(
+        insertions,  # type: List[Insertion]
+        reference_seq,  # type: pyfaidx.Fasta
+        region,  # type: Tuple[str, int, int]
+        pattern=None,  # type: Optional[str]
+        intervals=None,  # type: Optional[Iterable[Tuple[str, int, int]]]
+        total=None,  # type: Optional[int]
+        filters=None,  # type: Optional[List[Callable]]
+        insertion_trees=None  # type: GenomicIntervalTree
+):  # type: (...) -> float
     """Tests a given genomic region for enrichment in insertions."""
 
     if total is None:
@@ -218,7 +266,7 @@ def test_region(insertions,
     # (such as filtering on gene name/id for example).
     if filters is not None:
         for filter_func in filters:
-            region_ins = (ins for ins in region_ins if filter_func(ins))
+            region_ins = set(ins for ins in region_ins if filter_func(ins))
 
     # Calculate p-value.
     x = len(list(region_ins))
@@ -227,12 +275,16 @@ def test_region(insertions,
     # Note here we use loc=1, because we are interested in
     # calculating P(X >= x), not P(X > x) (the default
     # surivival function).
-    p_val = poisson.sf(x, mu=mu, loc=1)
+    p_val = poisson.sf(x, mu=mu, loc=1)  # type: float
 
     return p_val
 
 
-def count_region(reference_seq, region, pattern=None):
+def count_region(
+        reference_seq,  # type: pyfaidx.Fasta
+        region,  # type: Tuple[str, int, int]
+        pattern=None  # type: Optional[str]
+):  # type: (...) -> int
     """Counts occurrences of pattern within given genomic region.
 
     Parameters
@@ -260,19 +312,21 @@ def count_region(reference_seq, region, pattern=None):
 
 
 def _build_regex(pattern):
+    # type: (str) -> Pattern[str]
     if pattern is not None:
         return re.compile(pattern + '|' + pattern[::-1])
     return None
 
 
 def _count_sequence(sequence, regex=None):
+    # type: (pyfaidx.Sequence, Pattern[str]) -> int
     """Counts occurrences of pattern in sequence.
 
     Parameters
     ----------
-    sequence : pyfaidx.Sequence or str
+    sequence : pyfaidx.Sequence
         Sequence to search.
-    regex : regex
+    regex : Pattern[str]
         Pattern to count.
 
     Returns
@@ -289,7 +343,11 @@ def _count_sequence(sequence, regex=None):
     return count
 
 
-def count_total(reference_seq, pattern=None, intervals=None):
+def count_total(
+        reference_seq,  # type: pyfaidx.Sequence
+        pattern=None,  # type: str
+        intervals=None  # type: Iterable[Tuple[str, int, int]]
+):  # type: (...) -> int
     """Counts total occurrences of pattern in reference.
 
     Parameters
@@ -334,6 +392,7 @@ def count_total(reference_seq, pattern=None, intervals=None):
 
 
 def merge_genomic_intervals(intervals):
+    # type: (Iterable[Tuple[str, int, int]]) -> Iterable[Tuple[str, int, int]]
     """Merges overlapping genomic intervals.
 
     Parameters
@@ -359,7 +418,10 @@ def merge_genomic_intervals(intervals):
             yield chrom, low, high
 
 
-def merge_intervals(intervals, is_sorted=False):
+def merge_intervals(
+        intervals,  # type: Iterable[Tuple[int, int]]
+        is_sorted=False  # type: Optional[bool]
+):  # type: (...) -> Iterable[Tuple[int, int]]
     """Merges overlapping intervals.
 
     Parameters

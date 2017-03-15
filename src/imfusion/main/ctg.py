@@ -1,7 +1,10 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Script for testing for CTGs."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import argparse
 import logging
@@ -15,21 +18,27 @@ import pandas as pd
 
 from imfusion.build import Reference
 from imfusion.ctg import test_ctgs
-from imfusion.expression.test import de_exon
+from imfusion.expression.counts import read_exon_counts
+from imfusion.expression.test import test_de
 from imfusion.model import Insertion
+
+FORMAT = "[%(asctime)-15s] %(message)s"
+logging.basicConfig(format=FORMAT, level=logging.INFO)
 
 
 # pylint: disable=E1101
 def main():
+    """Main for imfusion-ctg."""
+
     logger = logging.getLogger()
-    args = _parser_args()
+    args = parse_args()
 
     # Read insertions and filter for depth.
     insertions = list(Insertion.from_csv(args.insertions, sep='\t'))
 
     if args.min_depth is not None:
         insertions = [
-            ins for ins in insertions if ins.support > args.min_depth
+            ins for ins in insertions if ins.support >= args.min_depth
         ]
 
     # Identify CTGs.
@@ -38,32 +47,48 @@ def main():
     if args.window is not None:
         logger.info('- Using window (%d, %d)', *args.window)
 
-    reference = Reference(args.reference_path)
+    reference = Reference(args.reference)
 
     ctgs = test_ctgs(
         insertions,
-        reference_seq=reference.fasta_path,
-        reference_gtf=reference.gtf_path,
-        gene_ids=,
+        reference=reference,
+        gene_ids=args.gene_ids,
         chromosomes=args.chromosomes,
         pattern=args.pattern,
-        window=args.window,
-        threshold=args.threshold)
+        window=args.window)
+
+    # Filter using given threshold.
+    if args.threshold is not None:
+        ctgs = ctgs.query('q_value <= {}'.format(args.threshold))
 
     # If expression is given, test for differential expression.
     if args.expression is not None:
-        raise NotImplementedError()
-        # logger.info('Testing for differential expression')
-        # de_results = _test_de(ins_frame, args.expression, args.exon_gtf,
-        #                       ctgs['gene_id'])
-        # ctgs = pd.merge(ctgs, de_results, on='gene_id', how='left')
+        logger.info('Testing for differential expression')
+
+        # Perform DE tests.
+        exon_counts = read_exon_counts(args.expression)
+        de_results = test_de(insertions, exon_counts, gene_ids=ctgs['gene_id'])
+
+        # Combine with CTG result.
+        de_results = de_results.rename(columns={
+            'direction': 'de_direction',
+            'p_value': 'de_pvalue',
+            'test_type': 'de_test'
+        })
+        ctgs = pd.merge(ctgs, de_results, on='gene_id', how='left')
+
+        if args.de_threshold is not None:
+            # Filter for non-significant genes, keeping nans.
+            ctgs = ctgs.ix[~(ctgs['de_pvalue'] > args.de_threshold)]
 
     # Write outputs.
     logger.info('Writing outputs')
     ctgs.to_csv(str(args.output), sep='\t', index=False)
 
 
-def _parser_args():
+def parse_args():
+    """Parses arguments for imfusion-expression."""
+
     parser = argparse.ArgumentParser()
 
     base_group = parser.add_argument_group('Basic arguments')
@@ -84,14 +109,13 @@ def _parser_args():
         'reference genome or the original reference.')
 
     base_group.add_argument(
-        '--reference_gtf',
-        required=True,
-        type=Path,
-        help='Path to the reference gtf file. Typically '
-        'the same file as used in im-fusion build.')
+        '--gene_ids', default=None, nargs='+', help='IDs of genes to test.')
 
     base_group.add_argument(
-        '--output', type=Path, help='Path for the output CTG file.')
+        '--output',
+        type=Path,
+        help='Path for the output CTG file.',
+        required=True)
 
     base_group.add_argument(
         '--threshold',
@@ -152,31 +176,12 @@ def _parser_args():
 
     de_group.add_argument(
         '--de_threshold',
-        default=0.05,
+        default=None,
         type=float,
         help='Minimum p-value for a CTG to be considered '
         'as differentially expressed.')
 
     return parser.parse_args()
-
-
-def _test_de(insertions, expression_path, dexseq_gtf, gene_ids):
-    # Test each gene for differential expression.
-    de_results = {}
-    for gene_id in gene_ids:
-        try:
-            de_results[gene_id] = de_exon(insertions, expression_path,
-                                          dexseq_gtf, gene_id)
-        except ValueError:
-            pass
-
-    # Summarize result in a DataFrame.
-    de_results = pd.DataFrame(
-        ((gene_id, res.p_value, res.direction)
-         for gene_id, res in de_results.items()),
-        columns=['gene_id', 'de_pvalue', 'de_direction'])
-
-    return de_results
 
 
 if __name__ == '__main__':

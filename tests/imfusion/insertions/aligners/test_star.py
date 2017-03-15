@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""Tests for imfusion.insertions.aligners.star module."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
+from __future__ import absolute_import, division, print_function
+from builtins import *
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
+
 import argparse
 import shutil
 
@@ -8,11 +16,12 @@ except ImportError:
 
 import pytest
 
-from frozendict import frozendict
+from future.utils import native_str
 import pandas as pd
 
 from imfusion.insertions.aligners import star
 from imfusion.model import Fusion, TransposonFusion, Insertion
+from imfusion.util.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name
 
@@ -94,8 +103,8 @@ class TestExtractTransposonFusions(object):
                 strand_transposon=-1,
                 flank_genome=-62,
                 flank_transposon=100,
-                junction_support=4,
-                spanning_support=3,
+                support_junction=4,
+                support_spanning=3,
                 metadata=frozendict({}))
         ]
 
@@ -118,8 +127,8 @@ class TestExtractTransposonFusions(object):
             strand_transposon=1,
             flank_genome=-78,
             flank_transposon=-76,
-            junction_support=380,
-            spanning_support=118,
+            support_junction=380,
+            support_spanning=118,
             metadata=frozendict({}))
         assert expected in fusions
 
@@ -144,8 +153,8 @@ class TestExtractJunctionFusions(object):
                 strand_b=1,
                 flank_a=52,
                 flank_b=62,
-                junction_support=4,
-                spanning_support=0)
+                support_junction=4,
+                support_spanning=0)
         ]
 
 
@@ -169,23 +178,29 @@ class TestExtractSpanningFusions(object):
                 strand_b=1,
                 flank_a=0,
                 flank_b=0,
-                junction_support=0,
-                spanning_support=3)
+                support_junction=0,
+                support_spanning=3)
         ]
 
 
 @pytest.fixture
 def star_align_kws(tmpdir):
+    "Basic arguments for star_align." ""
     return {
-        'fastqs': [('in.R1.fastq.gz', 'in.R2.fastq.gz')],
-        'index_path': '/path/to/index',
-        'output_dir': Path(str(tmpdir / '_star')),
+        'fastq_path': Path('in.R1.fastq.gz'),
+        'fastq2_path': Path('in.R2.fastq.gz'),
+        'index_path': Path('/path/to/index'),
+        'output_dir': Path(native_str(tmpdir / '_star')),
         'extra_args': None
     }
 
 
 class TestStarAlign(object):
+    """Tests for star_align function."""
+
     def test_basic(self, star_align_kws, mocker):
+        """Tests basic call."""
+
         mock_align = mocker.patch.object(star.shell, 'run_command')
         star.star_align(**star_align_kws)
 
@@ -199,14 +214,17 @@ class TestStarAlign(object):
             args=[
                 'STAR', '--genomeDir', '/path/to/index', '--outFileNamePrefix',
                 str(star_align_kws['output_dir']) + '/', '--readFilesIn',
-                star_align_kws['fastqs'][0][0], star_align_kws['fastqs'][0][1],
-                '--readFilesCommand', 'gunzip', '-c'
+                str(star_align_kws['fastq_path']),
+                str(star_align_kws['fastq2_path']), '--readFilesCommand',
+                'gunzip', '-c'
             ],
             stdout=None,
             stderr=None,
             logger=pytest.helpers.mock_any(object))
 
     def test_extra_args(self, star_align_kws, mocker):
+        """Tests call with extra args."""
+
         star_align_kws['extra_args'] = {
             '--alignIntronMax': (200000, ),
             '--twopassMode': ('None', )
@@ -226,31 +244,23 @@ class TestStarAlign(object):
         assert args[args.index('--twopassMode') + 1] == 'None'
 
     def test_unpaired(self, star_align_kws, mocker):
-        star_align_kws['fastqs'] = ['in.fastq.gz']
+        """Tests call for unpaired samples."""
+
+        star_align_kws['fastq2_path'] = None
 
         mock_align = mocker.patch.object(star.shell, 'run_command')
         star.star_align(**star_align_kws)
 
         args = pytest.helpers.mock_call(mock_align)[1]['args']
         assert '--readFilesIn' in args
-        assert args[args.index('--readFilesIn') + 1] == 'in.fastq.gz'
-
-    def test_multiple(self, star_align_kws, mocker):
-        star_align_kws['fastqs'] = [('in1.R1.fastq.gz', 'in1.R2.fastq.gz'),
-                                    ('in2.R1.fastq.gz', 'in2.R2.fastq.gz')]
-
-        mock_align = mocker.patch.object(star.shell, 'run_command')
-        star.star_align(**star_align_kws)
-
-        args = pytest.helpers.mock_call(mock_align)[1]['args']
-        assert '--readFilesIn' in args
-        assert args[args.index('--readFilesIn') + 1] == \
-            'in1.R1.fastq.gz,in2.R1.fastq.gz'
-        assert args[args.index('--readFilesIn') + 2] == \
-            'in1.R2.fastq.gz,in2.R2.fastq.gz'
+        assert args[args.index('--readFilesIn') + 1] == str(star_align_kws[
+            'fastq_path'])
 
     def test_no_gzip(self, star_align_kws, mocker):
-        star_align_kws['fastqs'] = ['in1.fastq']
+        """Tests call for non-gzipped file."""
+
+        star_align_kws['fastq_path'] = Path('in1.fastq')
+        star_align_kws['fastq2_path'] = Path('in2.fastq')
 
         mock_align = mocker.patch.object(star.shell, 'run_command')
         star.star_align(**star_align_kws)
@@ -261,7 +271,8 @@ class TestStarAlign(object):
 
 @pytest.fixture
 def read_paths():
-    return [(Path('a.fastq.gz'), Path('b.fastq.gz'))]
+    """Example read paths."""
+    return (Path('a.fastq.gz'), Path('b.fastq.gz'))
 
 
 @pytest.fixture
@@ -273,8 +284,9 @@ def star_reference():
 
 @pytest.fixture
 def star_output_dir(tmpdir, chimeric_junctions_path):
+    """Simulated star output directory."""
     # Create directories.
-    output_dir = Path(str(tmpdir / 'out'))
+    output_dir = Path(native_str(tmpdir / 'out'))
 
     star_dir = output_dir / '_star'
     star_dir.mkdir(parents=True)
@@ -290,9 +302,10 @@ def star_output_dir(tmpdir, chimeric_junctions_path):
 
 @pytest.fixture
 def cmdline_args(tmpdir):
+    """Example command line arguments."""
     return [
         '--fastq', 'a.fastq.gz', '--fastq2', 'b.fastq.gz', '--reference',
-        str(tmpdir), '--output_dir', '/path/to/out'
+        native_str(tmpdir), '--output_dir', '/path/to/out'
     ]
 
 
@@ -326,16 +339,22 @@ class TestStarAligner(object):
 
         # TODO: Check assembly?
 
-        # Mock star_align call.
+        # Mock functions call.
         star_mock = mocker.patch.object(star, 'star_align')
+        mocker.patch.object(star.util, 'count_lines', return_value=8e6)
 
         # Call identify insertions.
+        fastq, fastq2 = read_paths
+
         aligner = star.StarAligner(star_reference)
-        ins = list(aligner.identify_insertions(read_paths, star_output_dir))
+        ins = list(
+            aligner.identify_insertions(
+                fastq, star_output_dir, fastq2_path=fastq2))
 
         # Check call to star_align.
         star_mock.assert_called_once_with(
-            read_paths,
+            fastq_path=fastq,
+            fastq2_path=fastq2,
             output_dir=star_output_dir / '_star',
             index_path=star_reference.index_path,
             extra_args={
@@ -352,23 +371,23 @@ class TestStarAligner(object):
         # Check result, including specific Cblb insertion.
         assert len(ins) == 5
 
-        assert ins[2] == Insertion(
-            id='INS_3',
-            seqname='16',
-            position=52141095,
-            strand=-1,
-            junction_support=380,
-            spanning_support=118,
-            support=498,
-            metadata=frozendict({
-                'transposon_anchor': 1541,
-                'feature_name': 'En2SA',
-                'gene_name': 'Cblb',
-                'feature_type': 'SA',
-                'gene_strand': 1,
-                'feature_strand': -1,
-                'orientation': 'antisense'
-            }))
+        assert ins[2].id == 'INS_3'
+        assert ins[2].seqname == '16'
+        assert ins[2].position == 52141095
+        assert ins[2].strand == -1
+        assert ins[2].support_junction == 380
+        assert ins[2].support_spanning == 118
+        assert ins[2].support == 498
+        assert ins[2].metadata['gene_id'] == 'ENSMUSG00000022637'
+        assert ins[2].metadata['transposon_anchor'] == 1541
+        assert ins[2].metadata['feature_name'] == 'En2SA'
+        assert ins[2].metadata['gene_name'] == 'Cblb'
+        assert ins[2].metadata['feature_type'] == 'SA'
+        assert ins[2].metadata['gene_strand'] == 1
+        assert ins[2].metadata['orientation'] == 'antisense'
+        assert ins[2].metadata['ffpm_junction'] == 190.0
+        assert ins[2].metadata['ffpm_spanning'] == 59.0
+        assert ins[2].metadata['ffpm'] == 249.0
 
     def test_from_args_basic(self, cmdline_args):
         """Tests creation with minimal arguments."""
@@ -382,8 +401,8 @@ class TestStarAligner(object):
         aligner = star.StarAligner.from_args(args)
 
         # Check args.
-        assert args.fastq == [Path('a.fastq.gz')]
-        assert args.fastq2 == [Path('b.fastq.gz')]
+        assert args.fastq == Path('a.fastq.gz')
+        assert args.fastq2 == Path('b.fastq.gz')
         assert args.output_dir == Path('/path/to/out')
 
         # Check aligner.
@@ -421,8 +440,8 @@ class TestStarAligner(object):
         aligner = star.StarAligner.from_args(args)
 
         # Check args.
-        assert args.fastq == [Path('a.fastq.gz')]
-        assert args.fastq2 == [Path('b.fastq.gz')]
+        assert args.fastq == Path('a.fastq.gz')
+        assert args.fastq2 == Path('b.fastq.gz')
         assert args.output_dir == Path('/path/to/out')
 
         # Check aligner.

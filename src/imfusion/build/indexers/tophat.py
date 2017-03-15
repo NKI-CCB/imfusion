@@ -1,10 +1,18 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Implements indexer for building Tophat references."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import tempfile
 import shutil
+
+try:
+    import pathlib
+except ImportError:
+    import pathlib2 as pathlib
 
 from imfusion.util import shell
 
@@ -27,6 +35,8 @@ class TophatIndexer(Indexer):
         return ['bowtie-build', 'tophat2']
 
     def _build_indices(self, reference):
+        # type: (TophatReference) -> None
+
         # Build bowtie index.
         self._logger.info('Building bowtie index')
 
@@ -44,7 +54,11 @@ class TophatIndexer(Indexer):
                                         transcriptome_log_path)
 
     @staticmethod
-    def _build_bowtie_index(reference_path, output_base_path, log_path=None):
+    def _build_bowtie_index(
+            reference_path,  # type: pathlib.Path
+            output_base_path,  # type: pathlib.Path
+            log_path=None  # type: pathlib.Path
+    ):
         """
         Builds a bowtie index for a reference genome.
 
@@ -63,14 +77,19 @@ class TophatIndexer(Indexer):
             'bowtie-build', str(reference_path), str(output_base_path)
         ]
 
-        with log_path.open('w') as log_file:
-            shell.run_command(args=cmdline_args, stdout=log_file)
+        if log_path is not None:
+            with log_path.open('w') as log_file:
+                shell.run_command(args=cmdline_args, stdout=log_file)
+        else:
+            shell.run_command(args=cmdline_args)
 
     @staticmethod
-    def _build_transcriptome_index(index_path,
-                                   gtf_path,
-                                   output_base_path,
-                                   log_path=None):
+    def _build_transcriptome_index(
+            index_path,  # type: pathlib.Path
+            gtf_path,  # type: pathlib.Path
+            output_base_path,  # type: pathlib.Path
+            log_path=None  # type: pathlib.Path
+    ):  # type:  (...) -> None
         """
         Builds a transcriptome index for a reference genome.
 
@@ -97,7 +116,11 @@ class TophatIndexer(Indexer):
                 '--bowtie1', '--output-dir', str(tmp_dir), str(index_path)
             ]
 
-            shell.run_command(args=cmdline_args, stderr=log_path)
+            if log_path is not None:
+                with log_path.open('w') as log_file:
+                    shell.run_command(args=cmdline_args, stdout=log_file)
+            else:
+                shell.run_command(args=cmdline_args)
         finally:
             shutil.rmtree(tmp_dir)
 
@@ -110,5 +133,12 @@ class TophatReference(Reference):
 
     @property
     def transcriptome_path(self):
+        # type: (...) -> pathlib.Path
         """Path to transcriptome index."""
         return self._reference / 'transcriptome'
+
+    @property
+    def index_path(self):
+        # type: (...) -> pathlib.Path
+        """Path to index."""
+        return self._reference / 'reference'

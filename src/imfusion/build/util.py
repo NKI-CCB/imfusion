@@ -1,17 +1,29 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Contains utility functions for building references."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
+
+from typing import Iterable, Tuple
+
+try:
+    import pathlib
+except ImportError:
+    import pathlib2 as pathlib
 
 import pyfaidx
 
 from imfusion.util.tabix import GtfIterator
 
 
-def build_reference(reference_path,
-                    transposon_path,
-                    output_path,
-                    blacklisted_regions=None):
+def build_reference(
+        reference_path,  # type: pathlib.Path
+        transposon_path,  # type: pathlib.Path
+        output_path,  # type: pathlib.Path
+        blacklisted_regions=None  # type: Iterable[Tuple[str, int, int]]
+):  # type: (...) -> None
     """Builds an augmented reference genome containing the transposon.
 
     Optionally, specific regions of the original reference can be blacklisted if
@@ -46,6 +58,7 @@ def build_reference(reference_path,
 
 
 def _concatenate_fastas(fasta_paths, output_path):
+    # type: (Iterable[pathlib.Path], pathlib.Path) -> None
     """Concatenates multiple fasta files into a single file.
 
     This function combines multiple fasta files into a single output
@@ -55,7 +68,7 @@ def _concatenate_fastas(fasta_paths, output_path):
 
     Parameters
     ----------
-    fasta_paths : List[pathlib.Path]
+    fasta_paths : Iterable[pathlib.Path]
         Paths to fasta files that should be concatentated.
     output_path : pathlib.Paths
         Path for the combined output file.
@@ -85,6 +98,7 @@ def _write_fasta_record(fileobj, name, sequence, max_width=80):
 
 
 def mask_reference(reference_path, blacklist_regions):
+    # type: (pathlib.Path, Iterable[Tuple[str, int, int]]) -> None
     """Masks blacklisted regions in a given reference sequence.
 
     This function removes blacklisted regions from a given reference genome.
@@ -95,7 +109,7 @@ def mask_reference(reference_path, blacklist_regions):
     ----------
     refseq_path : pathlib.Path
         Path to the reference sequence in fasta format.
-    blacklist_regions : List[tuple(str, int, int)]:
+    blacklist_regions : Iterable[tuple(str, int, int)]:
         List of regions that should be blacklisted in the reference
         sequence. Regions should be specified as a tuple of (chromosome,
         start_position, end_position). For example: ('1', 2000, 2200).
@@ -114,6 +128,7 @@ def mask_reference(reference_path, blacklist_regions):
 
 
 def regions_from_strings(region_strs):
+    # type: (Iterable[str]) -> List[Tuple[str, int, int]]
     """Builds blacklist region list for region strings.
 
     Parses region strings into a list of blacklist region tuples.
@@ -123,12 +138,12 @@ def regions_from_strings(region_strs):
 
     Parameters
     ----------
-    region_strs : List[str]
+    region_strs : Iterable[str]
         List of region strings.
 
     Returns
     -------
-    tuple(str, int, int)
+    Listp[Tuple(str, int, int]]
         List of blacklist region tuples.
 
     """
@@ -137,12 +152,14 @@ def regions_from_strings(region_strs):
 
 
 def _parse_region_str(region_str):
+    # type: (str) -> Tuple[str, int, int]
     seqname, range_str = region_str.split(':')
     start, end = tuple(int(e) for e in range_str.split('-'))
     return seqname, start, end
 
 
 def regions_from_genes(gene_ids, gtf_path):
+    # type: (List[str], pathlib.Path) -> List[Tuple[str, int, int]]
     """Builds blacklist frame for given genes.
 
     Returns a list of blacklist regions encompassing the regions
@@ -152,12 +169,12 @@ def regions_from_genes(gene_ids, gtf_path):
     ----------
     gene_ids : List[str]
         List of (Ensembl) gene ids.
-    gtf_path : Str or pathlib.Path
+    gtf_path : pathlib.Path
         Path to gtf file.
 
     Returns
     -------
-    tuple(str, int, int)
+    Tuple[str, int, int]
         List of blacklist region tuples.
 
     """

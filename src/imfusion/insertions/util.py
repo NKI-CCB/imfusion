@@ -1,177 +1,42 @@
-"""Module containing functions for annotating gene-transposon fusions."""
+# -*- coding: utf-8 -*-
+"""Provides functions for annotating gene-transposon fusions."""
 
-# pylint: disable=W0622,W0614,W0401
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 from collections import namedtuple
+import gzip
 import itertools
 import operator
+from typing import Any, Callable, Iterable, Tuple
 
-from frozendict import frozendict
+try:
+    import pathlib
+except ImportError:
+    import pathlib2 as pathlib
+
+from future.utils import native
 import numpy as np
 import pysam
 import toolz
 
 from intervaltree import IntervalTree
 
-from imfusion.model import MetadataFrameMixin, Insertion
+from imfusion.model import MetadataFrameMixin, Insertion, Fusion
 from imfusion.util import shell, tabix
-
-Exon = namedtuple(
-    'Exon',
-    ['chromosome', 'start', 'end', 'strand', 'gene_name', 'transcript_id'])
-
-Transcript = namedtuple(
-    'Transcript', ['id', 'chromosome', 'start', 'end', 'strand', 'gene_name'])
-
-_Gene = namedtuple('Gene', ['chromosome', 'start', 'end', 'strand', 'name'])
+from imfusion.util.frozendict import frozendict
 
 
-class Gene(_Gene):
-
-    __slots__ = ()
-
-    @classmethod
-    def from_transcripts(self, transcripts):
-        transcripts = list(transcripts)
-
-        first = transcripts[0]
-        start = min(transcript.start for transcript in transcripts)
-        end = max(transcript.end for transcript in transcripts)
-
-        return Gene(
-            chromosome=first.chromosome,
-            start=start,
-            end=end,
-            strand=first.strand,
-            name=first.gene_name)
-
-
-_TransposonFeature = namedtuple(
-    'TransposonFeature',
-    ['name', 'start', 'end', 'strand', 'type', 'metadata'])
-
-
-class TransposonFeature(_TransposonFeature, MetadataFrameMixin):
-    """Transposon feature model class."""
-
-    __slots__ = ()
-
-
-class TranscriptReference(object):
-    def __init__(self, transcript_trees, exon_trees):
-        self._transcripts = transcript_trees
-        self._exons = exon_trees
-
-    @classmethod
-    def from_gtf(cls, gtf_path, chromosomes=None, record_filter=None):
-        def _record_to_exon(record):
-            attrs = record.asDict()
-            return Exon(
-                chromosome=record.contig,
-                start=record.start,
-                end=record.end,
-                strand=1 if record.strand == '+' else -1,
-                gene_name=attrs.get('gene_name', None),
-                transcript_id=attrs.get('transcript_id', None))
-
-        def _record_to_transcript(record):
-            attrs = record.asDict()
-            return Transcript(
-                id=record['transcript_id'],
-                chromosome=record.contig,
-                start=record.start,
-                end=record.end,
-                strand=1 if record.strand == '+' else -1,
-                gene_name=attrs.get('gene_name', None))
-
-        gtf = pysam.TabixFile(str(gtf_path), parser=pysam.asGTF())
-
-        if chromosomes is None:
-            chromosomes = gtf.contigs
-
-        transcript_trees = {}
-        exon_trees = {}
-
-        for chrom in chromosomes:
-            # Collect exons and transcripts.
-            transcripts = []
-            exons = []
-
-            records = gtf.fetch(reference=chrom)
-
-            if record_filter is not None:
-                records = (rec for rec in records if record_filter(rec))
-
-            for record in records:
-                if record.feature == 'transcript':
-                    transcripts.append(_record_to_transcript(record))
-                elif record.feature == 'exon':
-                    exons.append(_record_to_exon(record))
-
-            # Build transcript lookup tree.
-            transcript_trees[chrom] = IntervalTree.from_tuples(
-                (tr.start, tr.end, tr) for tr in transcripts)
-
-            # Build exon lookup tree.
-            keyfunc = lambda rec: rec.transcript_id
-
-            exons = sorted(exons, key=keyfunc)
-            grouped = itertools.groupby(exons, key=keyfunc)
-
-            for tr_id, grp in grouped:
-                exon_trees[tr_id] = IntervalTree.from_tuples(
-                    (exon.start, exon.end, exon) for exon in grp)
-
-        return cls(transcript_trees, exon_trees)
-
-    @staticmethod
-    def _lookup_genomic(trees, region):
-        chrom, start, end = region
-        overlap = trees[chrom][start:end]
-        return [tup[2] for tup in overlap]
-
-    @staticmethod
-    def _lookup_tree(tree, region):
-        start, end = region
-        overlap = tree[start:end]
-        return [tup[2] for tup in overlap]
-
-    def overlap_transcripts(self, region, strict=True):
-        overlap = self._lookup_genomic(self._transcripts, region)
-
-        if strict:
-            strict_overlap = []
-            for transcript in overlap:
-                exons = self._exons[transcript.id]
-                exon_overlap = self._lookup_tree(exons, region[1:])
-
-                if len(exon_overlap) > 0:
-                    strict_overlap.append(transcript)
-            overlap = strict_overlap
-
-        return overlap
-
-    def overlap_genes(self, region, strict=True):
-        transcripts = self.overlap_transcripts(region, strict=strict)
-
-        name_func = operator.attrgetter('gene_name')
-        transcripts = sorted(transcripts, key=name_func)
-        grouped = itertools.groupby(transcripts, key=name_func)
-
-        return [Gene.from_transcripts(grp) for _, grp in grouped]
-
-    def get_exons(self, transcript_id):
-        return [interval[2] for interval in self._exons[transcript_id].items()]
-
-
-def extract_insertions(fusions,
-                       gtf_path,
-                       features_path,
-                       chromosomes=None,
-                       assembled_gtf_path=None):
+def extract_insertions(
+        fusions,  # type: Iterable[Fusion]
+        gtf_path,  # type: pathlib.Path
+        features_path,  # type: pathlib.Path
+        chromosomes=None,  # type: List[str]
+        assembled_gtf_path=None,  # type: pathlib.Path
+        ffpm_fastq_path=None  # type: pathlib.Path
+):  # type: (...) -> Iterable[Insertion]
     """Extract insertions from gene-transposon fusions."""
 
     # Annotate for genes.
@@ -195,21 +60,27 @@ def extract_insertions(fusions,
     annotated = (fusion for fusion in annotated
                  if 'feature_name' in fusion.metadata)
 
+    # Calculate FFPM scores.
+    if ffpm_fastq_path is not None:
+        annotated = annotate_ffpm(annotated, fastq_path=ffpm_fastq_path)
+
     # Convert to insertions.
     insertions = Insertion.from_transposon_fusions(
         annotated, id_fmt_str='INS_{}')
 
-    yield from insertions
+    for insertion in insertions:
+        yield insertion
 
 
 def annotate_fusions_for_genes(fusions, reference):
+    # type: (Iterable[Fusion], TranscriptReference) -> Iterable[Fusion]
     """Annotates fusions with genes overlapped by the genomic fusion site.
 
     Parameters
     ----------
     fusions : iterable[TransposonFusion]
         Fusions to annotate.
-    gtf_path : str or pathlib.Path
+    gtf_path : pathlib.Path
         Path to (indexed) gtf file, containing gene exon features.
 
     Yields
@@ -226,7 +97,8 @@ def annotate_fusions_for_genes(fusions, reference):
             for gene in genes:
                 gene_meta = {
                     'gene_name': gene.name,
-                    'gene_strand': gene.strand
+                    'gene_strand': gene.strand,
+                    'gene_id': gene.id
                 }
                 merged_meta = toolz.merge(fusion.metadata, gene_meta)
                 yield fusion._replace(metadata=frozendict(merged_meta))
@@ -235,6 +107,7 @@ def annotate_fusions_for_genes(fusions, reference):
 
 
 def annotate_fusions_for_transposon(fusions, feature_path):
+    # type: (Iterable[Fusion], pathlib.Path) -> Iterable[Fusion]
     """Annotates fusions with transposon features overlapped by the fusion.
 
     Parameters
@@ -277,17 +150,19 @@ def annotate_fusions_for_transposon(fusions, feature_path):
             yield fusion
 
 
-def annotate_fusions_for_assembly(fusions,
-                                  reference,
-                                  assembly,
-                                  skip_annotated=True):
+def annotate_fusions_for_assembly(
+        fusions,  # type: Iterable[Fusion]
+        reference,  # type: TranscriptReference
+        assembly,  # type: TranscriptReference
+        skip_annotated=True  # type: bool
+):  # type: (...) -> Iterable[Fusion]
     """Annotates fusions using the assembled GTF."""
 
     def _exon_region(exon):
         return (exon.chromosome, exon.start, exon.end)
 
     for fusion in fusions:
-        if skip_annotated and 'gene_name' in fusion.metadata:
+        if skip_annotated and 'gene_id' in fusion.metadata:
             # Already annotated
             yield fusion
         else:
@@ -310,6 +185,7 @@ def annotate_fusions_for_assembly(fusions,
                             new_meta = {
                                 'gene_name': gene.name,
                                 'gene_strand': gene.strand,
+                                'gene_id': gene.id,
                                 'novel_transcript': transcript.id
                             }
                             yield fusion._replace(metadata=toolz.merge(
@@ -318,8 +194,9 @@ def annotate_fusions_for_assembly(fusions,
                         # No gene overlap, yield with transcript info.
                         new_meta = {
                             'gene_name': transcript.id,
+                            'gene_id': transcript.id,
                             'gene_strand': transcript.strand,
-                            'novel_transcript': 'True'
+                            'novel_transcript': transcript.id
                         }
                         yield fusion._replace(
                             metadata=toolz.merge(fusion.metadata, new_meta))
@@ -328,7 +205,201 @@ def annotate_fusions_for_assembly(fusions,
                 yield fusion
 
 
-def stringtie_assemble(bam_path, gtf_path, output_path, extra_args=None):
+class TranscriptReference(object):
+    """Reference class, used for efficiently looking up features in
+    the reference transciptome."""
+
+    def __init__(self, transcript_trees, exon_trees):
+        self._transcripts = transcript_trees
+        self._exons = exon_trees
+
+    @classmethod
+    def from_gtf(
+            cls,
+            gtf_path,  # type: pathlib.Path
+            chromosomes=None,  # type: List[str]
+            record_filter=None  # type: Callable[[Any], bool]
+    ):  # type: (...) -> TranscriptReference
+        """Builds an Reference instance from the given GTF file."""
+
+        # Open gtf file.
+        gtf = pysam.TabixFile(native(str(gtf_path)), parser=pysam.asGTF())
+
+        if chromosomes is None:
+            chromosomes = gtf.contigs
+
+        # Build the trees.
+        transcript_trees = {}
+        exon_trees = {}
+
+        for chrom in chromosomes:
+            # Collect exons and transcripts.
+            transcripts = []
+            exons = []
+
+            records = gtf.fetch(reference=chrom)
+
+            if record_filter is not None:
+                records = (rec for rec in records if record_filter(rec))
+
+            for record in records:
+                if record.feature == 'transcript':
+                    transcripts.append(cls._record_to_transcript(record))
+                elif record.feature == 'exon':
+                    exons.append(cls._record_to_exon(record))
+
+            # Build transcript lookup tree.
+            transcript_trees[chrom] = IntervalTree.from_tuples(
+                (tr.start, tr.end, tr) for tr in transcripts)
+
+            # Build exon lookup tree.
+            keyfunc = lambda rec: rec.transcript_id
+
+            exons = sorted(exons, key=keyfunc)
+            grouped = itertools.groupby(exons, key=keyfunc)
+
+            for tr_id, grp in grouped:
+                exon_trees[tr_id] = IntervalTree.from_tuples(
+                    (exon.start, exon.end, exon) for exon in grp)
+
+        return cls(transcript_trees, exon_trees)
+
+    @staticmethod
+    def _record_to_exon(record):
+        attrs = record.asDict()
+        return Exon(
+            chromosome=record.contig,
+            start=record.start,
+            end=record.end,
+            strand=1 if record.strand == '+' else -1,
+            gene_name=attrs.get('gene_name', None),
+            gene_id=attrs.get('gene_id', None),
+            transcript_id=attrs.get('transcript_id', None))
+
+    @staticmethod
+    def _record_to_transcript(record):
+        attrs = record.asDict()
+        return Transcript(
+            id=record['transcript_id'],
+            chromosome=record.contig,
+            start=record.start,
+            end=record.end,
+            strand=1 if record.strand == '+' else -1,
+            gene_name=attrs.get('gene_name', None),
+            gene_id=attrs.get('gene_id', None))
+
+    @staticmethod
+    def _lookup_genomic(trees, region):
+        chrom, start, end = region
+        overlap = trees[chrom][start:end]
+        return [tup[2] for tup in overlap]
+
+    @staticmethod
+    def _lookup_tree(tree, region):
+        start, end = region
+        overlap = tree[start:end]
+        return [tup[2] for tup in overlap]
+
+    def overlap_transcripts(self, region, strict=True):
+        # type: (Tuple[str, int, int], bool) -> List[Transcript]
+        """Returns transcripts that overlap with given region."""
+
+        overlap = self._lookup_genomic(self._transcripts, region)
+
+        if strict:
+            strict_overlap = []
+            for transcript in overlap:
+                exons = self._exons[transcript.id]
+                exon_overlap = self._lookup_tree(exons, region[1:])
+
+                if len(exon_overlap) > 0:
+                    strict_overlap.append(transcript)
+            overlap = strict_overlap
+
+        return overlap
+
+    def overlap_genes(self, region, strict=True):
+        # type: (Tuple[str, int, int], bool) -> List[Gene]
+        """Returns genes that overlap with given region."""
+
+        transcripts = self.overlap_transcripts(region, strict=strict)
+
+        id_func = operator.attrgetter('gene_id')
+        transcripts = sorted(transcripts, key=id_func)
+        grouped = itertools.groupby(transcripts, key=id_func)
+
+        return [Gene.from_transcripts(list(grp)) for _, grp in grouped]
+
+    def get_exons(self, transcript_id):
+        # type: (str) -> List[Exon]
+        """Returns exons for given transcript."""
+        return [interval[2] for interval in self._exons[transcript_id].items()]
+
+
+_Exon = namedtuple('Exon', [
+    'chromosome', 'start', 'end', 'strand', 'gene_name', 'gene_id',
+    'transcript_id'
+])
+
+
+class Exon(_Exon):
+    """Exon model class, used in TranscriptReference instances."""
+    __slots__ = ()
+
+
+_Transcript = namedtuple(
+    'Transcript',
+    ['id', 'chromosome', 'start', 'end', 'strand', 'gene_name', 'gene_id'])
+
+
+class Transcript(_Transcript):
+    """Transcript model class, used in TranscriptReference instances."""
+    __slots__ = ()
+
+
+_Gene = namedtuple('Gene',
+                   ['chromosome', 'start', 'end', 'strand', 'name', 'id'])
+
+
+class Gene(_Gene):
+    """Gene model class, used in TranscriptReference instances."""
+
+    __slots__ = ()
+
+    @classmethod
+    def from_transcripts(cls, transcripts):
+        # type: (List[Transcript]) -> Gene
+        """Builds a gene instance from a collection of transcripts."""
+
+        first = transcripts[0]
+        start = min(transcript.start for transcript in transcripts)
+        end = max(transcript.end for transcript in transcripts)
+
+        return cls(chromosome=first.chromosome,
+                   start=start,
+                   end=end,
+                   strand=first.strand,
+                   name=first.gene_name,
+                   id=first.gene_id)
+
+
+_TransposonFeature = namedtuple(
+    'TransposonFeature',
+    ['name', 'start', 'end', 'strand', 'type', 'metadata'])
+
+
+class TransposonFeature(_TransposonFeature, MetadataFrameMixin):
+    """Transposon feature model class."""
+
+    __slots__ = ()
+
+
+def stringtie_assemble(
+        bam_path,  # type: pathlib.Path
+        gtf_path,  # type: pathlib.Path
+        output_path,  # type: pathlib.Path
+        extra_args=None  # type: Dict[str, Iterable[Any]]
+):  # type: (...) -> None
     """Runs stringtie to assemble transripts."""
 
     extra_args = extra_args or {}
@@ -346,22 +417,24 @@ def stringtie_assemble(bam_path, gtf_path, output_path, extra_args=None):
     shell.run_command(cmdline_args)
 
 
-def filter_insertions(insertions,
-                      features=True,
-                      orientation=True,
-                      blacklist=None):
+def filter_insertions(
+        insertions,  # type: Iterable[Insertion]
+        features=True,  # type: bool
+        orientation=True,  # type: bool
+        blacklist=None  # type: Set[str]
+):
     """Filters false positive insertions using a common set of filters.
 
     Parameters
     ----------
-    insertions : iterable[Insertion]
+    insertions : Iterable[Insertion]
         Insertions to filter.
     features : bool
         Whether to filter insertions that correspond to unexpected
         features of the transposon (non SA/SD) features.
     orientation : bool
         Whether to filter insertions that have the conflicting orientations
-        between gene and transposon features.abs
+        between gene and transposon features.
     blacklist : set[str]
         List of blacklisted genes to filter for.
 
@@ -369,7 +442,6 @@ def filter_insertions(insertions,
     ------
     Insertion
         Next filtered insertion.
-
 
     """
 
@@ -382,10 +454,12 @@ def filter_insertions(insertions,
     if orientation:
         insertions = filter_wrong_orientation(insertions)
 
-    yield from insertions
+    for insertion in insertions:
+        yield insertion
 
 
 def filter_unexpected_features(insertions):
+    # type: (Iterable[Insertion]) -> Iterable[Insertion]
     """Filters insertions that have non splice-acceptor/donor features.
 
     This filter removes any insertions that splice to tranposon features
@@ -411,15 +485,16 @@ def filter_unexpected_features(insertions):
             yield ins
 
 
-def filter_blacklist(insertions, gene_symbols):
+def filter_blacklist(insertions, genes, field='gene_name'):
+    # type: (Iterable[Insertion], Set[str], str) -> Iterable[Insertion]
     """Filters insertions for blacklisted genes.
 
     Parameters
     ----------
     insertions : List[Insertion]
         Insertions to filter.
-    gene_symbols : set[str]
-        Names (symbols) of the blacklisted genes.
+    genes : set[str]
+        Symbols of the blacklisted genes.
 
     Yields
     ------
@@ -428,14 +503,13 @@ def filter_blacklist(insertions, gene_symbols):
 
     """
 
-    gene_symbols = set(gene_symbols)
-
     for ins in insertions:
-        if ins.metadata['gene_name'] not in gene_symbols:
+        if ins.metadata[field] not in genes:
             yield ins
 
 
 def filter_wrong_orientation(insertions, drop_na=False):
+    # type: (Iterable[Insertion], bool) -> Iterable[Insertion]
     """Filters insertions with wrong feature orientations w.r.t. their genes.
 
     This filter removes any insertions with a transposon feature that is
@@ -467,3 +541,49 @@ def filter_wrong_orientation(insertions, drop_na=False):
         elif not drop_na and (np.isnan(feat_ori) or np.isnan(gene_strand)):
             # Keeping NaN cases, so yield.
             yield ins
+
+
+def annotate_ffpm(fusions, fastq_path):
+    # type: (Iterable[Fusion], pathlib.Path) -> Iterable[Fusion]
+    """Annotates fusions with FFPM (Fusion Fragments Per Million) score."""
+
+    # Calculate normalization factor.
+    n_reads = count_lines(fastq_path) // 4
+    norm_factor = (1.0 / n_reads) * 1e6
+
+    for fusion in fusions:
+        ffpm_meta = {
+            'ffpm_junction': fusion.support_junction * norm_factor,
+            'ffpm_spanning': fusion.support_spanning * norm_factor,
+            'ffpm': fusion.support * norm_factor
+        }
+        merged_meta = toolz.merge(fusion.metadata, ffpm_meta)
+        yield fusion._replace(metadata=frozendict(merged_meta))
+
+
+def count_lines(file_path):
+    # type: (pathlib.Path) -> int
+    """Counts number of lines in (gzipped) file."""
+
+    if file_path.suffixes[-1] == '.gz':
+        with gzip.open(str(file_path)) as file_obj:
+            count = _count_lines(file_obj)
+    else:
+        with file_path.open() as file_obj:
+            count = _count_lines(file_obj)
+    return count
+
+
+def _count_lines(file_obj):
+    """Counts number of lines in given file."""
+
+    lines = 0
+    buf_size = 1024 * 1024
+    read_f = file_obj.read  # loop optimization
+
+    buf = read_f(buf_size)
+    while buf:
+        lines += buf.count(b'\n')
+        buf = read_f(buf_size)
+
+    return lines

@@ -1,20 +1,23 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Implements aligner for building Tophat2 references."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 try:
     from pathlib import Path
 except ImportError:
     from pathlib2 import Path
 
-from frozendict import frozendict
 import pandas as pd
 import toolz
 
 from imfusion.build.indexers.tophat import TophatReference
 from imfusion.model import TransposonFusion
-from imfusion.util import shell, path
+from imfusion.util import shell, path, tabix
+from imfusion.util.frozendict import frozendict
 
 from .base import Aligner, register_aligner
 from .. import util
@@ -56,27 +59,33 @@ class TophatAligner(Aligner):
 
         return programs
 
-    def identify_insertions(self, read_paths, output_dir):
+    def identify_insertions(self, fastq_path, output_dir, fastq2_path=None):
         """Identifies insertions from given reads."""
 
         # Perform alignment using STAR.
         alignment_path = output_dir / 'alignment.bam'
         if not alignment_path.exists():
             self._logger.info('Performing alignment')
-            self._align(read_paths, output_dir)
+            self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
         else:
             self._logger.info('Using existing alignment')
 
         # Assemble transcripts if requested.
         if self._assemble:
-            assembled_path = output_dir / 'assembled_gtf'
+            assembled_path = output_dir / 'assembled.gtf.gz'
             if not assembled_path.exists():
                 self._logger.info('Assembling transcripts')
 
+                # Generate assembled GTF.
+                stringtie_out_path = assembled_path.with_suffix('')
                 util.stringtie_assemble(
                     alignment_path,
                     gtf_path=self._reference.gtf_path,
-                    output_path=assembled_path)
+                    output_path=stringtie_out_path)
+
+                # Compress and index.
+                tabix.index_gtf(stringtie_out_path, output_path=assembled_path)
+                stringtie_out_path.unlink()
             else:
                 self._logger.info('Using existing assembly')
         else:
@@ -95,6 +104,7 @@ class TophatAligner(Aligner):
                 gtf_path=self._reference.indexed_gtf_path,
                 features_path=self._reference.features_path,
                 assembled_gtf_path=assembled_path,
+                ffpm_fastq_path=fastq_path,
                 chromosomes=None))
 
         self._logger.info('Filtering insertions')
@@ -107,7 +117,7 @@ class TophatAligner(Aligner):
         for insertion in insertions:
             yield insertion
 
-    def _align(self, read_paths, output_dir):
+    def _align(self, fastq_path, output_dir, fastq2_path=None):
         # Setup args.
         transcriptome_path = self._reference.transcriptome_path
 
@@ -125,7 +135,8 @@ class TophatAligner(Aligner):
         tophat_dir = output_dir / '_tophat'
 
         tophat2_align(
-            read_paths,
+            fastq_path=fastq_path,
+            fastq2_path=fastq2_path,
             index_path=self._reference.index_path,
             output_dir=tophat_dir,
             extra_args=args,
@@ -142,8 +153,12 @@ class TophatAligner(Aligner):
 
     def _extract_fusions(self, fusion_path):
         fusion_data = read_fusion_out(fusion_path)
-        yield from extract_transposon_fusions(
+
+        fusions = extract_transposon_fusions(
             fusion_data, transposon_name=self._reference.transposon_name)
+
+        for fusion in fusions:
+            yield fusion
 
     @classmethod
     def configure_args(cls, parser):
@@ -188,9 +203,10 @@ class TophatAligner(Aligner):
 register_aligner('tophat', TophatAligner)
 
 
-def tophat2_align(fastqs,
+def tophat2_align(fastq_path,
                   index_path,
                   output_dir,
+                  fastq2_path=None,
                   extra_args=None,
                   stdout=None,
                   stderr=None,
@@ -203,17 +219,17 @@ def tophat2_align(fastqs,
 
     Parameters
     ----------
-    fastqs : list[pathlib.Path] or list[tuple(pathlib.Path, pathlib.Path)]
-        Paths to the fastq files that should be used for the Tophat2
-        alignment. Can be given as a list of file paths for single-end
-        sequencing data, or a list of path tuples for paired-end sequencing
-        data. The fastqs are treated as belonging to a single sample.
+    fastq_path : pathlib.Path
+        Paths to the fastq file that should be used for the Tophat2
+        alignment.
     index_path : pathlib.Path
         Path to the bowtie index of the (augmented)
         genome that should be used in the alignment. This index is
         typically generated by the *build_reference* function.
     output_dir : pathlib.Path
         Path to the output directory.
+    fastq2_path : pathlib.Path
+        Path to the fastq file of the second pair (for paired-end sequencing).
     kwargs : dict
         Dict of extra command line arguments for Tophat2.
     path : pathlib.Path
@@ -227,21 +243,15 @@ def tophat2_align(fastqs,
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
-    # Extract fastq paths and concatenate into single str.
-    if isinstance(fastqs[0], tuple):
-        fastqs_1, fastqs_2 = zip(*fastqs)
-    else:
-        fastqs_1, fastqs_2 = fastqs, None
-
-    fastqs = [','.join(str(fp) for fp in fastqs_1)]
-
-    if fastqs_2 is not None:
-        fastqs += [','.join((str(fp) for fp in fastqs_2))]
-
     # Inject own arguments.
     extra_args['--output-dir'] = (str(output_dir), )
 
     # Build command-line arguments.
+    if fastq2_path is None:
+        fastqs = [str(fastq_path)]
+    else:
+        fastqs = [str(fastq_path), str(fastq2_path)]
+
     optional_args = list(shell.flatten_arguments(extra_args))
     positional_args = [str(index_path)] + fastqs
 
@@ -361,11 +371,11 @@ def _to_fusion_obj(fusion, transposon_name, is_paired):
     strand_transposon = fusion['strand_' + tr_id]
 
     if is_paired:
-        junction_support = fusion.supp_spanning_mates
-        spanning_support = fusion.supp_mates
+        support_junction = fusion.supp_spanning_mates
+        support_spanning = fusion.supp_mates
     else:
-        junction_support = fusion.supp_reads
-        spanning_support = 0
+        support_junction = fusion.supp_reads
+        support_spanning = 0
 
     return TransposonFusion(
         seqname=fusion['seqname_' + gen_id],
@@ -375,6 +385,6 @@ def _to_fusion_obj(fusion, transposon_name, is_paired):
         flank_transposon=fusion['flank_' + tr_id] * strand_transposon * tr_dir,
         strand_genome=strand_genome,
         strand_transposon=strand_transposon,
-        junction_support=junction_support,
-        spanning_support=spanning_support,
+        support_junction=support_junction,
+        support_spanning=support_spanning,
         metadata=frozendict())
