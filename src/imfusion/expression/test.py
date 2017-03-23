@@ -182,7 +182,7 @@ def test_de_exon(
     pos_sums = norm_after[list(pos_samples)].sum()
     neg_sums = norm_after[list(neg_samples)].sum()
 
-    p_value = mannwhitneyu(pos_sums, neg_sums)[1]
+    p_value = mannwhitneyu(pos_sums, neg_sums, alternative='two-sided')[1]
 
     direction = 1 if pos_sums.mean() > neg_sums.mean() else -1
 
@@ -337,7 +337,8 @@ class DeResult(object):
         # Sanity check.
         stat = mannwhitneyu(
             plot_data.query('insertion == True').after,
-            plot_data.query('insertion == False').after)
+            plot_data.query('insertion == False').after,
+            alternative='two-sided')
         assert abs(stat[1] - self.p_value) < 1e-6
 
         # Log transform data if needed.
@@ -644,7 +645,7 @@ def test_de_gene(
     pos_counts = norm_counts.loc[gene_id, pos_samples]
     neg_counts = norm_counts.loc[gene_id, neg_samples]
 
-    p_value = mannwhitneyu(pos_counts, neg_counts)[1]
+    p_value = mannwhitneyu(pos_counts, neg_counts, alternative='two-sided')[1]
     direction = 1 if pos_counts.mean() > neg_counts.mean() else -1
 
     return DeGeneResult(
