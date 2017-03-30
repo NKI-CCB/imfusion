@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Getting started &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  <title>Getting started &mdash; IM-Fusion 0.2.0 documentation</title>
   
 
   
@@ -30,8 +30,11 @@
   
 
   
-    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="index.html"/>
-        <link rel="next" title="Command-line usage" href="command_line_usage.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="index.html"/>
+        <link rel="next" title="Usage" href="usage.html"/>
         <link rel="prev" title="Installation" href="installation.html"/> 
 
   
@@ -60,7 +63,7 @@
             
             
               <div class="version">
-                0.1
+                0.2.0
               </div>
             
           
@@ -82,25 +85,15 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#building-a-reference">Building a reference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analyzing-individual-samples">Analyzing individual samples</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#detecting-insertions">Detecting insertions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#quantifying-expression">Quantifying expression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#required-files">Required files</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#identifying-candidate-genes">Identifying candidate genes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#merging-sample-results">Merging sample results</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#selecting-de-ctgs">Selecting (DE) CTGs</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 </ul>
 
             
@@ -135,7 +128,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/getting_started.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/getting_started.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -147,189 +140,75 @@
             
   <div class="section" id="getting-started">
 <h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="building-a-reference">
-<h2>Building a reference<a class="headerlink" href="#building-a-reference" title="Permalink to this headline">¶</a></h2>
-<p>Before detecting insertion sites, IM-Fusion first needs to build an
-augmented version of the host reference genome that contains the
-sequence of the transposon as additional sequence. This augmented reference
-is created using <strong>im-fusion build</strong>, which essentially concatenates
-the host reference genome and the transposon sequence (both in Fasta
-format) into a new Fasta file and builds any indices needed for the
-alignment to the augmented reference.</p>
-<p>The basic command for <strong>im-fusion build</strong> is:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">build</span> <span class="o">--</span><span class="n">reference_seq</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
-                <span class="o">--</span><span class="n">reference_gtf</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
-                <span class="o">--</span><span class="n">transposon_sequence</span> <span class="o">./</span><span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
-                <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">augmented</span><span class="o">.</span><span class="n">fa</span>
-</pre></div>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>An IM-Fusion analysis consists of the following steps:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><strong>Building a reference</strong> - An augmented reference genome is created,
+which contains both the host reference sequence and the transposon
+sequence. This reference genome is also indexed for use in alignment.</li>
+<li><strong>Identifying insertions</strong> - Insertions are identified (per sample)
+using one of the fusion-aware aligners (currently STAR or
+Tophat-Fusion), which are used to align reads to the reference genome
+and identify gene-transposon fusions from chimeric read alignments.
+These fusions are analyzed to identify the corresponding transposon
+insertions.</li>
+<li><strong>Quantifying exon expression</strong> - Exon level expression counts are
+generated (per sample) using the RNA-seq alignment from the previous
+step. These counts can be used to (interactively) visualize insertions
+together with the expression of affected genes, or to test for the
+differential expression of candidate genes identified in Step 5.</li>
+<li><strong>Merging samples</strong> - Insertions and expression counts from multiple
+samples are merged into a single dataset, which is more convenient for
+downstream analyses.</li>
+<li><strong>Selecting (DE) CTGs</strong> - The merged dataset is analyzed to identify
+Commonly Targeted Genes (CTGs) – genes that are more frequently affected
+by insertions (across samples) than would be expected by chance. The
+exon expression counts are used to test whether the expression of CTGs
+is significantly affected by their insertions. This provides an
+additional &#8216;biological&#8217; filter, allowing us to specifically select for
+these differentially expressed CTGs (DE CTGs), which are more likely to
+have a true biological effect.</li>
+</ol>
+</div></blockquote>
+<p>Each of these steps is implemented using a dedicated command. For more details
+on the individual steps and their commands, see <a class="reference internal" href="usage.html"><span class="doc">Usage</span></a>. Additionally,
+supporting code is provided for interactive analyses (such as plotting
+differential expression) and manually running certain steps of the pipeline.
+For more details, see <a class="reference internal" href="api.html"><span class="doc">API</span></a>.</p>
 </div>
-<p>Here, the <em>reference_seq</em> argument points to a fasta file containing
-the sequence of the reference genome, <em>reference_gtf</em> points to the gtf
-file containing the reference gene features and <em>transposon.fa</em> points to
-the transposon sequence. The augmented reference is written to the path
-specified by <em>output</em>.</p>
-<p>Optionally, specific genomic regions can be blacklisted as follows:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">build</span> <span class="o">--</span><span class="n">reference_seq</span> <span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
-                <span class="o">--</span><span class="n">reference_gtf</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
-                <span class="o">--</span><span class="n">transposon_seq</span> <span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
-                <span class="o">--</span><span class="n">blacklist_regions</span> <span class="mi">13</span><span class="p">:</span><span class="mi">31623816</span><span class="o">-</span><span class="mi">31633406</span> \
-                <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">augmented</span><span class="o">.</span><span class="n">fa</span>
-</pre></div>
-</div>
-<p>Blacklisting is used to avoid remove sequences that are homologous between
-the reference and the transposon sequence, which present issues during
-the read alignment. These homologous sequences typically are the result
-of re-using endogeneous splice acceptor/donor sequences for the construction
-of the transposon.</p>
-<p>Alternatively, entire genes may be blacklisted using their IDs:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">build</span> <span class="o">--</span><span class="n">reference_sequence</span> <span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
-                <span class="o">--</span><span class="n">reference_gtf</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
-                <span class="o">--</span><span class="n">transposon_seq</span> <span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
-                <span class="o">--</span><span class="n">blacklist_genes</span> <span class="n">ENSMUSG00000039095</span> \
-                <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">augmented</span><span class="o">.</span><span class="n">fa</span>
-</pre></div>
-</div>
-<p>For a more detailed description and additional arguments,
-see <a class="reference internal" href="command_line_usage.html#imfusion-build-usage"><span class="std std-ref">im-fusion build</span></a>.</p>
-</div>
-<div class="section" id="analyzing-individual-samples">
-<h2>Analyzing individual samples<a class="headerlink" href="#analyzing-individual-samples" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="detecting-insertions">
-<h3>Detecting insertions<a class="headerlink" href="#detecting-insertions" title="Permalink to this headline">¶</a></h3>
-<p>Transposon insertions are detected for each sample individually using the
-command <strong>im-fusion insertions</strong>. This command essentially runs Tophat2 to
-align the RNA-seq reads and identify gene fusions, extracts gene-transposon
-fusions from the result and derives the corresponding insertions. The
-insertions are written as the tab-separated file <em>insertions.txt</em> in
-the output directory.</p>
-<p>The basic command for <strong>im-fusion insertions</strong> is:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">insertions</span> <span class="o">--</span><span class="n">fastq</span> <span class="n">sample_s1</span><span class="o">.</span><span class="n">R1</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
-                     <span class="o">--</span><span class="n">reference_index</span> <span class="n">augmented</span> \
-                     <span class="o">--</span><span class="n">reference_gtf</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
-                     <span class="o">--</span><span class="n">transposon_name</span> <span class="n">T2Onc2</span> \
-                     <span class="o">--</span><span class="n">transposon_features</span> <span class="n">T2Onc2</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">txt</span> \
-                     <span class="o">--</span><span class="n">output_dir</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">s1</span> \
-                     <span class="o">--</span><span class="n">sample_id</span> <span class="n">s1</span>
-</pre></div>
-</div>
-<p>The <em>fastq</em> argument should specify paths to the fastq file files containing
-the RNA-seq reads for the given sample. For paired-end samples, the
-corresponding second pair should be provided in the same order using the
-optional <em>fastq2</em> argument. The argument <em>reference_index</em> should point to
-the bowtie index of the augmented reference genome, <em>reference_gtf</em> to
-the reference gene gtf file and <em>tranposon_name</em> should reflect the name of
-the transposon sequence. The <em>output_dir</em> argument specifies where the
-sample output should be written.</p>
-<p>The <em>transposon_features</em> argument should specify the path to a TSV file
-describing the different features of the used transposon. The file should
-contain the columns &#8216;name&#8217;, &#8216;start&#8217;, &#8216;end&#8217;, &#8216;strand&#8217; and &#8216;type&#8217;.
-Start, end and strand are used to define the position and orientation of the
-features. The type column indicates whether a feature represents a splice
-acceptor or donor feature and should contain only SA, SD or empty values. See
-the data directory on Github for some examples.</p>
-<p>For a more detailed description and additional arguments,
-see <a class="reference internal" href="command_line_usage.html#imfusion-insertions-usage"><span class="std std-ref">im-fusion insertions</span></a>.</p>
-</div>
-<div class="section" id="quantifying-expression">
-<h3>Quantifying expression<a class="headerlink" href="#quantifying-expression" title="Permalink to this headline">¶</a></h3>
-<p>After detecting insertions, we use <strong>im-fusion expression</strong> to quantify
-exon expression for the given sample using the generated RNA-seq alignment.
-The counts are generated using the <strong>featureCounts</strong> tool, which must be
-available in PATH.</p>
-<p>The basic command is as follows:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">expression</span> <span class="o">--</span><span class="n">sample_dir</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">s1</span> \
-                     <span class="o">--</span><span class="n">exon_gtf</span> <span class="n">exons</span><span class="o">.</span><span class="n">gtf</span> \
-                     <span class="o">--</span><span class="n">sample_id</span> <span class="n">s1</span>
-</pre></div>
-</div>
-<p>Here, the <em>exon_gtf</em> argument refers to a gtf file containing the flattened
-exon representation of previously used reference gtf. The
-<em>input_dir</em> argument should point to a sample directory (which was previously
-generated by <strong>im-fusion insertions</strong>). The generated counts are written to
-this sample directory as the TSV file <em>exon_counts.txt</em>.</p>
-<p>The easiest way to generate the required exon gtf file is to generate
-it from the previously used reference.gtf file using the
-dexseq_prepare_annotation.py script from
-<a class="reference external" href="http://bioconductor.org/packages/release/bioc/html/DEXSeq.html">DEXSeq</a>.
-After extracting the script from the DEXSeq package, the exon gtf can be
-generated using the following command:</p>
+<div class="section" id="required-files">
+<h2>Required files<a class="headerlink" href="#required-files" title="Permalink to this headline">¶</a></h2>
+<p>IM-Fusion does not require any special preparation for sequencing and should
+be applicable to standard RNA-sequencing data, as long as these data are not
+somehow depleted for the transposon sequences. Both single- and paired-end
+sequencing data is supported, although paired-end data is likely to provide
+more sensitivity in the results.</p>
+<p>For building a reference, the following files are required:</p>
+<blockquote>
+<div><ul class="simple">
+<li>The reference genome sequence, in Fasta format.</li>
+<li>The reference gene features, adhering to Ensembl&#8217;s GTF format.</li>
+<li>The transposon sequence, in Fasta format.</li>
+<li>A tab-separated file describing the different features of the transposon.</li>
+</ul>
+</div></blockquote>
+<p>The transposon feature file describes the locations of the splice-donor and
+splice-acceptor sites that are present in the transposon. The file should
+contain the following columns: name, start, end, strand and type; with each
+row describing a single feature. The first four of these columns describe the
+name, location and orientation of each feature. The last column specifies the
+type of the feature, which should be either ‘SD’ or ‘SA’ for splice-donor or
+splice-acceptor sites respectively. The field may also be left empty for other
+types of features, however these features will not be used by IM-Fusion.</p>
+<p>Finally, for generating the exon-level expression counts, IM-Fusion needs a
+flattened exon representation of the reference gene features (in GTF format).
+This file is most easily generated from the reference gene features using the
+<code class="docutils literal"><span class="pre">dexseq_prepare_annotation.py</span></code> script from <a class="reference external" href="http://bioconductor.org/packages/release/bioc/html/DEXSeq.html">DEXSeq</a>. Using this script,
+the exon gtf file can be generated as follows:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">dexseq_prepare_annotation</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">aggr</span> <span class="n">no</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> <span class="n">exons</span><span class="o">.</span><span class="n">gtf</span>
 </pre></div>
-</div>
-<p>For a more detailed description and additional arguments,
-see <a class="reference internal" href="command_line_usage.html#imfusion-expression-usage"><span class="std std-ref">im-fusion expression</span></a>.</p>
-</div>
-</div>
-<div class="section" id="identifying-candidate-genes">
-<h2>Identifying candidate genes<a class="headerlink" href="#identifying-candidate-genes" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="merging-sample-results">
-<h3>Merging sample results<a class="headerlink" href="#merging-sample-results" title="Permalink to this headline">¶</a></h3>
-<p>To detect genes that are recurrently mutated across samples, we first merge
-the individual sample results into a combined dataset using <strong>im-fusion merge</strong>.
-This command effectively concatenates the individual results into combined
-<em>insertions.txt</em> and <em>exon_counts.txt</em> files.</p>
-<p>The basic command is as follows:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">merge</span> <span class="o">--</span><span class="n">base_dir</span> <span class="o">./</span><span class="n">output</span> \
-                <span class="o">--</span><span class="n">output_base</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span>
-</pre></div>
-</div>
-<p>The argument <em>base_dir</em> refers to a directory that contains the output
-for individual samples as sub-directories. Any sub-directories containing
-an <em>insertions.txt</em> file are taken as a sample directory.  The argument
-<em>output_base</em> specifies the basename for the merged outputs.</p>
-<p>Specific sets of samples can be selected using the <em>samples</em> argument:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">merge</span> <span class="o">--</span><span class="n">base_dir</span> <span class="o">./</span><span class="n">output</span> \
-                <span class="o">--</span><span class="n">output_base</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span> \
-                <span class="o">--</span><span class="n">samples</span> <span class="n">s1</span> <span class="n">s2</span> <span class="n">s3</span>
-</pre></div>
-</div>
-<p>For a more detailed description and additional arguments,
-see <a class="reference internal" href="command_line_usage.html#imfusion-merge-usage"><span class="std std-ref">im-fusion merge</span></a>.</p>
-</div>
-<div class="section" id="selecting-de-ctgs">
-<h3>Selecting (DE) CTGs<a class="headerlink" href="#selecting-de-ctgs" title="Permalink to this headline">¶</a></h3>
-<p>To select candidate genes, we use <strong>im-fusion ctg</strong> to identify differentially
-expressed CTGs from the combined dataset generated by <strong>im-fusion merge</strong>.
-In essence, the <strong>ctg</strong> command first applies the CTG signifiance test to
-identify a list of possible candidate genes and then tests each of the genes for differential expression to narrow down the list.</p>
-<p>The basic command is as follows:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
-              <span class="o">--</span><span class="n">expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span> \
-              <span class="o">--</span><span class="n">reference_seq</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
-              <span class="o">--</span><span class="n">reference_gtf</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
-              <span class="o">--</span><span class="n">exon_gtf</span> <span class="o">./</span><span class="n">exons</span><span class="o">.</span><span class="n">gtf</span> \
-              <span class="o">--</span><span class="n">output</span> <span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span>
-</pre></div>
-</div>
-<p>Here, <em>insertions</em> and <em>expression</em> should point to the merged insertions
-and expression files generated by <strong>im-fusion merge</strong>. The argument
-<em>reference_seq</em> should refer to the reference fasta file, <em>reference_gtf</em> to
-the reference gtf file, <em>exon_gtf</em> to the flattened exon gtf file used for
-<strong>imfusion expression</strong> and <em>output</em> specifies the output file to which
-CTGs will be written.</p>
-<p>The significance thresholds for the CTG and DE tests can be specified
-using the arguments <em>threshold</em> and <em>de_threshold</em>:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
-              <span class="o">--</span><span class="n">expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span> \
-              <span class="o">--</span><span class="n">reference_seq</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
-              <span class="o">--</span><span class="n">reference_gtf</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
-              <span class="o">--</span><span class="n">exon_gtf</span> <span class="o">./</span><span class="n">exons</span><span class="o">.</span><span class="n">gtf</span> \
-              <span class="o">--</span><span class="n">output</span> <span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span> \
-              <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.05</span> \
-              <span class="o">--</span><span class="n">de_threshold</span> <span class="mf">0.05</span>
-</pre></div>
-</div>
-<p>Optionally, the differential expression test can be skipped by not providing
-the expression file. In this case, only the CTG test is performed:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
-              <span class="o">--</span><span class="n">reference_seq</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">fa</span> \
-              <span class="o">--</span><span class="n">reference_gtf</span> <span class="o">./</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> \
-              <span class="o">--</span><span class="n">output</span> <span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span> \
-              <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.05</span> \
-</pre></div>
-</div>
-<p>For a more detailed description and additional arguments,
-see <a class="reference internal" href="command_line_usage.html#imfusion-ctg-usage"><span class="std std-ref">im-fusion ctg</span></a>.</p>
 </div>
 </div>
 </div>
@@ -341,7 +220,7 @@ see <a class="reference internal" href="command_line_usage.html#imfusion-ctg-usa
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="command_line_usage.html" class="btn btn-neutral float-right" title="Command-line usage" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -353,7 +232,7 @@ see <a class="reference internal" href="command_line_usage.html#imfusion-ctg-usa
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Julian de Ruiter.
+        &copy; Copyright 2017, Julian de Ruiter.
 
     </p>
   </div>
@@ -375,10 +254,11 @@ see <a class="reference internal" href="command_line_usage.html#imfusion-ctg-usa
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1+1.g9b7cc62',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

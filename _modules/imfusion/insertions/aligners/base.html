@@ -1,0 +1,356 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.insertions.aligners.base &mdash; IM-Fusion 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../home.html">IM-Fusion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imfusion.insertions.aligners.base</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.insertions.aligners.base</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Implements base Aligner classes, used for identifying fusions/insertions.&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pathlib2</span> <span class="k">as</span> <span class="nn">pathlib</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.util</span> <span class="k">import</span> <span class="n">shell</span>
+
+<span class="n">_aligner_registry</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span> <span class="nf">register_aligner</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">aligner</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Registers aligner under given name.&quot;&quot;&quot;</span>
+    <span class="n">_aligner_registry</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">aligner</span>
+
+
+<span class="k">def</span> <span class="nf">get_aligners</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns all registered aligners.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_aligner_registry</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Aligner"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.Aligner">[docs]</a><span class="k">class</span> <span class="nc">Aligner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base aligner class.</span>
+
+<span class="sd">    This base class defines the interface for ``Aligner`` classes. The main</span>
+<span class="sd">    methods provided by ``Aligners`` are the ``check_dependencies`` and</span>
+<span class="sd">    ``identify_insertions`` methods. The former is used to check whether</span>
+<span class="sd">    required external dependencies are present in ``$PATH``, whilst the latter</span>
+<span class="sd">    should be called with a reference instance and the sequence read files</span>
+<span class="sd">    to identify insertions. The implementation of the ``identify_insertions``</span>
+<span class="sd">    method is specific to each aligner and should be overridden in each</span>
+<span class="sd">    subclass.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reference : Reference</span>
+<span class="sd">        Reference class describing the reference paths.</span>
+<span class="sd">    logger : logging.Logger</span>
+<span class="sd">        Logger to be used for logging messages.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">=</span> <span class="n">reference</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logger</span> <span class="ow">or</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;External dependencies required by aligner.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Aligner.check_dependencies"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.Aligner.check_dependencies">[docs]</a>    <span class="k">def</span> <span class="nf">check_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks if all required external dependencies are in ``$PATH``.</span>
+
+<span class="sd">        Raises a ValueError if any dependencies are missing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">shell</span><span class="o">.</span><span class="n">check_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Aligner.configure_args"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.Aligner.configure_args">[docs]</a>    <span class="k">def</span> <span class="nf">configure_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configures an argument parser for the Indexer.</span>
+
+<span class="sd">        Used by ``imfusion-build`` to configure the sub-command for</span>
+<span class="sd">        this indexer (if registered as an Indexer using the</span>
+<span class="sd">        ``register_indexer`` function).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parser : argparse.ArgumentParser</span>
+<span class="sd">            Argument parser to configure.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Required arguments.</span>
+        <span class="n">base_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Basic arguments&#39;</span><span class="p">)</span>
+
+        <span class="n">base_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--fastq&#39;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path(s) to the samples fastq files.&#39;</span><span class="p">)</span>
+
+        <span class="n">base_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--fastq2&#39;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Paths to the second pair fastq files (for paired-end &#39;</span>
+            <span class="s1">&#39;sequencing data). Should be given in the same order as for fastq.&#39;</span><span class="p">)</span>
+
+        <span class="n">base_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--reference&#39;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to the index of the augmented reference &#39;</span>
+            <span class="s1">&#39;generated by im-fusion build.&#39;</span><span class="p">)</span>
+
+        <span class="n">base_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--output_dir&#39;</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;The samples output directory.&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parses arguments from argparse into a dict.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Aligner.from_args"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.Aligner.from_args">[docs]</a>    <span class="k">def</span> <span class="nf">from_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructs an Indexer instance from given arguments.</span>
+
+<span class="sd">        Instantiates an Indexer instance from the given argparse arguments.</span>
+<span class="sd">        Uses the ``_parse_args`` method internally, which performs the actual</span>
+<span class="sd">        argument-to-parameter extraction. As such, the ``_parse_args`` method</span>
+<span class="sd">        should be overridden in any subclasses with extra parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args : argparse.Namespace</span>
+<span class="sd">            Arguments to parse.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">cls</span><span class="o">.</span><span class="n">_parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Aligner.identify_insertions"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.Aligner.identify_insertions">[docs]</a>    <span class="k">def</span> <span class="nf">identify_insertions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fastq_path</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">fastq2_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Identifies insertions from given reads.</span>
+
+<span class="sd">        Aligns RNA-seq reads to the reference genome and uses this alignment</span>
+<span class="sd">        to identify gene-transposon fusions. These gene-transposon fusions</span>
+<span class="sd">        are summarized to transposon insertions and returned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fastq_path : Path</span>
+<span class="sd">            Path to fastq file containing sequence reads. For paired-end data,</span>
+<span class="sd">            this should refer to the first read of the pair.</span>
+<span class="sd">        output_dir : Path</span>
+<span class="sd">            Output directory, to use for output files such as the alignment.</span>
+<span class="sd">        fastq2_path : Path</span>
+<span class="sd">            For paired-end sequencing data, path to fastq file containing</span>
+<span class="sd">            the second read of the pair.</span>
+
+<span class="sd">        Yields</span>
+<span class="sd">        ------</span>
+<span class="sd">        Insertion</span>
+<span class="sd">            Yields the identified insertions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

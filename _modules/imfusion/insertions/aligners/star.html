@@ -1,0 +1,1053 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.insertions.aligners.star &mdash; IM-Fusion 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../home.html">IM-Fusion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imfusion.insertions.aligners.star</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.insertions.aligners.star</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Implements aligner for building STAR references.&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">intervaltree</span> <span class="k">import</span> <span class="n">IntervalTree</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">toolz</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.build.indexers.star</span> <span class="k">import</span> <span class="n">StarReference</span>
+<span class="kn">from</span> <span class="nn">imfusion.model</span> <span class="k">import</span> <span class="n">Fusion</span><span class="p">,</span> <span class="n">TransposonFusion</span>
+<span class="kn">from</span> <span class="nn">imfusion.util</span> <span class="k">import</span> <span class="n">shell</span><span class="p">,</span> <span class="n">tabix</span><span class="p">,</span> <span class="n">path</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">Aligner</span><span class="p">,</span> <span class="n">register_aligner</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">util</span>
+
+<span class="n">CIGAR_MATCH_REGEX</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;(\d+)M&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="StarAligner"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.StarAligner">[docs]</a><span class="k">class</span> <span class="nc">StarAligner</span><span class="p">(</span><span class="n">Aligner</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;STAR aligner.</span>
+
+<span class="sd">    Aligner that identifies insertions using STAR, by aligning reads using STAR</span>
+<span class="sd">    (including chimeric alignments) and identifying gene-transposon fusions</span>
+<span class="sd">    from chimeric read alignments.</span>
+
+<span class="sd">    As STAR provides chimeric alignment information but does not provide a</span>
+<span class="sd">    an actual list of fusions, we identify fusions by summarizing these</span>
+<span class="sd">    alignments ourselves. The strategy to do so is as follows:</span>
+
+<span class="sd">        1. We filter for chimeric reads involving the transposon and genomic</span>
+<span class="sd">           loci, to reduce the number of reads we need to consider.</span>
+<span class="sd">        2. We select chimeric reads (or mates) that actually overlap the</span>
+<span class="sd">           breakpoint of the fusion, as these alignments provide the exact</span>
+<span class="sd">           position of the fusion. These reads are grouped by their positions</span>
+<span class="sd">           to determine the number of reads that support each fusion. Fusions</span>
+<span class="sd">           with close distance (on both the genomic and transposon loci) are</span>
+<span class="sd">           merged to account for slight variations in the alignment.</span>
+<span class="sd">        3. For paired-end data:</span>
+<span class="sd">            - We select mates that span the fusion site</span>
+<span class="sd">              (meaning that they do not overlap the breakpoint, therefore we</span>
+<span class="sd">              only have an approximate position) and group mates of which both</span>
+<span class="sd">              ends are with close proximity of eachother.</span>
+<span class="sd">            - We then try to assign these groups of spanning mates to</span>
+<span class="sd">              previously identified &#39;junction&#39; fusions that are in the close</span>
+<span class="sd">              vicinity. If we find a match, the number of mates in the group is</span>
+<span class="sd">              registered as &#39;spanning support&#39; for that fusion. If no match is</span>
+<span class="sd">              found, we consider the group to identify a unique fusion and</span>
+<span class="sd">              derive an approximate location for the fusion from the</span>
+<span class="sd">              mate locations.</span>
+<span class="sd">        4. We return the combined list of fusions. For single-end data, this</span>
+<span class="sd">           only contains junction fusions, whilst for paired-end data this is</span>
+<span class="sd">           the combined list of junction and unassigned spanning fusions.</span>
+
+<span class="sd">    To avoid memory issues with STAR during the sorting of bam files, sorting</span>
+<span class="sd">    can be performed using Sambamba. Other external dependencies of this</span>
+<span class="sd">    aligner are STAR itself and Stringtie, which is used for the assembly of</span>
+<span class="sd">    novel transcripts (if requested).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reference : Reference</span>
+<span class="sd">        Reference class describing the reference paths.</span>
+<span class="sd">    assemble : bool</span>
+<span class="sd">        Whether to perform the assembly of novel transcripts using Stringie.</span>
+<span class="sd">    assemble_args : Dict[str, Any]</span>
+<span class="sd">        Extra arguments to pass to Stringie during assembly.</span>
+<span class="sd">    min_flank : int</span>
+<span class="sd">        Minimum number of flanking bases required on both sides of the</span>
+<span class="sd">        breakpoint for a fusion to be considered valid. This means that, for</span>
+<span class="sd">        a split read overlapping the fusion boundary, at least ``min_flank``</span>
+<span class="sd">        bases should be on either sides of the fusion.</span>
+<span class="sd">    threads : int</span>
+<span class="sd">        Number of threads to use.</span>
+<span class="sd">    extra_args :</span>
+<span class="sd">        Extra arguments to pass to STAR for alignment.</span>
+<span class="sd">    logger : logging.Logger</span>
+<span class="sd">        Logger to be used for logging messages.</span>
+<span class="sd">    filter_features : bool</span>
+<span class="sd">        Whether insertions should be filtered to remove non SA/SD insertions.</span>
+<span class="sd">    filter_orientation : bool</span>
+<span class="sd">        Whether insertions should be filtered for fusions in which the</span>
+<span class="sd">        transposon feature is in the wrong orientation.</span>
+<span class="sd">    filter_blacklist : List[str]</span>
+<span class="sd">        List of gene ids to filter insertions for.</span>
+<span class="sd">    external_sort : bool</span>
+<span class="sd">        Whether sorting should be performed using STAR (False) or using</span>
+<span class="sd">        Sambamba (True). Sambamba uses less memory than STAR, but is slower.</span>
+<span class="sd">    merge_junction_dist : int</span>
+<span class="sd">        Maximum distance within which fusions supported by split reads</span>
+<span class="sd">        (overlapping the junction, so that the exact breakpoint is known) are</span>
+<span class="sd">        merged. This merging avoids calling multiple fusions due to slight</span>
+<span class="sd">        variations in the alignment, although this value should not be chosen</span>
+<span class="sd">        too large to avoid merging distinct insertions.</span>
+<span class="sd">    max_spanning_dist : int</span>
+<span class="sd">        Maximum distance within which spanning mate pairs (mates that do not</span>
+<span class="sd">        overlap the fusion junction) are grouped when summarizing spanning</span>
+<span class="sd">        chimeric reads. Both mates from two pairs need to be within this</span>
+<span class="sd">        distance of each other to be merged. The value should be chosen to</span>
+<span class="sd">        reflect the expected or emprical insert size.</span>
+<span class="sd">    max_junction_dist : int</span>
+<span class="sd">        Maxixmum distance within which groups of spanning mates are assigned</span>
+<span class="sd">        to a junction fusion (which is supported by split reads, so that its</span>
+<span class="sd">        exact position is known). Groups that cannot be assigned to a junction</span>
+<span class="sd">        fusion are considered to arise from a separate insertion.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">reference</span><span class="p">,</span>  <span class="c1"># type: StarReference</span>
+            <span class="n">assemble</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># type: bool</span>
+            <span class="n">assemble_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: Dict[str, Any]</span>
+            <span class="n">min_flank</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>  <span class="c1"># type: int</span>
+            <span class="n">threads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># type: int</span>
+            <span class="n">extra_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: Dict[str, Any]</span>
+            <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: Any</span>
+            <span class="n">filter_features</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># type: bool</span>
+            <span class="n">filter_orientation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># type: bool</span>
+            <span class="n">filter_blacklist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: List[str]</span>
+            <span class="n">external_sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># type: bool</span>
+            <span class="n">merge_junction_dist</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="c1"># type: int</span>
+            <span class="n">max_spanning_dist</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>  <span class="c1"># type: int</span>
+            <span class="n">max_junction_dist</span><span class="o">=</span><span class="mi">10000</span>  <span class="c1"># type: int</span>
+    <span class="p">):</span>  <span class="c1"># type: (...) -&gt; None</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble</span> <span class="o">=</span> <span class="n">assemble</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_args</span> <span class="o">=</span> <span class="n">assemble_args</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_flank</span> <span class="o">=</span> <span class="n">min_flank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_threads</span> <span class="o">=</span> <span class="n">threads</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_external_sort</span> <span class="o">=</span> <span class="n">external_sort</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_args</span> <span class="o">=</span> <span class="n">extra_args</span> <span class="ow">or</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_merge_junction_dist</span> <span class="o">=</span> <span class="n">merge_junction_dist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_spanning_dist</span> <span class="o">=</span> <span class="n">max_spanning_dist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_junction_dist</span> <span class="o">=</span> <span class="n">max_junction_dist</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filter_features</span> <span class="o">=</span> <span class="n">filter_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filter_orientation</span> <span class="o">=</span> <span class="n">filter_orientation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filter_blacklist</span> <span class="o">=</span> <span class="n">filter_blacklist</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;External dependencies required by aligner.&quot;&quot;&quot;</span>
+
+        <span class="n">programs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;STAR&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_external_sort</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">shell</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s1">&#39;sambamba&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Fall back to samtools if sambamba is not available.</span>
+                <span class="n">programs</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;samtools&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">programs</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;sambamba&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assemble</span><span class="p">:</span>
+            <span class="n">programs</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;stringtie&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">programs</span>
+
+<div class="viewcode-block" id="StarAligner.identify_insertions"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.StarAligner.identify_insertions">[docs]</a>    <span class="k">def</span> <span class="nf">identify_insertions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fastq_path</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">fastq2_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Identifies insertions from given reads.</span>
+
+<span class="sd">        Aligns RNA-seq reads to the reference genome and uses this alignment</span>
+<span class="sd">        to identify gene-transposon fusions. These gene-transposon fusions</span>
+<span class="sd">        are summarized to transposon insertions and returned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fastq_path : Path</span>
+<span class="sd">            Path to fastq file containing sequence reads. For paired-end data,</span>
+<span class="sd">            this should refer to the first read of the pair.</span>
+<span class="sd">        output_dir : Path</span>
+<span class="sd">            Output directory, to use for output files such as the alignment.</span>
+<span class="sd">        fastq2_path : Path</span>
+<span class="sd">            For paired-end sequencing data, path to fastq file containing</span>
+<span class="sd">            the second read of the pair.</span>
+
+<span class="sd">        Yields</span>
+<span class="sd">        ------</span>
+<span class="sd">        Insertion</span>
+<span class="sd">            Yields the identified insertions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Perform alignment using STAR.</span>
+        <span class="n">alignment_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s1">&#39;alignment.bam&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">alignment_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Performing alignment&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">fastq_path</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">fastq2_path</span><span class="o">=</span><span class="n">fastq2_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Using existing alignment&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Assemble transcripts if requested.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assemble</span><span class="p">:</span>
+            <span class="n">assembled_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s1">&#39;assembled.gtf.gz&#39;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">assembled_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Assembling transcripts&#39;</span><span class="p">)</span>
+
+                <span class="c1"># Generate assembled GTF.</span>
+                <span class="n">stringtie_out_path</span> <span class="o">=</span> <span class="n">assembled_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">util</span><span class="o">.</span><span class="n">stringtie_assemble</span><span class="p">(</span>
+                    <span class="n">alignment_path</span><span class="p">,</span>
+                    <span class="n">gtf_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="o">.</span><span class="n">gtf_path</span><span class="p">,</span>
+                    <span class="n">output_path</span><span class="o">=</span><span class="n">stringtie_out_path</span><span class="p">)</span>
+
+                <span class="c1"># Compress and index.</span>
+                <span class="n">tabix</span><span class="o">.</span><span class="n">index_gtf</span><span class="p">(</span><span class="n">stringtie_out_path</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="n">assembled_path</span><span class="p">)</span>
+                <span class="n">stringtie_out_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Using existing assembly&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">assembled_path</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Extract identified fusions.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Extracting fusions&#39;</span><span class="p">)</span>
+        <span class="n">fusion_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s1">&#39;fusions.out&#39;</span>
+        <span class="n">fusions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extract_fusions</span><span class="p">(</span><span class="n">fusion_path</span><span class="p">))</span>
+
+        <span class="c1"># Extract insertions.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Extracting insertions&#39;</span><span class="p">)</span>
+        <span class="n">insertions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="n">util</span><span class="o">.</span><span class="n">extract_insertions</span><span class="p">(</span>
+                <span class="n">fusions</span><span class="p">,</span>
+                <span class="n">gtf_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="o">.</span><span class="n">indexed_gtf_path</span><span class="p">,</span>
+                <span class="n">features_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="o">.</span><span class="n">features_path</span><span class="p">,</span>
+                <span class="n">assembled_gtf_path</span><span class="o">=</span><span class="n">assembled_path</span><span class="p">,</span>
+                <span class="n">ffpm_fastq_path</span><span class="o">=</span><span class="n">fastq_path</span><span class="p">,</span>
+                <span class="n">chromosomes</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Filtering insertions&#39;</span><span class="p">)</span>
+        <span class="n">insertions</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">filter_insertions</span><span class="p">(</span>
+            <span class="n">insertions</span><span class="p">,</span>
+            <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_filter_features</span><span class="p">,</span>
+            <span class="n">orientation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_filter_orientation</span><span class="p">,</span>
+            <span class="n">blacklist</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_filter_blacklist</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">insertion</span> <span class="ow">in</span> <span class="n">insertions</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">insertion</span></div>
+
+    <span class="k">def</span> <span class="nf">_align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fastq_path</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">fastq2_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Put output into subdirectory, we will symlink the</span>
+        <span class="c1"># expected outputs from STAR later.</span>
+        <span class="n">star_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s1">&#39;_star&#39;</span>
+
+        <span class="c1"># Gather default arguments.</span>
+        <span class="n">sort_type</span> <span class="o">=</span> <span class="s1">&#39;Unsorted&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_external_sort</span> <span class="k">else</span> <span class="s1">&#39;SortedByCoordinate&#39;</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;--twopassMode&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Basic&#39;</span><span class="p">,</span> <span class="p">),</span>
+            <span class="s1">&#39;--outReadsUnmapped&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="p">),</span>
+            <span class="s1">&#39;--outSAMtype&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;BAM&#39;</span><span class="p">,</span> <span class="n">sort_type</span><span class="p">),</span>
+            <span class="s1">&#39;--runThreadN&#39;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_threads</span><span class="p">,</span> <span class="p">),</span>
+            <span class="s1">&#39;--chimSegmentMin&#39;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_flank</span><span class="p">,</span> <span class="p">),</span>
+            <span class="s1">&#39;--outSAMstrandField&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;intronMotif&#39;</span><span class="p">,</span> <span class="p">)</span>  <span class="c1"># XS field for Stringtie.</span>
+        <span class="p">}</span>
+
+        <span class="n">star_align</span><span class="p">(</span>
+            <span class="n">fastq_path</span><span class="o">=</span><span class="n">fastq_path</span><span class="p">,</span>
+            <span class="n">fastq2_path</span><span class="o">=</span><span class="n">fastq2_path</span><span class="p">,</span>
+            <span class="n">index_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="o">.</span><span class="n">index_path</span><span class="p">,</span>
+            <span class="n">output_dir</span><span class="o">=</span><span class="n">star_dir</span><span class="p">,</span>
+            <span class="n">extra_args</span><span class="o">=</span><span class="n">toolz</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_args</span><span class="p">),</span>
+            <span class="n">stdout</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">)</span>
+
+        <span class="c1"># If not yet sorted, sort bam file using samtools/sambamba.</span>
+        <span class="n">sorted_bam_path</span> <span class="o">=</span> <span class="n">star_dir</span> <span class="o">/</span> <span class="s1">&#39;Aligned.sortedByCoord.out.bam&#39;</span>
+
+        <span class="k">if</span> <span class="n">sort_type</span> <span class="o">==</span> <span class="s1">&#39;Unsorted&#39;</span><span class="p">:</span>
+            <span class="n">unsorted_bam_path</span> <span class="o">=</span> <span class="n">star_dir</span> <span class="o">/</span> <span class="s1">&#39;Aligned.out.bam&#39;</span>
+            <span class="n">_sort_bam</span><span class="p">(</span>
+                <span class="n">unsorted_bam_path</span><span class="p">,</span> <span class="n">sorted_bam_path</span><span class="p">,</span> <span class="n">threads</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_threads</span><span class="p">)</span>
+            <span class="n">unsorted_bam_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+        <span class="c1"># Symlink fusions and alignment into expected location.</span>
+        <span class="n">dest_bam_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s1">&#39;alignment.bam&#39;</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">symlink_relative</span><span class="p">(</span>
+            <span class="n">src_path</span><span class="o">=</span><span class="n">sorted_bam_path</span><span class="p">,</span> <span class="n">dest_path</span><span class="o">=</span><span class="n">dest_bam_path</span><span class="p">)</span>
+
+        <span class="n">path</span><span class="o">.</span><span class="n">symlink_relative</span><span class="p">(</span>
+            <span class="n">src_path</span><span class="o">=</span><span class="n">star_dir</span> <span class="o">/</span> <span class="s1">&#39;Chimeric.out.junction&#39;</span><span class="p">,</span>
+            <span class="n">dest_path</span><span class="o">=</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s1">&#39;fusions.out&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_extract_fusions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fusion_path</span><span class="p">):</span>
+        <span class="c1"># Read chimeric junction data.</span>
+        <span class="n">chimeric_data</span> <span class="o">=</span> <span class="n">read_chimeric_junctions</span><span class="p">(</span><span class="n">fusion_path</span><span class="p">)</span>
+
+        <span class="c1"># Extract transposon fusions.</span>
+        <span class="n">fusions</span> <span class="o">=</span> <span class="n">extract_transposon_fusions</span><span class="p">(</span>
+            <span class="n">chimeric_data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="o">.</span><span class="n">transposon_name</span><span class="p">,</span>
+            <span class="n">merge_junction_dist</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_merge_junction_dist</span><span class="p">,</span>
+            <span class="n">max_spanning_dist</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_spanning_dist</span><span class="p">,</span>
+            <span class="n">max_junction_dist</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_junction_dist</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">fusion</span> <span class="ow">in</span> <span class="n">fusions</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">fusion</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StarAligner.configure_args"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.StarAligner.configure_args">[docs]</a>    <span class="k">def</span> <span class="nf">configure_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configures an argument parser for the Indexer.</span>
+
+<span class="sd">        Used by ``imfusion-build`` to configure the sub-command for</span>
+<span class="sd">        this indexer (if registered as an Indexer using the</span>
+<span class="sd">        ``register_indexer`` function).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parser : argparse.ArgumentParser</span>
+<span class="sd">            Argument parser to configure.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">configure_args</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+
+        <span class="n">star_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;STAR arguments&#39;</span><span class="p">)</span>
+        <span class="n">star_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--star_threads&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">star_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--star_min_flank&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">star_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--star_external_sort&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
+        <span class="n">star_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--star_args&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">shell</span><span class="o">.</span><span class="n">parse_arguments</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">star_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--merge_junction_dist&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">star_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--max_spanning_dist&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">star_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--max_junction_dist&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">assemble_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Assembly&#39;</span><span class="p">)</span>
+        <span class="n">assemble_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--assemble&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
+
+        <span class="n">filt_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Filtering&#39;</span><span class="p">)</span>
+        <span class="n">filt_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--no_filter_orientation&#39;</span><span class="p">,</span>
+            <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;filter_orientation&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_false&#39;</span><span class="p">)</span>
+        <span class="n">filt_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--no_filter_feature&#39;</span><span class="p">,</span>
+            <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;filter_features&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_false&#39;</span><span class="p">)</span>
+        <span class="n">filt_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--blacklisted_genes&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">kws</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">StarReference</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">reference</span><span class="p">),</span>
+            <span class="n">min_flank</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">star_min_flank</span><span class="p">,</span>
+            <span class="n">threads</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">star_threads</span><span class="p">,</span>
+            <span class="n">extra_args</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">star_args</span><span class="p">,</span>
+            <span class="n">external_sort</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">star_external_sort</span><span class="p">,</span>
+            <span class="n">assemble</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">assemble</span><span class="p">,</span>
+            <span class="n">merge_junction_dist</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">merge_junction_dist</span><span class="p">,</span>
+            <span class="n">max_spanning_dist</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">max_spanning_dist</span><span class="p">,</span>
+            <span class="n">max_junction_dist</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">max_junction_dist</span><span class="p">,</span>
+            <span class="n">filter_features</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">filter_features</span><span class="p">,</span>
+            <span class="n">filter_orientation</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">filter_orientation</span><span class="p">,</span>
+            <span class="n">filter_blacklist</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">blacklisted_genes</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">kws</span></div>
+
+
+<span class="n">register_aligner</span><span class="p">(</span><span class="s1">&#39;star&#39;</span><span class="p">,</span> <span class="n">StarAligner</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_sort_bam</span><span class="p">(</span><span class="n">input_bam</span><span class="p">,</span> <span class="n">output_bam</span><span class="p">,</span> <span class="n">threads</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">shell</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s1">&#39;sambamba&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">output_bam</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">&#39;_tmp&#39;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;sambamba&#39;</span><span class="p">,</span> <span class="s1">&#39;sort&#39;</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">output_bam</span><span class="p">),</span>
+            <span class="s1">&#39;--tmpdir=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)),</span> <span class="s1">&#39;-t&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">threads</span><span class="p">),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">input_bam</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="k">elif</span> <span class="n">shell</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s1">&#39;samtools&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;samtools&#39;</span><span class="p">,</span> <span class="s1">&#39;sort&#39;</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">output_bam</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_bam</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Samtools or Sambamba must be installed for &#39;</span>
+                         <span class="s1">&#39;external sorting&#39;</span><span class="p">)</span>
+
+    <span class="n">shell</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">build_star_index</span><span class="p">(</span><span class="n">reference_path</span><span class="p">,</span>
+                     <span class="n">gtf_path</span><span class="p">,</span>
+                     <span class="n">output_base_path</span><span class="p">,</span>
+                     <span class="n">overhang</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                     <span class="n">stdout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs STAR in build mode to generate a reference index.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_base_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">output_base_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">cmdline_args</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;STAR&#39;</span><span class="p">,</span> <span class="s1">&#39;--runMode&#39;</span><span class="p">,</span> <span class="s1">&#39;genomeGenerate&#39;</span><span class="p">,</span> <span class="s1">&#39;--genomeDir&#39;</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">output_base_path</span><span class="p">),</span> <span class="s1">&#39;--genomeFastaFiles&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference_path</span><span class="p">),</span>
+        <span class="s1">&#39;--sjdbGTFfile&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">gtf_path</span><span class="p">),</span> <span class="s1">&#39;--sjdbOverhang&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">overhang</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="n">shell</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">cmdline_args</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">stderr</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">star_align</span><span class="p">(</span><span class="n">fastq_path</span><span class="p">,</span>
+               <span class="n">index_path</span><span class="p">,</span>
+               <span class="n">output_dir</span><span class="p">,</span>
+               <span class="n">fastq2_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">extra_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">stdout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs STAR in alignment mode for the given fastqs.&quot;&quot;&quot;</span>
+
+    <span class="n">extra_args</span> <span class="o">=</span> <span class="n">extra_args</span> <span class="ow">or</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Check if files are gzipped.</span>
+    <span class="k">if</span> <span class="n">fastq_path</span><span class="o">.</span><span class="n">suffixes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;.gz&#39;</span><span class="p">:</span>
+        <span class="n">extra_args</span><span class="p">[</span><span class="s1">&#39;--readFilesCommand&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;gunzip&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Assemble arguments.</span>
+    <span class="k">if</span> <span class="n">fastq2_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fastq_args</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">fastq_path</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fastq_args</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">fastq_path</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">fastq2_path</span><span class="p">)]</span>
+
+    <span class="n">cmdline_args</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;STAR&#39;</span><span class="p">,</span> <span class="s1">&#39;--genomeDir&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">index_path</span><span class="p">),</span> <span class="s1">&#39;--outFileNamePrefix&#39;</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;--readFilesIn&#39;</span>
+    <span class="p">]</span> <span class="o">+</span> <span class="n">fastq_args</span>
+    <span class="n">cmdline_args</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">shell</span><span class="o">.</span><span class="n">flatten_arguments</span><span class="p">(</span><span class="n">extra_args</span> <span class="ow">or</span> <span class="p">{})</span>
+    <span class="p">]</span>
+
+    <span class="n">shell</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span>
+        <span class="n">args</span><span class="o">=</span><span class="n">cmdline_args</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">stderr</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">read_chimeric_junctions</span><span class="p">(</span><span class="n">chimeric_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads junctions from STARs Chimeric.out.junction output file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pathlib.Path</span>
+<span class="sd">        Path to the Chimeric.out.junction file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        Pandas DataFrame containing the junction data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># File structure is as follows.</span>
+    <span class="c1">#</span>
+    <span class="c1"># http://labshare.cshl.edu/shares/gingeraslab/www-data/</span>
+    <span class="c1"># dobin/STAR/STAR.posix/doc/STARmanual.pdf</span>
+    <span class="c1">#</span>
+    <span class="c1"># The first 9 columns give information about the chimeric junction:</span>
+    <span class="c1">#</span>
+    <span class="c1">#   column 1: chromosome of the donor</span>
+    <span class="c1">#   column 2: first base of the intron of the donor (1-based)</span>
+    <span class="c1">#   column 3: strand of the donor</span>
+    <span class="c1">#   column 4: chromosome of the acceptor</span>
+    <span class="c1">#   column 5: first base of the intron of the acceptor (1-based)</span>
+    <span class="c1">#   column 6: strand of the acceptor</span>
+    <span class="c1">#   column 7: junction type: -1=encompassing junction</span>
+    <span class="c1">#       (between the mates), 1=GT/AG, 2=CT/AC</span>
+    <span class="c1">#   column 8: repeat length to the left of the junction</span>
+    <span class="c1">#   column 9: repeat length to the right of the junction</span>
+    <span class="c1">#</span>
+    <span class="c1"># Columns 10-14 describe the alignments of the two chimeric segments,</span>
+    <span class="c1"># it is SAM like. Alignments are given with respect to the (+) strand</span>
+    <span class="c1">#</span>
+    <span class="c1">#   column 10: read name</span>
+    <span class="c1">#   column 11: first base of the first segment (on the + strand)</span>
+    <span class="c1">#   column 12: CIGAR of the first segment</span>
+    <span class="c1">#   column 13: first base of the second segment</span>
+    <span class="c1">#   column 14: CIGAR of the second segment</span>
+    <span class="c1">#</span>
+
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;seqname_a&#39;</span><span class="p">,</span> <span class="s1">&#39;location_a&#39;</span><span class="p">,</span> <span class="s1">&#39;strand_a&#39;</span><span class="p">,</span> <span class="s1">&#39;seqname_b&#39;</span><span class="p">,</span> <span class="s1">&#39;location_b&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;strand_b&#39;</span><span class="p">,</span> <span class="s1">&#39;junction_type&#39;</span><span class="p">,</span> <span class="s1">&#39;repeat_length_left&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;repeat_length_right&#39;</span><span class="p">,</span> <span class="s1">&#39;read_name&#39;</span><span class="p">,</span> <span class="s1">&#39;first_segment_base&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;first_segment_cigar&#39;</span><span class="p">,</span> <span class="s1">&#39;second_segment_base&#39;</span><span class="p">,</span> <span class="s1">&#39;second_segment_cigar&#39;</span>
+    <span class="p">]</span>
+
+    <span class="n">junctions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">chimeric_path</span><span class="p">),</span>
+        <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;seqname_a&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+               <span class="s1">&#39;seqname_b&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">})</span>
+
+    <span class="k">for</span> <span class="n">strand_col</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;strand_a&#39;</span><span class="p">,</span> <span class="s1">&#39;strand_b&#39;</span><span class="p">]:</span>
+        <span class="n">junctions</span><span class="p">[</span><span class="n">strand_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">junctions</span><span class="p">[</span><span class="n">strand_col</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">({</span><span class="s1">&#39;+&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">junctions</span>
+
+
+<span class="k">def</span> <span class="nf">normalize_chimeric_junctions</span><span class="p">(</span><span class="n">chimeric_data</span><span class="p">,</span> <span class="n">seqname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Normalizes chimeric junction data so that seqnames are ordered.</span>
+
+<span class="sd">    This function normalizes a chimeric junction DataFrame so that seqname_a</span>
+<span class="sd">    and seqname_b are lexically ordered (i.e., seqname_a &lt; seqname_b).</span>
+<span class="sd">    Intra-chromosomal junctions (with seqname_a == seqname_b) are normalized</span>
+<span class="sd">    using their location, so that location_a &lt; location_b.</span>
+
+<span class="sd">    Alternatively, if the seqname argument is given, the junctions are</span>
+<span class="sd">    normalized so that seqname_a == seqname. Any junctions not including</span>
+<span class="sd">    the seqname chromosome are dropped.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    chimeric_data : pd.DataFrame</span>
+<span class="sd">        DataFrame of chimeric junctions to normalize.</span>
+<span class="sd">    seqname : str, optional</span>
+<span class="sd">        Optional sequence name to normalize for. If given, junctions are</span>
+<span class="sd">        normalized so that seqname_a == seqname. Any junctions not including</span>
+<span class="sd">        the named sequence are dropped.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        Normalized chimeric junction DataFrame.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">seqname</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Reads are &#39;normal&#39; if seq_a &lt; seq_b or, in the case that</span>
+        <span class="c1"># seq_a == seq_b, if loc_a &lt; loc_b.</span>
+        <span class="n">same_seq</span> <span class="o">=</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">seqname_a</span> <span class="o">==</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">seqname_b</span>
+        <span class="n">seq_ordered</span> <span class="o">=</span> <span class="p">(</span><span class="n">chimeric_data</span><span class="o">.</span><span class="n">seqname_a</span> <span class="o">&lt;</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">seqname_b</span><span class="p">)</span>
+        <span class="n">loc_ordered</span> <span class="o">=</span> <span class="p">(</span><span class="n">chimeric_data</span><span class="o">.</span><span class="n">location_a</span> <span class="o">&lt;</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">location_b</span><span class="p">)</span>
+
+        <span class="n">norm_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">seq_ordered</span> <span class="o">|</span> <span class="p">(</span><span class="n">same_seq</span> <span class="o">&amp;</span> <span class="n">loc_ordered</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Subset to samples that have at least one end on seqname.</span>
+        <span class="n">chimeric_data</span> <span class="o">=</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">ix</span><span class="p">[(</span><span class="n">chimeric_data</span><span class="o">.</span><span class="n">seqname_a</span> <span class="o">==</span> <span class="n">seqname</span><span class="p">)</span> <span class="o">|</span>
+                                         <span class="p">(</span><span class="n">chimeric_data</span><span class="o">.</span><span class="n">seqname_b</span> <span class="o">==</span> <span class="n">seqname</span><span class="p">)]</span>
+
+        <span class="c1"># Chimeric reads are &#39;normal&#39; if first side is on seqname and</span>
+        <span class="c1"># and if locations are ordered in the case that seq_a == seq_b.</span>
+        <span class="n">loc_ordered</span> <span class="o">=</span> <span class="p">(</span><span class="n">chimeric_data</span><span class="o">.</span><span class="n">location_a</span> <span class="o">&lt;</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">location_b</span><span class="p">)</span>
+        <span class="n">norm_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">chimeric_data</span><span class="o">.</span><span class="n">seqname_a</span> <span class="o">==</span> <span class="n">seqname</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">loc_ordered</span>
+
+    <span class="n">normed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">chimeric_data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">norm_mask</span><span class="p">],</span>
+            <span class="n">_reverse_chimeric</span><span class="p">(</span><span class="n">chimeric_data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="o">~</span><span class="n">norm_mask</span><span class="p">])</span>
+        <span class="p">],</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">normed</span>
+
+
+<span class="k">def</span> <span class="nf">_reverse_chimeric</span><span class="p">(</span><span class="n">chimeric_data</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">chimeric_data</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;seqname_a&#39;</span><span class="p">:</span> <span class="s1">&#39;seqname_b&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;location_a&#39;</span><span class="p">:</span> <span class="s1">&#39;location_b&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;strand_a&#39;</span><span class="p">:</span> <span class="s1">&#39;strand_b&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;seqname_b&#39;</span><span class="p">:</span> <span class="s1">&#39;seqname_a&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;location_b&#39;</span><span class="p">:</span> <span class="s1">&#39;location_a&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;strand_b&#39;</span><span class="p">:</span> <span class="s1">&#39;strand_a&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;flank_a&#39;</span><span class="p">:</span> <span class="s1">&#39;flank_b&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;flank_b&#39;</span><span class="p">:</span> <span class="s1">&#39;flank_a&#39;</span>
+    <span class="p">})</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
+        <span class="n">strand_a</span><span class="o">=</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="n">df</span><span class="o">.</span><span class="n">strand_a</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">strand_b</span><span class="o">=</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="n">df</span><span class="o">.</span><span class="n">strand_b</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">chimeric_data</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">extract_transposon_fusions</span><span class="p">(</span><span class="n">chimeric_data</span><span class="p">,</span>
+                               <span class="n">transposon_name</span><span class="p">,</span>
+                               <span class="n">merge_junction_dist</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                               <span class="n">max_spanning_dist</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+                               <span class="n">max_junction_dist</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts transposon fusions from a STAR chimeric read dataframe.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Subset and normalize chimeric reads for transposon.</span>
+    <span class="n">chimeric_data</span> <span class="o">=</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span>
+        <span class="p">(</span><span class="n">chimeric_data</span><span class="p">[</span><span class="s1">&#39;seqname_a&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">transposon_name</span><span class="p">)</span> <span class="o">^</span>
+        <span class="p">(</span><span class="n">chimeric_data</span><span class="p">[</span><span class="s1">&#39;seqname_b&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">transposon_name</span><span class="p">)]</span> <span class="c1"># yapf: disable</span>
+
+    <span class="n">chimeric_data</span> <span class="o">=</span> <span class="n">normalize_chimeric_junctions</span><span class="p">(</span>
+        <span class="n">chimeric_data</span><span class="p">,</span> <span class="n">seqname</span><span class="o">=</span><span class="n">transposon_name</span><span class="p">)</span>
+
+    <span class="c1"># Extract junction fusions and merge close junctions.</span>
+    <span class="n">junctions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+        <span class="n">extract_junction_fusions</span><span class="p">(</span>
+            <span class="n">chimeric_data</span><span class="p">,</span> <span class="n">merge_dist</span><span class="o">=</span><span class="n">merge_junction_dist</span><span class="p">))</span>
+
+    <span class="c1"># Assign spanning reads to junctions.</span>
+    <span class="n">junctions</span><span class="p">,</span> <span class="n">unassigned</span> <span class="o">=</span> <span class="n">assign_spanning_reads</span><span class="p">(</span>
+        <span class="n">junctions</span><span class="p">,</span>
+        <span class="n">chimeric_data</span><span class="p">,</span>
+        <span class="n">max_dist_left</span><span class="o">=</span><span class="n">max_spanning_dist</span><span class="p">,</span>
+        <span class="n">max_dist_right</span><span class="o">=</span><span class="n">max_junction_dist</span><span class="p">)</span>
+
+    <span class="c1"># Extract spanning fusions from unused reads.</span>
+    <span class="n">spanning</span> <span class="o">=</span> <span class="n">extract_spanning_fusions</span><span class="p">(</span><span class="n">unassigned</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="n">max_spanning_dist</span><span class="p">)</span>
+    <span class="n">fusions</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">([</span><span class="n">junctions</span><span class="p">,</span> <span class="n">spanning</span><span class="p">])</span>
+
+    <span class="c1"># Convert to transposon fusions.</span>
+    <span class="k">for</span> <span class="n">fusion</span> <span class="ow">in</span> <span class="n">fusions</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">TransposonFusion</span><span class="o">.</span><span class="n">from_fusion</span><span class="p">(</span><span class="n">fusion</span><span class="p">,</span> <span class="n">transposon_name</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">extract_junction_fusions</span><span class="p">(</span><span class="n">chimeric_data</span><span class="p">,</span> <span class="n">merge_dist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts junction fusions from a STAR chimeric read dataframe.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Ensure chimeric data only contains junction reads.</span>
+    <span class="n">chimeric_data</span> <span class="o">=</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;junction_type &gt;= 0&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">chimeric_data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Add flanking annotation.</span>
+        <span class="n">chimeric_data</span> <span class="o">=</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">flanks</span> <span class="o">=</span> <span class="p">(</span><span class="n">_flank_sizes</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">itertuples</span><span class="p">())</span>
+        <span class="n">chimeric_data</span><span class="p">[</span><span class="s1">&#39;flank_a&#39;</span><span class="p">],</span> <span class="n">chimeric_data</span><span class="p">[</span><span class="s1">&#39;flank_b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">flanks</span><span class="p">)</span>
+
+        <span class="c1"># Group by position and summarize.</span>
+        <span class="n">grouped</span> <span class="o">=</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span>
+            <span class="s1">&#39;seqname_a&#39;</span><span class="p">,</span> <span class="s1">&#39;location_a&#39;</span><span class="p">,</span> <span class="s1">&#39;strand_a&#39;</span><span class="p">,</span> <span class="s1">&#39;seqname_b&#39;</span><span class="p">,</span> <span class="s1">&#39;location_b&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;strand_b&#39;</span>
+        <span class="p">])</span>
+
+        <span class="n">summarized</span> <span class="o">=</span> <span class="p">(</span><span class="n">grouped</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span>
+            <span class="s1">&#39;flank_a&#39;</span><span class="p">:</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;flank_b&#39;</span><span class="p">:</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;read_name&#39;</span><span class="p">:</span> <span class="s1">&#39;nunique&#39;</span>
+        <span class="p">})</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">support_spanning</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                      <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;read_name&#39;</span><span class="p">:</span> <span class="s1">&#39;support_junction&#39;</span><span class="p">}))</span>
+
+        <span class="c1"># Transform to Fusions.</span>
+        <span class="n">fusions</span> <span class="o">=</span> <span class="p">(</span><span class="n">Fusion</span><span class="p">(</span><span class="o">**</span><span class="n">toolz</span><span class="o">.</span><span class="n">keyfilter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;Index&#39;</span><span class="p">},</span>
+                                            <span class="n">row</span><span class="o">.</span><span class="n">_asdict</span><span class="p">()))</span>
+                   <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">summarized</span><span class="o">.</span><span class="n">itertuples</span><span class="p">())</span>
+
+        <span class="c1"># Merge fusions within dist.</span>
+        <span class="k">if</span> <span class="n">merge_dist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fusions</span> <span class="o">=</span> <span class="n">Fusion</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">fusions</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="n">merge_dist</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">fusion</span> <span class="ow">in</span> <span class="n">fusions</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">fusion</span>
+
+
+<span class="k">def</span> <span class="nf">_flank_sizes</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">_flank_size</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">donor</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">_flank_size</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">donor</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_flank_size</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">donor</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates flank size of a spanning read on one side of the fusion.&quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: account for deletions/insertions etc.</span>
+
+    <span class="k">if</span> <span class="n">donor</span><span class="p">:</span>
+        <span class="n">mate_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">strand_a</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">cigar</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">first_segment_cigar</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mate_index</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">strand_b</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">cigar</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">second_segment_cigar</span>
+
+    <span class="n">cigar_split</span> <span class="o">=</span> <span class="n">cigar</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">_sum_matches</span><span class="p">(</span><span class="n">cigar_split</span><span class="p">[</span><span class="n">mate_index</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">size</span>
+
+
+<span class="k">def</span> <span class="nf">_sum_matches</span><span class="p">(</span><span class="n">cigar_str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sums the number of matches in a CIGAR string.&quot;&quot;&quot;</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="n">CIGAR_MATCH_REGEX</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">cigar_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">matches</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">assign_spanning_reads</span><span class="p">(</span><span class="n">junctions</span><span class="p">,</span> <span class="n">chimeric_data</span><span class="p">,</span> <span class="n">max_dist_left</span><span class="p">,</span>
+                          <span class="n">max_dist_right</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assigns spanning reads to the closest junction that they support.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Ensure chimeric data only contains spanning reads.</span>
+    <span class="n">chimeric_data</span> <span class="o">=</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;junction_type &lt; 0&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Assign chimeric reads to junctions.</span>
+    <span class="n">trees_a</span> <span class="o">=</span> <span class="n">_build_lookup_trees</span><span class="p">(</span><span class="n">junctions</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">trees_b</span> <span class="o">=</span> <span class="n">_build_lookup_trees</span><span class="p">(</span><span class="n">junctions</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+    <span class="n">assignments</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">unassigned_idx</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">spanning_read</span> <span class="ow">in</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+        <span class="n">junc</span> <span class="o">=</span> <span class="n">_lookup_closest</span><span class="p">(</span><span class="n">spanning_read</span><span class="p">,</span> <span class="n">trees_a</span><span class="p">,</span> <span class="n">trees_b</span><span class="p">,</span> <span class="n">max_dist_left</span><span class="p">,</span>
+                               <span class="n">max_dist_right</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">junc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">assignments</span><span class="p">[</span><span class="n">junc</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spanning_read</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unassigned_idx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spanning_read</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span>
+
+    <span class="c1"># Augment junctions.</span>
+    <span class="n">new_juncs</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">junc</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span>
+            <span class="n">support_spanning</span><span class="o">=</span><span class="n">junc</span><span class="o">.</span><span class="n">support_spanning</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">assignments</span><span class="p">[</span><span class="n">junc</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">junc</span> <span class="ow">in</span> <span class="n">junctions</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Select unassigned reads.</span>
+    <span class="n">unassigned</span> <span class="o">=</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">unassigned_idx</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">new_juncs</span><span class="p">,</span> <span class="n">unassigned</span>
+
+
+<span class="k">def</span> <span class="nf">_build_lookup_trees</span><span class="p">(</span><span class="n">fusions</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">):</span>
+    <span class="c1"># Define attr getters.</span>
+    <span class="n">get_seq</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;seqname_&#39;</span> <span class="o">+</span> <span class="n">side</span><span class="p">)</span>
+    <span class="n">get_loc</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;location_&#39;</span> <span class="o">+</span> <span class="n">side</span><span class="p">)</span>
+    <span class="n">get_strand</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;strand_&#39;</span> <span class="o">+</span> <span class="n">side</span><span class="p">)</span>
+
+    <span class="c1"># Setup keyfunc.</span>
+    <span class="k">def</span> <span class="nf">_keyfunc</span><span class="p">(</span><span class="n">fusion</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">get_seq</span><span class="p">(</span><span class="n">fusion</span><span class="p">),</span> <span class="n">get_strand</span><span class="p">(</span><span class="n">fusion</span><span class="p">))</span>
+
+    <span class="c1"># Sort and group fusions.</span>
+    <span class="n">fusions</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">fusions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_keyfunc</span><span class="p">)</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">fusions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_keyfunc</span><span class="p">)</span>
+
+    <span class="n">trees</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">grp</span> <span class="ow">in</span> <span class="n">grouped</span><span class="p">:</span>
+        <span class="n">trees</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">IntervalTree</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">get_loc</span><span class="p">(</span><span class="n">fus</span><span class="p">),</span> <span class="n">get_loc</span><span class="p">(</span><span class="n">fus</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">fus</span><span class="p">)</span> <span class="k">for</span> <span class="n">fus</span> <span class="ow">in</span> <span class="n">grp</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">trees</span>
+
+
+<span class="k">def</span> <span class="nf">_lookup_closest</span><span class="p">(</span><span class="n">fusion</span><span class="p">,</span>
+                    <span class="n">trees_a</span><span class="p">,</span>
+                    <span class="n">trees_b</span><span class="p">,</span>
+                    <span class="n">max_dist_left</span><span class="p">,</span>
+                    <span class="n">max_dist_right</span><span class="p">,</span>
+                    <span class="n">slack</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_dist</span><span class="p">(</span><span class="n">fusion</span><span class="p">,</span> <span class="n">hit</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">fusion</span><span class="o">.</span><span class="n">location_a</span> <span class="o">-</span> <span class="n">hit</span><span class="o">.</span><span class="n">location_a</span><span class="p">)</span> <span class="o">+</span>
+                <span class="nb">abs</span><span class="p">(</span><span class="n">fusion</span><span class="o">.</span><span class="n">location_b</span> <span class="o">-</span> <span class="n">hit</span><span class="o">.</span><span class="n">location_b</span><span class="p">))</span>
+
+    <span class="c1"># Identify candidate fusions.</span>
+    <span class="n">overlap_a</span> <span class="o">=</span> <span class="n">_lookup_tree</span><span class="p">(</span>
+        <span class="n">fusion</span><span class="p">,</span> <span class="n">trees_a</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="n">max_dist_left</span><span class="p">,</span> <span class="n">slack</span><span class="o">=</span><span class="n">slack</span><span class="p">)</span>
+    <span class="n">overlap_b</span> <span class="o">=</span> <span class="n">_lookup_tree</span><span class="p">(</span>
+        <span class="n">fusion</span><span class="p">,</span> <span class="n">trees_b</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="n">max_dist_right</span><span class="p">,</span> <span class="n">slack</span><span class="o">=</span><span class="n">slack</span><span class="p">)</span>
+    <span class="n">overlap</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">overlap_a</span> <span class="o">&amp;</span> <span class="n">overlap_b</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">overlap</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">_dist</span><span class="p">(</span><span class="n">fusion</span><span class="p">,</span> <span class="n">hit</span><span class="p">)</span> <span class="k">for</span> <span class="n">hit</span> <span class="ow">in</span> <span class="n">overlap</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">overlap</span><span class="p">[</span><span class="n">distances</span><span class="o">.</span><span class="n">argmin</span><span class="p">()]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_lookup_tree</span><span class="p">(</span><span class="n">fusion</span><span class="p">,</span> <span class="n">trees</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">slack</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+
+    <span class="c1"># Define attr getters.</span>
+    <span class="n">get_seq</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;seqname_&#39;</span> <span class="o">+</span> <span class="n">side</span><span class="p">)</span>
+    <span class="n">get_loc</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;location_&#39;</span> <span class="o">+</span> <span class="n">side</span><span class="p">)</span>
+    <span class="n">get_strand</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;strand_&#39;</span> <span class="o">+</span> <span class="n">side</span><span class="p">)</span>
+
+    <span class="c1"># Setup tree, query range.</span>
+    <span class="n">strand</span> <span class="o">=</span> <span class="n">get_strand</span><span class="p">(</span><span class="n">fusion</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">trees</span><span class="p">[(</span><span class="n">get_seq</span><span class="p">(</span><span class="n">fusion</span><span class="p">),</span> <span class="n">strand</span><span class="p">)]</span>
+
+        <span class="n">direction</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s1">&#39;a&#39;</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">strand</span>
+
+        <span class="n">loc</span> <span class="o">=</span> <span class="n">get_loc</span><span class="p">(</span><span class="n">fusion</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">loc</span> <span class="o">-</span> <span class="n">max_dist</span><span class="p">,</span> <span class="n">loc</span> <span class="o">+</span> <span class="n">slack</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">loc</span> <span class="o">-</span> <span class="n">slack</span><span class="p">,</span> <span class="n">loc</span> <span class="o">+</span> <span class="n">max_dist</span>
+
+        <span class="c1"># Determine overlap and return fusions.</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tup</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">tup</span> <span class="ow">in</span> <span class="n">tree</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">overlap</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">extract_spanning_fusions</span><span class="p">(</span><span class="n">chimeric_data</span><span class="p">,</span> <span class="n">max_dist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts spanning fusions from a STAR chimeric read dataframe.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Select spanning fusions.</span>
+    <span class="n">chimeric_data</span> <span class="o">=</span> <span class="n">chimeric_data</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;junction_type &lt; 0&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Group by position and summarize.</span>
+    <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="n">_groupby_position</span><span class="p">(</span><span class="n">chimeric_data</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="n">max_dist</span><span class="p">):</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="n">grp</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">agg_donor</span> <span class="o">=</span> <span class="nb">max</span> <span class="k">if</span> <span class="n">first</span><span class="o">.</span><span class="n">strand_a</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">min</span>
+        <span class="n">agg_acc</span> <span class="o">=</span> <span class="nb">min</span> <span class="k">if</span> <span class="n">first</span><span class="o">.</span><span class="n">strand_b</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">max</span>
+
+        <span class="k">yield</span> <span class="n">Fusion</span><span class="p">(</span>
+            <span class="n">seqname_a</span><span class="o">=</span><span class="n">first</span><span class="o">.</span><span class="n">seqname_a</span><span class="p">,</span>
+            <span class="n">location_a</span><span class="o">=</span><span class="n">agg_donor</span><span class="p">(</span><span class="n">grp</span><span class="o">.</span><span class="n">location_a</span><span class="p">),</span>
+            <span class="n">strand_a</span><span class="o">=</span><span class="n">first</span><span class="o">.</span><span class="n">strand_a</span><span class="p">,</span>
+            <span class="n">seqname_b</span><span class="o">=</span><span class="n">first</span><span class="o">.</span><span class="n">seqname_b</span><span class="p">,</span>
+            <span class="n">location_b</span><span class="o">=</span><span class="n">agg_acc</span><span class="p">(</span><span class="n">grp</span><span class="o">.</span><span class="n">location_b</span><span class="p">),</span>
+            <span class="n">strand_b</span><span class="o">=</span><span class="n">first</span><span class="o">.</span><span class="n">strand_b</span><span class="p">,</span>
+            <span class="n">support_junction</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">support_spanning</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">grp</span><span class="p">),</span>
+            <span class="n">flank_a</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">flank_b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_groupby_position</span><span class="p">(</span><span class="n">spanning_data</span><span class="p">,</span> <span class="n">max_dist</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Groups reads within given distance at both locations.&quot;&quot;&quot;</span>
+
+    <span class="n">grp_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;seqname_a&#39;</span><span class="p">,</span> <span class="s1">&#39;seqname_b&#39;</span><span class="p">,</span> <span class="s1">&#39;strand_a&#39;</span><span class="p">,</span> <span class="s1">&#39;strand_b&#39;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">grp</span> <span class="ow">in</span> <span class="n">spanning_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">grp_cols</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">grp</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">grp</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">clust_a</span> <span class="o">=</span> <span class="n">_cluster_positions</span><span class="p">(</span>
+                <span class="n">grp</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s1">&#39;location_a&#39;</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="n">max_dist</span><span class="p">)</span>
+            <span class="n">clust_b</span> <span class="o">=</span> <span class="n">_cluster_positions</span><span class="p">(</span>
+                <span class="n">grp</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s1">&#39;location_b&#39;</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="n">max_dist</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">loc_grp</span> <span class="ow">in</span> <span class="n">grp</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">clust_a</span><span class="p">,</span> <span class="n">clust_b</span><span class="p">]):</span>
+                <span class="k">yield</span> <span class="n">loc_grp</span>
+
+
+<span class="k">def</span> <span class="nf">_cluster_positions</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">max_dist</span><span class="p">):</span>
+    <span class="n">locs</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">locs</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">diff</span> <span class="o">&gt;</span> <span class="n">max_dist</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">locs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">groups</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

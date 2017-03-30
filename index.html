@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IM-Fusion &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  <title>IM-Fusion &mdash; IM-Fusion 0.2.0 documentation</title>
   
 
   
@@ -30,8 +30,11 @@
   
 
   
-    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="#"/>
-        <link rel="next" title="Home" href="home.html"/> 
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="#"/>
+        <link rel="next" title="IM-Fusion" href="home.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                0.1
+                0.2.0
               </div>
             
           
@@ -81,12 +84,11 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 </ul>
 
             
@@ -121,7 +123,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/index.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -136,13 +138,7 @@
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="home.html#im-fusion">IM-Fusion</a></li>
-<li class="toctree-l2"><a class="reference internal" href="home.html#where-to-start">Where to start?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="home.html#sources">Sources</a></li>
-<li class="toctree-l2"><a class="reference internal" href="home.html#license">License</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#using-conda-recommended">Using conda (recommended)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#using-pip">Using pip</a></li>
@@ -150,31 +146,22 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#building-a-reference">Building a reference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#analyzing-individual-samples">Analyzing individual samples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#identifying-candidate-genes">Identifying candidate genes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#required-files">Required files</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="command_line_usage.html">Command-line usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="command_line_usage.html#im-fusion-build">im-fusion build</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_usage.html#im-fusion-insertions">im-fusion insertions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_usage.html#im-fusion-expression">im-fusion expression</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_usage.html#im-fusion-merge">im-fusion merge</a></li>
-<li class="toctree-l2"><a class="reference internal" href="command_line_usage.html#im-fusion-ctg">im-fusion ctg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#building-a-reference">Building a reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#detecting-insertions-per-sample">Detecting insertions (per sample)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#quantifying-expression-per-sample">Quantifying expression (per sample)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#merging-sample-results">Merging sample results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#selecting-de-ctgs">Selecting (DE) CTGs</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#imfusion-aligners">imfusion.aligners</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#imfusion-ctg">imfusion.ctg</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#imfusion-expression">imfusion.expression</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#imfusion-merge">imfusion.merge</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#imfusion-model">imfusion.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#imfusion-util">imfusion.util</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development.html#release-notes">Release notes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development.html#testing">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#building-references">Building references</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#identifying-insertions">Identifying insertions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#testing-for-differential-expression">Testing for differential expression</a></li>
 </ul>
 </li>
 </ul>
@@ -196,7 +183,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="home.html" class="btn btn-neutral float-right" title="Home" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="home.html" class="btn btn-neutral float-right" title="IM-Fusion" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -206,7 +193,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Julian de Ruiter.
+        &copy; Copyright 2017, Julian de Ruiter.
 
     </p>
   </div>
@@ -228,10 +215,11 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1+1.g9b7cc62',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

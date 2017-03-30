@@ -1,0 +1,571 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.build.indexers.base &mdash; IM-Fusion 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../home.html">IM-Fusion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imfusion.build.indexers.base</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.build.indexers.base</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Implements base indexer classes, used for building references.&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+
+<span class="c1"># pylint: disable=W0611</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pathlib2</span> <span class="k">as</span> <span class="nn">pathlib</span>
+
+<span class="kn">import</span> <span class="nn">pyfaidx</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.util</span> <span class="k">import</span> <span class="n">shell</span><span class="p">,</span> <span class="n">tabix</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">util</span> <span class="k">as</span> <span class="n">build_util</span>
+
+<span class="n">_indexer_registry</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span> <span class="nf">register_indexer</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">indexer</span><span class="p">):</span>
+    <span class="c1"># type: (str, Type[Indexer]) -&gt; None</span>
+    <span class="sd">&quot;&quot;&quot;Registers indexer under given name.&quot;&quot;&quot;</span>
+    <span class="n">_indexer_registry</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">indexer</span>
+
+
+<span class="k">def</span> <span class="nf">get_indexers</span><span class="p">():</span>
+    <span class="c1"># type: (...) -&gt; Dict[str, Type[Indexer]]</span>
+    <span class="sd">&quot;&quot;&quot;Returns dict of available indexers.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_indexer_registry</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Indexer"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Indexer">[docs]</a><span class="k">class</span> <span class="nc">Indexer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base Indexer class.</span>
+
+<span class="sd">    This base class defines the interface for Indexer classes and provides</span>
+<span class="sd">    basic functionality for building augmented reference genomes. Functionality</span>
+<span class="sd">    for building the indices for alignment is provided by sub-classes</span>
+<span class="sd">    (as this is aligner specific), typically by overriding the protected</span>
+<span class="sd">    ``_build_indices`` method.</span>
+
+<span class="sd">    The main interface of the class is formed by the ``check_dependencies``</span>
+<span class="sd">    and ``build`` methods. The former is used to check whether required</span>
+<span class="sd">    external dependencies are present in ``$PATH``, whilst the latter is</span>
+<span class="sd">    called with the required reference files to build the actual reference.</span>
+<span class="sd">    On completion, the ``build`` method returns a ``Reference`` object, which</span>
+<span class="sd">    defines paths to the various reference files. The class of this object is</span>
+<span class="sd">    defined by the ``_reference_class`` method, which may be overridden to</span>
+<span class="sd">    return aligner-specific ``Reference`` subclasses.</span>
+
+<span class="sd">    Additionally, the class provides the methods ``configure_args`` and</span>
+<span class="sd">    ``from_args``, which are used to configure the argument parser for</span>
+<span class="sd">    ``imfusion-build`` and to instantate instances from parsed arguments.</span>
+<span class="sd">    Subclasses with extra options should override the protected ``_parse_args``</span>
+<span class="sd">    method, which extracts constructor parameters from argparse arguments</span>
+<span class="sd">    for ``from_args``, allowing for flexible interpretation of these arguments.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    logger : logging.Logger</span>
+<span class="sd">        Logger to be used for logging messages.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># type: (Any) -&gt; None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logger</span> <span class="ow">or</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_reference_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># type: (...) -&gt; Type[Reference]</span>
+        <span class="sd">&quot;&quot;&quot;Reference class to use for this indexer.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Reference</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># type: (...) -&gt; List[str]</span>
+        <span class="sd">&quot;&quot;&quot;External dependencies required by Indexer.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Indexer.check_dependencies"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Indexer.check_dependencies">[docs]</a>    <span class="k">def</span> <span class="nf">check_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks if all required external dependencies are in ``$PATH``.</span>
+
+<span class="sd">        Raises a ValueError if any dependencies are missing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">shell</span><span class="o">.</span><span class="n">check_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Indexer.build"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Indexer.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">refseq_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">gtf_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">transposon_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">transposon_features_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">output_dir</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">blacklist_regions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: List[Tuple[str, int, int]]</span>
+            <span class="n">blacklist_genes</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># type: List[str]</span>
+    <span class="p">):</span>  <span class="c1"># type: (...) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;Builds an augmented reference containing the transposon sequence.</span>
+
+<span class="sd">        The reference is built by first copying the original reference</span>
+<span class="sd">        sequence into the output directory and then augmenting this reference</span>
+<span class="sd">        with the transposon sequence. If needed, blacklisted genes/regions are</span>
+<span class="sd">        then masked within this reference. Next, other supporting files</span>
+<span class="sd">        (such as the reference GTF) are copied and indexed as needed. As a</span>
+<span class="sd">        final step, aligner-specific indices are built for the augmented</span>
+<span class="sd">        reference.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        refseq_path : Path</span>
+<span class="sd">            Path to the reference sequence (in Fasta format).</span>
+<span class="sd">        gtf_path : Path</span>
+<span class="sd">            Path to the reference GTF file.</span>
+<span class="sd">        transposon_path : Path</span>
+<span class="sd">            Path to the transposon sequence (in Fasta format).</span>
+<span class="sd">        transposon_features_path : Path</span>
+<span class="sd">            Path to the transposon features (tab-separated file).</span>
+<span class="sd">        output_dir : Path</span>
+<span class="sd">            Path to the output directory. Should not yet exist.</span>
+<span class="sd">        blacklist_regions: List[Tuple[str, int, int]]</span>
+<span class="sd">            List or regions that should be blacklisted, specified as a tuple</span>
+<span class="sd">            of (chromosome, start, end).</span>
+<span class="sd">        blacklist_genes : List[str]</span>
+<span class="sd">            List of genes that should be blacklisted. Should correspond to</span>
+<span class="sd">            ``gene_id`` entries in the passed GTF file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Reference</span>
+<span class="sd">            Returns a ``Reference`` object, which describes the paths to</span>
+<span class="sd">            various files within the generated reference.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create output directory.</span>
+        <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Use dummy Reference instance for paths.</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_class</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+
+        <span class="c1"># Copy and index additional files (GTF etc.).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_copy_and_index_files</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
+            <span class="n">gtf_path</span><span class="o">=</span><span class="n">gtf_path</span><span class="p">,</span>
+            <span class="n">transposon_path</span><span class="o">=</span><span class="n">transposon_path</span><span class="p">,</span>
+            <span class="n">transposon_features_path</span><span class="o">=</span><span class="n">transposon_features_path</span><span class="p">)</span>
+
+        <span class="c1"># Build augmented reference.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_reference</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
+            <span class="n">refseq_path</span><span class="o">=</span><span class="n">refseq_path</span><span class="p">,</span>
+            <span class="n">transposon_path</span><span class="o">=</span><span class="n">transposon_path</span><span class="p">,</span>
+            <span class="n">blacklist_genes</span><span class="o">=</span><span class="n">blacklist_genes</span><span class="p">,</span>
+            <span class="n">blacklist_regions</span><span class="o">=</span><span class="n">blacklist_regions</span><span class="p">)</span>
+
+        <span class="c1"># Build any required indices using files.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_indices</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_build_reference</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">reference</span><span class="p">,</span>  <span class="c1"># type: Reference</span>
+            <span class="n">refseq_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">transposon_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">blacklist_regions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: List[Tuple[str, int, int]]</span>
+            <span class="n">blacklist_genes</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># type: List[str]</span>
+    <span class="p">):</span>  <span class="c1"># type (...) -&gt; None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Building augmented reference&#39;</span><span class="p">)</span>
+
+        <span class="n">blacklist_regions</span> <span class="o">=</span> <span class="n">blacklist_regions</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="n">blacklist_genes</span> <span class="o">=</span> <span class="n">blacklist_genes</span> <span class="ow">or</span> <span class="p">[]</span>
+
+        <span class="n">blacklist</span> <span class="o">=</span> <span class="p">(</span><span class="n">build_util</span><span class="o">.</span><span class="n">regions_from_strings</span><span class="p">(</span><span class="n">blacklist_regions</span><span class="p">)</span> <span class="o">+</span>
+                     <span class="n">build_util</span><span class="o">.</span><span class="n">regions_from_genes</span><span class="p">(</span><span class="n">blacklist_genes</span><span class="p">,</span>
+                                                   <span class="n">reference</span><span class="o">.</span><span class="n">indexed_gtf_path</span><span class="p">))</span>
+
+        <span class="n">build_util</span><span class="o">.</span><span class="n">build_reference</span><span class="p">(</span>
+            <span class="n">refseq_path</span><span class="p">,</span>
+            <span class="n">transposon_path</span><span class="p">,</span>
+            <span class="n">output_path</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">fasta_path</span><span class="p">,</span>
+            <span class="n">blacklisted_regions</span><span class="o">=</span><span class="n">blacklist</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_copy_and_index_files</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">reference</span><span class="p">,</span>  <span class="c1"># type: Reference</span>
+            <span class="n">gtf_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">transposon_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">transposon_features_path</span>  <span class="c1"># type: pathlib.Path</span>
+    <span class="p">):</span>  <span class="c1"># type: (...) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;Copies and indexes additional reference files (GTF, transposon).&quot;&quot;&quot;</span>
+
+        <span class="c1"># Copy additional reference files.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Copying files&#39;</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">transposon_path</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">transposon_path</span><span class="p">))</span>
+
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">transposon_features_path</span><span class="p">),</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">features_path</span><span class="p">))</span> <span class="c1"># yapf: disable</span>
+
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">gtf_path</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf_path</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Indexing reference gtf&#39;</span><span class="p">)</span>
+        <span class="n">tabix</span><span class="o">.</span><span class="n">index_gtf</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf_path</span><span class="p">,</span>
+                        <span class="n">output_path</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">indexed_gtf_path</span><span class="p">)</span> <span class="c1"># yapf: disable</span>
+
+    <span class="k">def</span> <span class="nf">_build_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Indexer.configure_args"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Indexer.configure_args">[docs]</a>    <span class="k">def</span> <span class="nf">configure_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="c1"># type: (argparse.ArgumentParser) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;Configures an argument parser for the Indexer.</span>
+
+<span class="sd">        Used by ``imfusion-build`` to configure the sub-command for</span>
+<span class="sd">        this indexer (if registered as an Indexer using the</span>
+<span class="sd">        ``register_indexer`` function).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parser : argparse.ArgumentParser</span>
+<span class="sd">            Argument parser to configure.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Basic arguments.</span>
+        <span class="n">base_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Basic arguments&#39;</span><span class="p">)</span>
+
+        <span class="n">base_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--reference_seq&#39;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to the reference sequence (in Fasta format).&#39;</span><span class="p">)</span>
+
+        <span class="n">base_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--reference_gtf&#39;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to the reference gtf file.&#39;</span><span class="p">)</span>
+
+        <span class="n">base_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--transposon_seq&#39;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to the transposon sequence (in Fasta format).&#39;</span><span class="p">)</span>
+
+        <span class="n">base_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--transposon_features&#39;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
+            <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to the transposon features (tsv).&#39;</span><span class="p">)</span>
+
+        <span class="n">base_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--output_dir&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Optional blacklist arguments.</span>
+        <span class="n">blacklist_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Blacklist arguments&#39;</span><span class="p">)</span>
+
+        <span class="n">blacklist_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--blacklist_regions&#39;</span><span class="p">,</span>
+            <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="p">(),</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Regions of the reference to blacklist. Should &#39;</span>
+            <span class="s1">&#39;be specified as </span><span class="se">\&#39;</span><span class="s1">chromosome:start-end</span><span class="se">\&#39;</span><span class="s1">.&#39;</span><span class="p">)</span>
+
+        <span class="n">blacklist_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--blacklist_genes&#39;</span><span class="p">,</span>
+            <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="p">(),</span>
+            <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Genes to blacklist. Should correspond with &#39;</span>
+            <span class="s1">&#39;the gene ids used in the reference gtf file.&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="c1"># type: (argparse.Namespace) -&gt; Dict[str, Any]</span>
+        <span class="sd">&quot;&quot;&quot;Parses argparse argument to a dict.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Indexer.from_args"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Indexer.from_args">[docs]</a>    <span class="k">def</span> <span class="nf">from_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="c1"># type: (argparse.Namespace) -&gt; Indexer</span>
+        <span class="sd">&quot;&quot;&quot;Constructs an Indexer instance from given arguments.</span>
+
+<span class="sd">        Instantiates an Indexer instance from the given argparse arguments.</span>
+<span class="sd">        Uses the ``_parse_args`` method internally, which performs the actual</span>
+<span class="sd">        argument-to-parameter extraction. As such, the ``_parse_args`` method</span>
+<span class="sd">        should be overridden in any subclasses with extra parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args : argparse.Namespace</span>
+<span class="sd">            Arguments to parse.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">cls</span><span class="o">.</span><span class="n">_parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="Reference"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Reference">[docs]</a><span class="k">class</span> <span class="nc">Reference</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base Reference class.</span>
+
+<span class="sd">    Reference classes define paths to specific files within the reference. This</span>
+<span class="sd">    includes, for example, paths to the augmented fasta file and to the r</span>
+<span class="sd">    eference index. This base class defines paths that should be available</span>
+<span class="sd">    for all references. Subclasses may define additional paths that are</span>
+<span class="sd">    specific to the corresponding aligner.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reference_path : Path</span>
+<span class="sd">        Path to the reference directory.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_path</span><span class="p">):</span>
+        <span class="c1"># type: (pathlib.Path) -&gt; None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">reference_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Reference path does not exist&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">=</span> <span class="n">reference_path</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">base_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; pathlib.Path</span>
+        <span class="sd">&quot;&quot;&quot;Path to reference base directory.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fasta_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; pathlib.Path</span>
+        <span class="sd">&quot;&quot;&quot;Path to reference sequence.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">/</span> <span class="s1">&#39;reference.fa&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gtf_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; pathlib.Path</span>
+        <span class="sd">&quot;&quot;&quot;Path to reference gtf.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">/</span> <span class="s1">&#39;reference.gtf&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">indexed_gtf_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; pathlib.Path</span>
+        <span class="sd">&quot;&quot;&quot;Path to reference gtf.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">/</span> <span class="s1">&#39;reference.gtf.gz&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; pathlib.Path</span>
+        <span class="sd">&quot;&quot;&quot;Path to index.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">/</span> <span class="s1">&#39;index&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transposon_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; str</span>
+        <span class="sd">&quot;&quot;&quot;Name of transposon sequence.&quot;&quot;&quot;</span>
+        <span class="n">seqs</span> <span class="o">=</span> <span class="n">pyfaidx</span><span class="o">.</span><span class="n">Fasta</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transposon_path</span><span class="p">))</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">seqs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transposon_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; pathlib.Path</span>
+        <span class="sd">&quot;&quot;&quot;Name of transposon sequence.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">/</span> <span class="s1">&#39;transposon.fa&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">features_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; pathlib.Path</span>
+        <span class="sd">&quot;&quot;&quot;Path to transposon features.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">/</span> <span class="s1">&#39;features.txt&#39;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

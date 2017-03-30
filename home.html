@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Home &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  <title>IM-Fusion &mdash; IM-Fusion 0.2.0 documentation</title>
   
 
   
@@ -30,7 +30,10 @@
   
 
   
-    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="index.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="index.html"/>
         <link rel="next" title="Installation" href="installation.html"/>
         <link rel="prev" title="IM-Fusion" href="index.html"/> 
 
@@ -60,7 +63,7 @@
             
             
               <div class="version">
-                0.1
+                0.2.0
               </div>
             
           
@@ -82,18 +85,11 @@
             
             
                 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#im-fusion">IM-Fusion</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#where-to-start">Where to start?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#sources">Sources</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#license">License</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 </ul>
 
             
@@ -124,11 +120,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Home</li>
+    <li>IM-Fusion</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/home.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/home.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -138,10 +134,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="home">
-<h1>Home<a class="headerlink" href="#home" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="im-fusion">
-<h2>IM-Fusion<a class="headerlink" href="#im-fusion" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="im-fusion">
+<h1>IM-Fusion<a class="headerlink" href="#im-fusion" title="Permalink to this headline">¶</a></h1>
 <p>IM-Fusion is a tool for identifying transposon insertion sites in
 insertional mutagenesis screens using single- and paired-end RNA-sequencing
 data. It essentially identifies insertion sites from gene-transposon fusions
@@ -150,7 +144,7 @@ transposon and endogeneous genes.</p>
 <p>IM-Fusion also identifies candidate genes for a given screen using a
 statistical test (based on the Poisson distribution) that identifies Commonly
 Targeted Genes (CTGs) &#8211; genes that are more frequently affected by insertions
-than would be expected by chance. To futher narrow down a list of CTGs, which
+than would be expected by chance. To further narrow down a list of CTGs, which
 may contain hundreds of genes, IM-Fusion also tests if insertions in a CTG have
 a significant effect on the expression of the gene, which is a strong indicator
 of them having an actual biological effect.</p>
@@ -158,42 +152,19 @@ of them having an actual biological effect.</p>
 <ul class="simple">
 <li>It identifies transposon insertion sites from both single- and paired-end
 RNA-sequencing data, without having any special sequencing requirements.</li>
-<li>Its gene-centric approach &#8211; both in the identification of insertions and
-in testing for differential expression of identified candidate genes &#8211;
-greatly reduces the number of false positive candidate genes.</li>
-<li>Its differential expression tests provide detailed insight into the effects
-of insertions on the expression of their target gene(s). By providing both
-a groupwise and a single-sample version of the test, IM-Fusion can identify
-effects for a single insertion in a specific sample, or determine the general
+<li>It uses a gene-centric approach &#8211; both for the identification of insertions
+and for testing of differential expression for identified candidate genes &#8211;
+which greatly reduces the number of false positive candidate genes.</li>
+<li>It implements several exon-level and gene-level differential expression
+tests, which provide detailed insight into the effects of insertions on
+the expression of their target  gene(s). By providing both a group-wise and
+a single-sample version of the test, IM-Fusion can identify effects for a
+single insertion in a specific sample, or determine the general
 effect of insertions on a given gene within the tumor cohort.</li>
 </ul>
 <p>For more details on the approach and a comparison with existing DNA-sequencing
-approaches, please see our paper &#8220;Identifying transposon insertions and
-their effects from RNA-sequencing data&#8221; (<em>submitted</em>).</p>
-</div>
-<div class="section" id="where-to-start">
-<h2>Where to start?<a class="headerlink" href="#where-to-start" title="Permalink to this headline">¶</a></h2>
-<p>For details on installing IM-Fusion and its dependencies, see
-<a class="reference internal" href="installation.html"><span class="doc">Installation</span></a>.</p>
-<p>The main interface of IM-Fusion is its command-line interface, which provides
-various commands for performing each step of its analysis. For an overview
-of the analysis and for a guide to preparing the required input files,
-see <a class="reference internal" href="getting_started.html"><span class="doc">Getting started</span></a>. For more details on the different options available
-for each command, see <a class="reference internal" href="command_line_usage.html"><span class="doc">Command-line usage</span></a>.</p>
-<p>An API interface is also provided for programmatic use of IM-Fusions various
-steps, or for creating custom pipelines based on our code. For details on the
-provided functions, see the <a class="reference internal" href="api.html"><span class="doc">API</span></a> documentation.</p>
-</div>
-<div class="section" id="sources">
-<h2>Sources<a class="headerlink" href="#sources" title="Permalink to this headline">¶</a></h2>
-<p>The source code of IM-Fusion is available on Github in the repository
-<a class="reference external" href="http://github.com/jrderuiter/im-fusion">jrderuiter/im-fusion</a>. Any
-questions or issues should also be addressed there.</p>
-</div>
-<div class="section" id="license">
-<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
-<p>IM-Fusion is released under the MIT license.</p>
-</div>
+approaches, please see our paper <strong>&#8220;Identifying transposon insertions and
+their effects from RNA-sequencing data&#8221;</strong> (<em>Currently under revision</em>).</p>
 </div>
 
 
@@ -215,7 +186,7 @@ questions or issues should also be addressed there.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Julian de Ruiter.
+        &copy; Copyright 2017, Julian de Ruiter.
 
     </p>
   </div>
@@ -237,10 +208,11 @@ questions or issues should also be addressed there.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1+1.g9b7cc62',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

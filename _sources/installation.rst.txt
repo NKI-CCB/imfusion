@@ -1,0 +1,172 @@
+Installation
+============
+
+Using conda (recommended)
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The recommended way to install IM-Fusion is using conda, as this allows us to
+install IM-Fusion together with its external dependencies (Tophat2/Bowtie,
+STAR and subread) into an isolated environment using a single command:
+
+.. code:: bash
+
+  conda create -n imfusion -c jrderuiter -c bioconda -c r imfusion
+
+Note that this uses the bioconda channel to install the external
+dependencies (tophat2, bowtie and subread) and the r channel to install R
+and rpy2.
+
+Alternatively, IM-Fusion can be installed in an existing environent using:
+
+.. code:: bash
+
+  conda install -c jrderuiter -c bioconda -c r imfusion
+
+Using pip
+~~~~~~~~~
+
+IM-Fusion can also be installed using pip:
+
+.. code:: bash
+
+    pip install git+https://github.com/jrderuiter/im-fusion.git
+
+Note that in this case, rpy2 is not installed by default as it can be
+difficult to install and is only required for the single-sample differential
+expression test. To use the test, ensure a working version of rpy2 is
+installed or install the required rpy2 dependencies using:
+
+.. code:: bash
+
+    pip install git+https://github.com/jrderuiter/imfusion.git[de_single]
+
+To also install the development dependencies of IM-Fusion use:
+
+.. code:: bash
+
+    pip install git+https://github.com/jrderuiter/imfusion.git[dev]
+
+Dependencies
+~~~~~~~~~~~~
+
+Python dependencies
+-------------------
+
+IM-Fusion is compatible with both Python 2.7 and Python 3.4+. However,
+identifying insertions using Tophat-Fusion only works in Python 2.7, as Tophat2
+is not compatible with Python 3.
+
+IM-Fusion was tested using the following versions for its dependencies:
+
+- future -- 0.15.2
+- toolz -- 0.7.4
+- pandas -- 0.18
+- numexpr -- 2.5
+- scipy -- 0.17
+- seaborn -- 0.7
+- pysam -- 0.8.4
+- intervaltree -- 2.1.0
+
+External dependencies
+---------------------
+
+IM-Fusion has three external dependencies:
+
+- STAR - for the alignment and detection of gene fusions.
+- Tophat2/Bowtie1 -- for the alignment and detection of gene fusions.
+- Stringtie - For performing reference-guided transcript assembly.
+- featureCounts -- for generating expression counts.
+
+These tools must be available in the current PATH for the insertion
+detection to work properly. Note that either STAR or Tophat2 needs to be
+installed, depending on your preference for the aligner. For help with
+their installation, see below.
+
+Tophat2/Bowtie1
+***************
+
+Tophat2 is an RNA-seq read aligner that also includes Tophat-Fusion,
+an aligner that can identify gene fusions from single- and paired-end
+RNA-sequencing data. A binary version of Tophat2 can be downloaded from the
+Tophat `website <https://ccb.jhu.edu/software/tophat/index.shtml>`_.
+After unpacking, make sure that the Tophat2 binary is available in ``$PATH``.
+
+Alternatively, Tophat2 can also be installed using bioconda:
+
+.. code:: bash
+
+    conda install tophat
+
+Tophat2 can also be installed using `homebrew <http://brew.sh>`_ or
+`linuxbrew <http://linuxbrew.sh>`_. For this option, first install
+homebrew or linuxbrew and then install Tophat2 using:
+
+.. code:: bash
+
+    brew update
+    brew install tophat
+
+Bowtie can be installed in the same fashion as Tophat, by downloading a binary
+version from the `bowtie website
+<http://bowtie-bio.sourceforge.net/index.shtml>`_ and ensuring that bowtie
+is available in ``$PATH``.
+
+Bowtie can also be installed using bioconda:
+
+.. code:: bash
+
+    conda install bowtie
+
+Or using homebrew/linuxbrew:
+
+.. code:: bash
+
+    brew update
+    brew install bowtie
+
+STAR
+****
+
+STAR is an RNA-seq aligner that can also perform chimeric read alignment,
+enabling the detection of gene-transposon fusions. STAR can be downloaded
+from the `STAR GitHub repository`_. After unpacking, make sure that the
+STAR binary is available in ``$PATH``.
+
+STAR can also be installed using bioconda:
+
+.. code:: bash
+
+    conda install star
+
+Or using homebrew/linuxbrew:
+
+.. code:: bash
+
+    brew update
+    brew install star
+
+.. _`STAR GitHub repository`: https://github.com/alexdobin/STAR
+
+featureCounts
+*************
+
+featureCounts is an efficient tool for generating expression counts from
+RNA-seq alignments. It is part of the subread package, which can be downloaded
+from `sourceforge <http://subread.sourceforge.net>`_. After downloading and
+unpacking the correct binary version for your machine, make sure the binary
+featureCounts is available in PATH.
+
+Subread can also be installed using bioconda:
+
+.. code:: bash
+
+    conda install subread
+
+Or by using `homebrew <http://brew.sh>`_ or `linuxbrew <http://linuxbrew.sh>`_
+with a custom tap:
+
+.. code:: bash
+
+    brew tap jrderuiter/tap
+    brew update
+    brew install subread

@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; IM-Fusion 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="index.html"/>
+        <link rel="next" title="API" href="api.html"/>
+        <link rel="prev" title="Getting started" href="getting_started.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="home.html">IM-Fusion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#building-a-reference">Building a reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#detecting-insertions-per-sample">Detecting insertions (per sample)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quantifying-expression-per-sample">Quantifying expression (per sample)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#merging-sample-results">Merging sample results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#selecting-de-ctgs">Selecting (DE) CTGs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Usage</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="building-a-reference">
+<h2>Building a reference<a class="headerlink" href="#building-a-reference" title="Permalink to this headline">¶</a></h2>
+<p>Before detecting insertion sites, IM-Fusion first needs to build an
+augmented version of the host reference genome that contains the
+sequence of the transposon as additional sequence. This augmented reference
+is created using the <code class="docutils literal"><span class="pre">imfusion-build</span></code> command, which essentially concatenates
+the host reference genome and the transposon sequence (both in Fasta
+format) into a new Fasta file and builds the indices needed for alignment.
+Separate sub-commands are provided for each supported aligner (currently STAR
+and Tophat-Fusion).</p>
+<p>The basic command for building a (STAR-based) reference is as follows:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">build</span> <span class="n">star</span> \
+    <span class="o">--</span><span class="n">reference_seq</span> <span class="n">Mus_musculus</span><span class="o">.</span><span class="n">GRCm38</span><span class="o">.</span><span class="n">dna</span><span class="o">.</span><span class="n">primary_assembly</span><span class="o">.</span><span class="n">fa</span> \
+    <span class="o">--</span><span class="n">reference_gtf</span> <span class="n">Mus_musculus</span><span class="o">.</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">gtf</span> \
+    <span class="o">--</span><span class="n">transposon_seq</span> <span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
+    <span class="o">--</span><span class="n">transposon_features</span> <span class="n">transposon</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">txt</span> \
+    <span class="o">--</span><span class="n">output_dir</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span>
+</pre></div>
+</div>
+<p>Here, the <code class="docutils literal"><span class="pre">--reference_seq</span></code> argument points to the fasta file containing
+the sequence of the reference genome, <code class="docutils literal"><span class="pre">--reference_gtf</span></code> points to the gtf
+file containing the reference gene features, <code class="docutils literal"><span class="pre">--transposon_seq</span></code> points to
+the transposon sequence and <code class="docutils literal"><span class="pre">--transposon_features</span></code> points to a file
+describing the transposon features. The reference files are written to the
+path specified by <code class="docutils literal"><span class="pre">--output_dir</span></code>.</p>
+<p>Optionally, specific genomic regions can be blacklisted using the
+<code class="docutils literal"><span class="pre">--blacklist_genes</span></code> and <code class="docutils literal"><span class="pre">--blacklist_regions</span></code> arguments. The former can
+be used to blacklist entire genes (specified by their Ensembl ID), whilst the
+latter can be used to blacklist specific regions (specified as chr:start-end).
+Sequences of blacklisted regions are replaced by &#8216;N&#8217; nucleotides in the
+generated reference.</p>
+<p>The command for building a Tophat-Fusion-based reference is nearly identical:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">build</span> <span class="n">tophat</span> \
+    <span class="o">--</span><span class="n">reference_seq</span> <span class="n">Mus_musculus</span><span class="o">.</span><span class="n">GRCm38</span><span class="o">.</span><span class="n">dna</span><span class="o">.</span><span class="n">primary_assembly</span><span class="o">.</span><span class="n">fa</span> \
+    <span class="o">--</span><span class="n">reference_gtf</span> <span class="n">Mus_musculus</span><span class="o">.</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">gtf</span> \
+    <span class="o">--</span><span class="n">transposon_seq</span> <span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
+    <span class="o">--</span><span class="n">transposon_features</span> <span class="n">transposon</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">txt</span> \
+    <span class="o">--</span><span class="n">output_dir</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">tophat</span>
+</pre></div>
+</div>
+<p>However, both aligners do have some aligner-specific arguments for building
+their references. See the help of the respective sub-commands for more details.</p>
+</div>
+<div class="section" id="detecting-insertions-per-sample">
+<h2>Detecting insertions (per sample)<a class="headerlink" href="#detecting-insertions-per-sample" title="Permalink to this headline">¶</a></h2>
+<p>After building the augmented reference, we can detect transposon insertions
+in each sample using the <code class="docutils literal"><span class="pre">imfusion-insertions</span></code> command. This command
+essentially runs a gene-fusion aware aligner (either STAR or Tophat-Fusion,
+with seperate sub-commands for each aligner) to align the RNA-seq reads and
+identify gene fusions, extracts gene-transposon fusions from the results and
+derives the corresponding insertion sites. The insertions are written as the
+tab-separated file <code class="docutils literal"><span class="pre">insertions.txt</span></code> in the output directory.</p>
+<p>The basic command for <code class="docutils literal"><span class="pre">imfusion-insertions</span></code> using the STAR aligner is:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">insertions</span> <span class="n">star</span>
+    <span class="o">--</span><span class="n">fastq</span> <span class="n">sample_s1</span><span class="o">.</span><span class="n">R1</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
+    <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
+    <span class="o">--</span><span class="n">output_dir</span> <span class="n">output</span><span class="o">/</span><span class="n">sample_s1</span>
+</pre></div>
+</div>
+<p>In this command, the <code class="docutils literal"><span class="pre">--fastq</span></code> argument specifies a path to the fastq
+file containing RNA-seq reads for the given sample. For paired-end samples, the
+second pair should be provided using the optional <code class="docutils literal"><span class="pre">--fastq2</span></code> argument.
+The <code class="docutils literal"><span class="pre">--reference</span></code> argument should point to the previously built augmented
+reference, whilst the <code class="docutils literal"><span class="pre">--output_dir</span></code> argument specifies where the
+sample output should be written.</p>
+<p>An optional <code class="docutils literal"><span class="pre">--assemble</span></code> argument indicates whether IM-Fusion should perform
+a reference-guided transcript assembly. If given, IM-Fusion runs Stringtie
+after the RNA-seq alignment to detect novel gene transcripts based on the
+RNA-seq alignment. The results of this assembly are subsequently used in the
+insertion detection step to annotate insertions that involve novel transcripts.</p>
+<p>The command for using Tophat-Fusion is nearly identical:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">insertions</span> <span class="n">tophat</span>
+    <span class="o">--</span><span class="n">fastq</span> <span class="n">sample_s1</span><span class="o">.</span><span class="n">R1</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
+    <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">tophat</span> \
+    <span class="o">--</span><span class="n">output_dir</span> <span class="n">output</span><span class="o">/</span><span class="n">sample_s1</span>
+</pre></div>
+</div>
+<p>However, both aligners do have some aligner-specific arguments concerning the
+alignment. See the help of the respective sub-commands for more details. For
+STAR, special attention should be paid to memory usage, as STAR requires
+approximately 30GB of memory (per process) for loading the reference genome.</p>
+</div>
+<div class="section" id="quantifying-expression-per-sample">
+<h2>Quantifying expression (per sample)<a class="headerlink" href="#quantifying-expression-per-sample" title="Permalink to this headline">¶</a></h2>
+<p>After detecting insertions, we use the generated RNA-seq alignment to quantify
+exon expression counts for the given sample. These counts are later used to
+test for differential expression when identifying candidate genes from a group
+of samples.</p>
+<p>The expression counts are generated using the <code class="docutils literal"><span class="pre">imfusion-expression</span></code> command:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">expression</span> \
+    <span class="o">--</span><span class="n">sample_dir</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">s1</span> \
+    <span class="o">--</span><span class="n">exon_gtf</span> <span class="n">exons</span><span class="o">.</span><span class="n">gtf</span>
+</pre></div>
+</div>
+<p>Here, the <code class="docutils literal"><span class="pre">--sample_dir</span></code> argument should point to a sample directory (which
+was previously generated by <code class="docutils literal"><span class="pre">imfusion-insertions</span></code>). The generated counts are
+written to this sample directory as the TSV file <code class="docutils literal"><span class="pre">exon_counts.txt</span></code>.
+The <code class="docutils literal"><span class="pre">--exon_gtf</span></code> argument refers to a gtf file containing the flattened
+exon representation of previously used reference gtf.</p>
+<p>The optional arguments <code class="docutils literal"><span class="pre">--paired</span></code> and <code class="docutils literal"><span class="pre">--stranded</span></code> are used to indicate
+whether the alignment contains paired-end sequencing data and to indicate
+the strandedness of this data (0 = unstranded, 1 = stranded
+and 2 = reversely stranded).</p>
+</div>
+<div class="section" id="merging-sample-results">
+<h2>Merging sample results<a class="headerlink" href="#merging-sample-results" title="Permalink to this headline">¶</a></h2>
+<p>To detect genes that are recurrently mutated across samples, we first merge
+the individual sample results into a combined dataset using <code class="docutils literal"><span class="pre">imfusion-merge</span></code>.
+This command effectively concatenates the individual results into combined
+<code class="docutils literal"><span class="pre">insertions.txt</span></code> and <code class="docutils literal"><span class="pre">exon_counts.txt</span></code> files.</p>
+<p>The basic command is as follows:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">merge</span> <span class="o">--</span><span class="n">sample_dirs</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">sample_s1</span> \
+                              <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">sample_s2</span> \
+                <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span> \
+                <span class="o">--</span><span class="n">output_expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>In this command, the <code class="docutils literal"><span class="pre">--sample_dirs</span></code> argument points to the sample
+directories that should be merged and <code class="docutils literal"><span class="pre">output</span></code> indicates that path to
+which the merged insertion file should be written. The <code class="docutils literal"><span class="pre">--output_expression</span></code>
+argument indicates where merged expression counts should be written. This
+argument may be omitted if no expression counts were generated.</p>
+</div>
+<div class="section" id="selecting-de-ctgs">
+<h2>Selecting (DE) CTGs<a class="headerlink" href="#selecting-de-ctgs" title="Permalink to this headline">¶</a></h2>
+<p>To identify genes that are commonly targeted by insertions (commonly targeted
+genes, or CTGs), IM-Fusion uses the Poisson distribution to test whether a
+given gene has more insertions than may be expected by chance. This test is
+performed on the merged dataset using the <code class="docutils literal"><span class="pre">imfusion-ctg</span></code> command:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
+              <span class="o">--</span><span class="n">expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span> \
+              <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
+              <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal"><span class="pre">--insertions</span></code> and <code class="docutils literal"><span class="pre">--expression</span></code> should point to the merged
+insertions and expression files generated by <code class="docutils literal"><span class="pre">imfusion-merge</span></code>. The
+<code class="docutils literal"><span class="pre">--reference</span></code> argument refers to the same reference as used for the
+alignment, whilst <code class="docutils literal"><span class="pre">--output</span></code> specifies the path where the CTG output
+should be written.</p>
+<p>The parameters for the CTG test can be changed using the <code class="docutils literal"><span class="pre">--window</span></code>,
+<code class="docutils literal"><span class="pre">--pattern</span></code> and <code class="docutils literal"><span class="pre">--chromosomes</span></code> arguments. The <code class="docutils literal"><span class="pre">--window</span></code> parameter
+specifies the size of the window around genes within which insertions should
+be included. The <code class="docutils literal"><span class="pre">--pattern</span></code> argument can be used to account for integration
+biases of the transposon, if the transposon is known to integrate at specific
+nucleotide sequences. The <code class="docutils literal"><span class="pre">--chromosome</span></code> argument specifies which chromosomes
+should be included in the test and is mainly used to omit chromosomes
+containing the transposon donor loci.</p>
+<p>Finally, the significance thresholds for the CTG and DE tests can be specified
+using the <code class="docutils literal"><span class="pre">--threshold</span></code> and <code class="docutils literal"><span class="pre">--de_threshold</span></code> arguments:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
+              <span class="o">--</span><span class="n">expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span> \
+              <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
+              <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span> \
+              <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.05</span> \
+              <span class="o">--</span><span class="n">de_threshold</span> <span class="mf">0.05</span>
+</pre></div>
+</div>
+<p>Optionally, the differential expression test can be skipped by not providing
+the expression data. In this case, only the CTG test is performed:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
+              <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
+              <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span>
+              <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.05</span> \
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting_started.html" class="btn btn-neutral" title="Getting started" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

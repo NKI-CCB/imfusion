@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  <title>API &mdash; IM-Fusion 0.2.0 documentation</title>
   
 
   
@@ -30,9 +30,12 @@
   
 
   
-    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="index.html"/>
-        <link rel="next" title="Development" href="development.html"/>
-        <link rel="prev" title="Command-line usage" href="command_line_usage.html"/> 
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="index.html"/>
+        <link rel="next" title="&lt;no title&gt;" href="contributing.html"/>
+        <link rel="prev" title="Usage" href="usage.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -60,7 +63,7 @@
             
             
               <div class="version">
-                0.1
+                0.2.0
               </div>
             
           
@@ -82,34 +85,20 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#imfusion-aligners">imfusion.aligners</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#imfusion-aligners-tophat2">imfusion.aligners.tophat2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-references">Building references</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#indexers">Indexers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#imfusion-ctg">imfusion.ctg</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#imfusion-expression">imfusion.expression</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#imfusion-expression-counts">imfusion.expression.counts</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#imfusion-expression-de-test">imfusion.expression.de_test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#identifying-insertions">Identifying insertions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing-for-differential-expression">Testing for differential expression</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#imfusion-merge">imfusion.merge</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#imfusion-model">imfusion.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#imfusion-util">imfusion.util</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#imfusion-util-check">imfusion.util.check</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#imfusion-util-fusions">imfusion.util.fusions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#imfusion-util-insertions">imfusion.util.insertions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#imfusion-util-reference">imfusion.util.reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#imfusion-util-tabix">imfusion.util.tabix</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 </ul>
 
             
@@ -144,7 +133,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/api.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -156,1123 +145,591 @@
             
   <div class="section" id="api">
 <h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="imfusion-aligners">
-<h2>imfusion.aligners<a class="headerlink" href="#imfusion-aligners" title="Permalink to this headline">¶</a></h2>
-<p>The <strong>aligners</strong> module contains the different aligners that can be used to
-identify insertion sites from gene-transposon fusions. Currently only
-Tophat2 is supported, though other aligners may be added in the future. The
-aligner modules only implement functionality that is specific to the aligner.
-Generic code for building reference genomes and identifying insertions are
-contained in the util modules <strong>util.fusions</strong>, <strong>util.insertions</strong> and
-<strong>util.reference</strong>.</p>
-<div class="section" id="imfusion-aligners-tophat2">
-<h3>imfusion.aligners.tophat2<a class="headerlink" href="#imfusion-aligners-tophat2" title="Permalink to this headline">¶</a></h3>
-<p>The <strong>tophat2</strong> submodule contains the functionality that is used to
-identify insertions from gene-transposon fusions using Tophat2. The module
-contains two main functions: <cite>build_reference</cite> and <cite>identify_insertions</cite>.
-The function <cite>build_reference</cite> is used to build an augmented reference genome
-and the corresponding indices for Tophat2. This augmented reference is can be
-supplied to <cite>identify_insertions</cite> to perform the actual
-insertion identification.</p>
-<dl class="function">
-<dt id="imfusion.aligners.tophat2.build_reference">
-<code class="descclassname">imfusion.aligners.tophat2.</code><code class="descname">build_reference</code><span class="sig-paren">(</span><em>ref_seq_path</em>, <em>ref_gtf_path</em>, <em>tr_seq_path</em>, <em>output_path</em>, <em>blacklist_regions=None</em>, <em>create_index=True</em>, <em>create_transcriptome_index=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/aligners/tophat2/reference.html#build_reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.aligners.tophat2.build_reference" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds an augmented reference genome for Tophat2.</p>
-<p>This is the main function responsible for building augmented reference
-genomes, which are used as a reference for Tophat2 when identifying
-transposon insertions in RNA-seq samples from an insertional mutagenesis
-screen. An augmented reference contains an extra sequence which reflects
-the sequence of the transposon that was used in the screen.</p>
-<p>Optionally, specific regions of the original reference can be blacklisted if
-these regions contain sequences that are also in the transposon sequence,
-as these may be problematic in the alignment. For example, in our
-Sleeping Beauty screen we masked regions in the Foxf2 and in En2 genes,
-as the T2onc2 transposon we used contains sequences from these genes.
-Sequences in blacklisted regions are replaced by Ns, effectively removing
-the regions from the reference.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>refseq_path</strong> (<em>pathlib.Path</em>) &#8211; Path to the fasta file containing the reference genome.</li>
-<li><strong>ref_gtf_path</strong> (<em>pathlib.Path</em>) &#8211; Path to the gtf file containing the genes of the reference genome.
-Assumed to have the same structure as Ensembls reference GTF files.</li>
-<li><strong>trseq_path</strong> (<em>pathlib.Path</em>) &#8211; Path to the fasta file containg the transposon sequence.</li>
-<li><strong>output_path</strong> (<em>pathlib.Path</em>) &#8211; Output path for the augmented reference genome (which is written
-as a new fasta file).</li>
-<li><strong>blacklist_regions</strong> (<em>List[tuple(str, int, int)]</em>) &#8211; List of regions that should be blacklisted in the augmented reference
-genome. Regions are specified as a tuple of (chromosome, start_position,
-end_position). For example: (&#8216;1&#8217;, 2000, 2200).</li>
-<li><strong>create_index</strong> (<em>bool</em>) &#8211; Whether a bowtie index should be created.</li>
-<li><strong>create_transcriptome_index</strong> (<em>bool</em>) &#8211; Whether a Tophat2 transcriptome index should be created.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.aligners.tophat2.identify_insertions">
-<code class="descclassname">imfusion.aligners.tophat2.</code><code class="descname">identify_insertions</code><span class="sig-paren">(</span><em>fastqs</em>, <em>index_path</em>, <em>reference_gtf_path</em>, <em>transposon_name</em>, <em>transposon_features</em>, <em>sample_id</em>, <em>work_dir</em>, <em>min_flank</em>, <em>tophat_kws=None</em>, <em>transcriptome_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/aligners/tophat2/insertions.html#identify_insertions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.aligners.tophat2.identify_insertions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Identifies insertions from RNA-seq fusions using Tophat2.</p>
-<p>Main function for identifying fusions from RNA-seq fastq files using Tophat2. The function essentially consists of four main steps:</p>
-<blockquote>
-<div><ul class="simple">
-<li>The identification of gene-transposon fusions using Tophat2</li>
-<li>Annotation of the found fusions for gene/transposon features</li>
-<li>Deriving approximate locations for the corresponding insertions.</li>
-<li>Filtering of fusions that are biologically implausible (for
-example due to their relative orientation)</li>
-</ul>
-</div></blockquote>
-<p>The function returns the list of insertions that were identified by
-Tophat2. The generated alignment is also symlinked into the work directory
-as &#8216;alignment.bam&#8217; for convenient access.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>fastqs</strong> (<em>list[pathlib.Path] or list[tuple(pathlib.Path, pathlib.Path)]</em>) &#8211; Paths to the fastq files that should be used for the Tophat2
-alignment. Can be given as a list of file paths for single-end
-sequencing data, or a list of path tuples for paired-end sequencing
-data. The fastqs are treated as belonging to a single sample.</li>
-<li><strong>index_path</strong> (<em>pathlib.Path</em>) &#8211; Path to the bowtie index of the (augmented)
-genome that should be used in the alignment. This index is
-typically generated by the <em>build_reference</em> function.</li>
-<li><strong>reference_gtf_path</strong> (<em>pathlib.Path:</em>) &#8211; Path to the gtf file containing genomic
-features. This file is used by Tophat2 for known gene features and
-for the annotation of gene features for identified fusions.</li>
-<li><strong>transposon_name</strong> (<em>str</em>) &#8211; Name of the transposon sequence in the augmented reference genome.</li>
-<li><strong>transposon_features</strong> (<em>pandas.DataFrame</em>) &#8211; Dataframe containing positions
-for the features present in the transposon sequence. Used to
-identify transposon features (such as splice acceptors or donors)
-that are involed in the identified fusions.</li>
-<li><strong>sample_id</strong> (<em>str</em>) &#8211; Sample name that the identified insertions should be assigned to.</li>
-<li><strong>work_dir</strong> (<em>pathlib.Path</em>) &#8211; Path to the working directory.</li>
-<li><strong>min_flank</strong> (<em>int</em>) &#8211; Minimum amount of flanking region that should be
-surrounding the fusion. Used by Tophat2 in its identification
-of fusions during the alignment.</li>
-<li><strong>tophat_kws</strong> (<em>dict</em>) &#8211; Dict of extra arguments for Tophat2.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><em>Insertion</em> &#8211; Next insertion that was identified in the given sample.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.aligners.tophat2.get_version">
-<code class="descclassname">imfusion.aligners.tophat2.</code><code class="descname">get_version</code><span class="sig-paren">(</span><em>path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/aligners/tophat2/util.html#get_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.aligners.tophat2.get_version" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the version of Tophat2 in path.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>pathlib.Path</em>) &#8211; Path to use for the Tophat2 executable.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Version of the Tophat2 executable in path.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.aligners.tophat2.get_bowtie_version">
-<code class="descclassname">imfusion.aligners.tophat2.</code><code class="descname">get_bowtie_version</code><span class="sig-paren">(</span><em>path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/aligners/tophat2/util.html#get_bowtie_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.aligners.tophat2.get_bowtie_version" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the version of Bowtie in path.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>pathlib.Path</em>) &#8211; Path to use for the bowtie executable.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Version of Bowtie executable in path.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="imfusion-ctg">
-<h2>imfusion.ctg<a class="headerlink" href="#imfusion-ctg" title="Permalink to this headline">¶</a></h2>
-<p>The <strong>ctg</strong> module contains the functions for identifying commonly targeted
-genes (CTGs) from a collection of insertions from multiple samples. The module
-contains two main functions: <cite>test_ctgs</cite> and <cite>test_de</cite>. The <cite>test_ctgs</cite>
-function performs the actual enrichment test and returns CTGs and their
-corresponding (corrected) p-values. The function <cite>test_de</cite> takes the CTG
-frame and tests each of the genes for differential expression, filtering
-out CTGs that are not significantly differentially expressed.</p>
-<dl class="function">
-<dt id="imfusion.ctg.test_ctgs">
-<code class="descclassname">imfusion.ctg.</code><code class="descname">test_ctgs</code><span class="sig-paren">(</span><em>insertion_frame</em>, <em>reference_seq</em>, <em>reference_gtf</em>, <em>chromosomes=None</em>, <em>pattern=None</em>, <em>gene_ids=None</em>, <em>per_sample=True</em>, <em>window=None</em>, <em>threshold=0.05</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/ctg.html#test_ctgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.ctg.test_ctgs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Identifies genes that are significantly enriched for insertions (CTGs).</p>
-<p>This function takes a DataFrame of insertions, coming from multiple samples,
-and identifies if any genes are more frequently affected by an
-insertion than would be expected by chance. These genes are called
-Commonly Targeted Genes (CTGs). CTGs are selected by comparing the
-number of insertions within the gene to the number of insertions
-that would be expected from the background insertion rate, which is
-modeled using a Poisson distribution.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>insertion_frame</strong> (<em>pd.DataFrame</em>) &#8211; Insertions to test (in DataFrame format).</li>
-<li><strong>reference_sequence</strong> (<em>pyfaidx.Fasta</em>) &#8211; Fasta sequence of the reference genome.</li>
-<li><strong>reference_gtf</strong> (<a class="reference internal" href="#imfusion.util.tabix.GtfFile" title="imfusion.util.tabix.GtfFile"><em>GtfFile</em></a>) &#8211; GtfFile containing reference genes.</li>
-<li><strong>chromosomes</strong> (<em>list[str]</em>) &#8211; List of chromosomes to include, defaults to all chromosomes
-in reference_gtf.</li>
-<li><strong>pattern</strong> (<em>str</em>) &#8211; Specificity pattern of the used transposon.</li>
-<li><strong>genes</strong> (<em>list[str]</em>) &#8211; List of genes to test (defaults to all genes with an insertion).</li>
-<li><strong>per_sample</strong> (<em>bool</em>) &#8211; Whether to perform the per sample test (recommended), which
-effectively collapes insertions per sample/gene combination.
-This avoids issues in which insertions that are detected
-multiple times or that may have hopped inside the gene locus
-are counted multiple times.</li>
-<li><strong>window</strong> (<em>tuple(int, int)</em>) &#8211; Window to include around gene (in bp). Specified as (upstream_dist,
-downstream_dist). For example: (-2000, 2000) specifies in a 2KB
-window around each gene.</li>
-<li><strong>threshold</strong> (<em>float</em>) &#8211; Maximum p-value for selected CTGs.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Results of CTG test for tested genes. Contains three columns:
-gene_id, p_val and p_val_corr. The last column, p_val_corr,
-represents the p-value of the gene after correcting for
-multiple testing using bonferroni correction.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pandas.DataFrame</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.ctg.test_de">
-<code class="descclassname">imfusion.ctg.</code><code class="descname">test_de</code><span class="sig-paren">(</span><em>ctgs</em>, <em>insertions</em>, <em>dexseq_gtf</em>, <em>exon_counts_path</em>, <em>threshold=0.05</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/ctg.html#test_de"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.ctg.test_de" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests identified CTGs for differential expression.</p>
-<p>This function takes CTG frame produced by <cite>test_ctgs</cite> and tests each
-of the identified CTGs for differential expression using the groupwise
-exon-level differential expression test (<cite>de_exon</cite>). The resulting
-DE p-values are added to the DataFrame and CTGs that are not
-differentially expressed are dropped.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>ctgs</strong> (<em>pandas.DataFrame</em>) &#8211; DataFrame containing the identified CTGs (as generated by <cite>test_ctgs</cite>).</li>
-<li><strong>insertions</strong> (<em>List[insertions]</em>) &#8211; List of insertions to use in the test. Should be the same insertions
-as used to identify CTGs.</li>
-<li><strong>dexseq_gtf</strong> (<a class="reference internal" href="#imfusion.util.tabix.GtfFile" title="imfusion.util.tabix.GtfFile"><em>imfusion.util.tabix.GtfFile</em></a>) &#8211; GtfFile instance containing the flattened exon representation of
-the original reference_gtf. The corresponding gtf file is typically
-generated using DEXSeqs script for preparing exon annotations.</li>
-<li><strong>exon_counts_path</strong> (<em>pathlib:Path</em>) &#8211; Path to the file containing exon counts for all samples.</li>
-<li><strong>threshold</strong> (<em>float</em>) &#8211; Maximum p-value for differential expression.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">CTG dataFrame containing the differential expression test results.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pandas.DataFrame</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="imfusion-expression">
-<h2>imfusion.expression<a class="headerlink" href="#imfusion-expression" title="Permalink to this headline">¶</a></h2>
-<p>The <strong>expression</strong> module contains functionality for generating expression
-counts and testing for differential expression. The <strong>counts</strong> submodule
-handles the count generation using the featureCounts tool. The <strong>de_test</strong>
-submodule implements the various differential expression tests.</p>
-<div class="section" id="imfusion-expression-counts">
-<h3>imfusion.expression.counts<a class="headerlink" href="#imfusion-expression-counts" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="imfusion.expression.counts.exon_counts">
-<code class="descclassname">imfusion.expression.counts.</code><code class="descname">exon_counts</code><span class="sig-paren">(</span><em>bam_files</em>, <em>gff_path</em>, <em>names=None</em>, <em>extra_kws=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/counts.html#exon_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.counts.exon_counts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates exon counts for given bam files using featureCounts.</p>
-<p>This function is used to generate a m-by-n matrix (m = number of samples,
-n = number of exons) of exon expression counts. This matrix is generated
-using featureCounts, whose results are then parsed and returned.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>bam_files</strong> (<em>list[pathlib.Path]</em>) &#8211; List of paths to the bam files for which counts should be generated.</li>
-<li><strong>gff_path</strong> (<em>pathlib.Path</em>) &#8211; Path to the gene feature file containing gene features.</li>
-<li><strong>names</strong> (<em>dict[str, str]</em>) &#8211; Alternative names to use for the given bam
-files. Keys of the dict should correspond to bam file paths, values
-should reflect the sample names that should be used in the
-resulting count matrix.</li>
-<li><strong>extra_kws</strong> (<em>dict[str, any]</em>) &#8211; Dictionary of extra arguments that
-should be passed to feature counts. Keys should correspond
-to argument names (including dashes), values should correspond
-to the argument value. Arguments without values (flags)
-should be given with the boolean value True.</li>
-<li><strong>**kwargs</strong> &#8211; Any kwargs are passed to <cite>feature_counts</cite>.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">DataFrame containing counts. The index of the DataFrame contains
-gene ids corresponding to exons in the gff file, the columns
-correspond to samples/bam files. Column names are either the bam
-file paths, or the alternative sample names if given.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pandas.DataFrame</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.expression.counts.feature_counts">
-<code class="descclassname">imfusion.expression.counts.</code><code class="descname">feature_counts</code><span class="sig-paren">(</span><em>bam_files</em>, <em>gff_path</em>, <em>names=None</em>, <em>extra_kws=None</em>, <em>tmp_dir=None</em>, <em>keep_tmp=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/counts.html#feature_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.counts.feature_counts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs featureCounts on bam files with given options.</p>
-<p>Main function used to run featureCounts. Used by <cite>gene_counts</cite> and
-<cite>exon_counts</cite> to generate expression counts.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>bam_files</strong> (<em>list[pathlib.Path]</em>) &#8211; List of paths to the bam files for which counts should be generated.</li>
-<li><strong>gff_path</strong> (<em>pathlib.Path</em>) &#8211; Path to the gff file containing gene features.</li>
-<li><strong>names</strong> (<em>dict[str, str]</em>) &#8211; Dictionary with sample names, used to rename
-columns from file paths to sample names. Keys of the Dictionary
-should correspond with the bam file paths, values should
-reflect the desired sample name for the respective bam file.</li>
-<li><strong>extra_kws</strong> (<em>dict[str, any]</em>) &#8211; Dictionary containing extra command line
-arguments that should be passed to featureCounts.</li>
-<li><strong>tmp_dir</strong> (<em>pathlib.Path</em>) &#8211; Temp directory to use for the generated counts.</li>
-<li><strong>keep_tmp</strong> (<em>bool</em>) &#8211; Whether to keep the temp directory (default = False).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">DataFrame containing feature counts for the given bam files. The rows
-correspond to the counted features, the columns correspond to the
-index values (chomosome, position etc.) and the bam files.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pandas.Dataframe</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="imfusion-expression-de-test">
-<h3>imfusion.expression.de_test<a class="headerlink" href="#imfusion-expression-de-test" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="imfusion.expression.de_test.de_exon">
-<code class="descclassname">imfusion.expression.de_test.</code><code class="descname">de_exon</code><span class="sig-paren">(</span><em>insertions</em>, <em>gene_id</em>, <em>dexseq_gtf</em>, <em>exon_counts</em>, <em>pos_samples=None</em>, <em>neg_samples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/de_test/test.html#de_exon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.de_test.de_exon" title="Permalink to this definition">¶</a></dt>
-<dd><p>Performs the groupwise exon-level differential expression test.</p>
-<p>Tests if the expression of exons after the insertion site(s) in a
-gene is significantly increased or decreased in samples with an
-insertion (pos_samples) compared to samples without an insertion
-(neg_samples). The test is performed by comparing normalized counts
-after the insertion sites between samples with and without an insertion
-in the gene, using the non-parametric Mann-Whitney-U test.</p>
-<p>Note that the before/after split for the groupwise test is taken as the
-common set of before/after exons over all samples with an insertion. In
-cases where either set is empty, for example due to insertions before the
-first exon of the gene, we attempt to drop samples that prevent a proper
-split and perform the test without these samples.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>insertions</strong> (<em>pandas.DataFrame</em>) &#8211; DataFrame containing all insertions.</li>
-<li><strong>gene_id</strong> (<em>str</em>) &#8211; ID of the gene of interest. Should correspond with a
-gene in the DEXSeq gtf file.</li>
-<li><strong>dexseq_gtf</strong> (<a class="reference internal" href="#imfusion.util.tabix.GtfFile" title="imfusion.util.tabix.GtfFile"><em>GtfFile</em></a>) &#8211; Gtf file containing exon features generated using DEXSeq. Can either
-be given as a GtfFile object or as a string specifying the path to
-the gtf file.</li>
-<li><strong>exon_counts</strong> (<em>pandas.DataFrame or pathlib.Path</em>) &#8211; DataFrame containing exon counts. The DataFrame is expected
-to contain samples as columns, and have a multi-index containing
-the chromosome, start, end and strand of the exon. This index
-should correspond with the annotation in the DEXSeq gtf. The
-samples should correspond with samples in the insertions frame.
-If a Path is given, it should point to a TSV file containing the counts.</li>
-<li><strong>pos_samples</strong> (<em>set[str]</em>) &#8211; Set of positive samples (with insertion) to use in the test. Defaults
-to all samples with an insertion in the gene of interest.</li>
-<li><strong>neg_samples</strong> (<em>set[str]</em>) &#8211; Set of negative samples (without insertion) to use in the test.
-Defaults to all samples not in the positive set.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Result of the differential expression test.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#imfusion.expression.de_test.DeExonResult" title="imfusion.expression.de_test.DeExonResult">DeExonResult</a></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
+<div class="section" id="building-references">
+<h2>Building references<a class="headerlink" href="#building-references" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="indexers">
+<h3>Indexers<a class="headerlink" href="#indexers" title="Permalink to this headline">¶</a></h3>
+<p>IM-Fusion uses <code class="docutils literal"><span class="pre">Indexer</span></code> classes to generate references for the
+different RNA-seq aligners, with one class provided for each aligner. The main
+methods provided by the Indexers are the <code class="docutils literal"><span class="pre">check_dependencies</span></code> and <code class="docutils literal"><span class="pre">build</span></code>
+methods. The former is used to check whether required external dependencies
+are present in <code class="docutils literal"><span class="pre">$PATH</span></code>, whilst the latter should be called with the required
+reference files to build the actual reference.</p>
 <dl class="class">
-<dt id="imfusion.expression.de_test.DeExonResult">
-<em class="property">class </em><code class="descclassname">imfusion.expression.de_test.</code><code class="descname">DeExonResult</code><span class="sig-paren">(</span><em>sums</em>, <em>sample_split</em>, <em>exon_split</em>, <em>direction</em>, <em>p_value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/de_test/test.html#DeExonResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.de_test.DeExonResult" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class embodying the results of the groupwise exon-level DE test.</p>
-<dl class="attribute">
-<dt id="DeExonResult.sums">
-<code class="descname">sums</code><a class="headerlink" href="#DeExonResult.sums" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>pandas.DataFrame</em> &#8211; DataFrame of before/after expression counts for all samples.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="DeExonResult.sample_split">
-<code class="descname">sample_split</code><a class="headerlink" href="#DeExonResult.sample_split" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>tuple(List[str], List[str])</em> &#8211; Split of samples into positive/negative samples.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="DeExonResult.exon_split">
-<code class="descname">exon_split</code><a class="headerlink" href="#DeExonResult.exon_split" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>tuple</em> &#8211; Split of exons into before/after groups.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="DeExonResult.direction">
-<code class="descname">direction</code><a class="headerlink" href="#DeExonResult.direction" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Direction of the differential expression (1 = positive, -1 = negative).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="DeExonResult.p_value">
-<code class="descname">p_value</code><a class="headerlink" href="#DeExonResult.p_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; P-value of the differential expression test.</p>
-</dd></dl>
-
+<dt id="imfusion.build.indexers.Indexer">
+<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">Indexer</code><span class="sig-paren">(</span><em>logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/base.html#Indexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.Indexer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base Indexer class.</p>
+<p>This base class defines the interface for Indexer classes and provides
+basic functionality for building augmented reference genomes. Functionality
+for building the indices for alignment is provided by sub-classes
+(as this is aligner specific), typically by overriding the protected
+<code class="docutils literal"><span class="pre">_build_indices</span></code> method.</p>
+<p>The main interface of the class is formed by the <code class="docutils literal"><span class="pre">check_dependencies</span></code>
+and <code class="docutils literal"><span class="pre">build</span></code> methods. The former is used to check whether required
+external dependencies are present in <code class="docutils literal"><span class="pre">$PATH</span></code>, whilst the latter is
+called with the required reference files to build the actual reference.
+On completion, the <code class="docutils literal"><span class="pre">build</span></code> method returns a <code class="docutils literal"><span class="pre">Reference</span></code> object, which
+defines paths to the various reference files. The class of this object is
+defined by the <code class="docutils literal"><span class="pre">_reference_class</span></code> method, which may be overridden to
+return aligner-specific <code class="docutils literal"><span class="pre">Reference</span></code> subclasses.</p>
+<p>Additionally, the class provides the methods <code class="docutils literal"><span class="pre">configure_args</span></code> and
+<code class="docutils literal"><span class="pre">from_args</span></code>, which are used to configure the argument parser for
+<code class="docutils literal"><span class="pre">imfusion-build</span></code> and to instantate instances from parsed arguments.
+Subclasses with extra options should override the protected <code class="docutils literal"><span class="pre">_parse_args</span></code>
+method, which extracts constructor parameters from argparse arguments
+for <code class="docutils literal"><span class="pre">from_args</span></code>, allowing for flexible interpretation of these arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>logger</strong> (<em>logging.Logger</em>) &#8211; Logger to be used for logging messages.</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
-<dt id="imfusion.expression.de_test.DeExonResult.plot_boxplot">
-<code class="descname">plot_boxplot</code><span class="sig-paren">(</span><em>log=False</em>, <em>ax=None</em>, <em>show_points=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/de_test/test.html#DeExonResult.plot_boxplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.de_test.DeExonResult.plot_boxplot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots boxplot of &#8216;after&#8217; expression for samples with/without
-insertions in the gene.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="imfusion.expression.de_test.DeExonResult.plot_sums">
-<code class="descname">plot_sums</code><span class="sig-paren">(</span><em>log=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/de_test/test.html#DeExonResult.plot_sums"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.de_test.DeExonResult.plot_sums" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots the distribution of before/after counts for the samples.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.expression.de_test.de_exon_single">
-<code class="descclassname">imfusion.expression.de_test.</code><code class="descname">de_exon_single</code><span class="sig-paren">(</span><em>insertions</em>, <em>gene_id</em>, <em>insertion_id</em>, <em>dexseq_gtf</em>, <em>exon_counts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/de_test/test.html#de_exon_single"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.de_test.de_exon_single" title="Permalink to this definition">¶</a></dt>
-<dd><p>Performs the single-sample exon-level differential expression test.</p>
-<p>Tests if the expression of exons after the insertion site of the
-given sample is significantly increased or decreased compared to samples
-without an insertion. This test is performed by comparing the (normalized)
-after count of the given sample to a background distribution of normalized
-counts of samples without an insertion, which is modeled using a
-negative binomial distribution.</p>
-<p>Note: this function requires Rpy2 to be installed, as R functions
-are used to fit the negative binomial distribution.</p>
+<dt id="imfusion.build.indexers.Indexer.build">
+<code class="descname">build</code><span class="sig-paren">(</span><em>refseq_path</em>, <em>gtf_path</em>, <em>transposon_path</em>, <em>transposon_features_path</em>, <em>output_dir</em>, <em>blacklist_regions=None</em>, <em>blacklist_genes=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/base.html#Indexer.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.Indexer.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds an augmented reference containing the transposon sequence.</p>
+<p>The reference is built by first copying the original reference
+sequence into the output directory and then augmenting this reference
+with the transposon sequence. If needed, blacklisted genes/regions are
+then masked within this reference. Next, other supporting files
+(such as the reference GTF) are copied and indexed as needed. As a
+final step, aligner-specific indices are built for the augmented
+reference.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>insertions</strong> (<em>pandas.DataFrame</em>) &#8211; DataFrame containing all insertions.</li>
-<li><strong>gene_id</strong> (<em>str</em>) &#8211; ID of the gene of interest. Should correspond with a
-gene in the DEXSeq gtf file.</li>
-<li><strong>insertion_id</strong> (<em>str</em>) &#8211; ID of the insertion of interest. Should correspond with
-an insertion in the list of insertions.</li>
-<li><strong>dexseq_gtf</strong> (<a class="reference internal" href="#imfusion.util.tabix.GtfFile" title="imfusion.util.tabix.GtfFile"><em>GtfFile</em></a>) &#8211; Gtf file containing exon features generated using DEXSeq. Can either
-be given as a GtfFile object or as a string specifying the path to
-the gtf file.</li>
-<li><strong>exon_counts</strong> (<em>pandas.DataFrame</em>) &#8211; DataFrame containing exon counts. The DataFrame is expected
-to contain samples as columns, and have a multi-index containing
-the chromosome, start, end and strand of the exon. This index
-should correspond with the annotation in the DEXSeq gtf. The
-samples should correspond with samples in the insertions frame.</li>
+<li><strong>refseq_path</strong> (<em>Path</em>) &#8211; Path to the reference sequence (in Fasta format).</li>
+<li><strong>gtf_path</strong> (<em>Path</em>) &#8211; Path to the reference GTF file.</li>
+<li><strong>transposon_path</strong> (<em>Path</em>) &#8211; Path to the transposon sequence (in Fasta format).</li>
+<li><strong>transposon_features_path</strong> (<em>Path</em>) &#8211; Path to the transposon features (tab-separated file).</li>
+<li><strong>output_dir</strong> (<em>Path</em>) &#8211; Path to the output directory. Should not yet exist.</li>
+<li><strong>blacklist_regions</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em><em></em><em>]</em><em></em>) &#8211; List or regions that should be blacklisted, specified as a tuple
+of (chromosome, start, end).</li>
+<li><strong>blacklist_genes</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em></em>) &#8211; List of genes that should be blacklisted. Should correspond to
+<code class="docutils literal"><span class="pre">gene_id</span></code> entries in the passed GTF file.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Result of the differential expression test.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Returns a <code class="docutils literal"><span class="pre">Reference</span></code> object, which describes the paths to
+various files within the generated reference.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#imfusion.expression.de_test.DeExonResult" title="imfusion.expression.de_test.DeExonResult">DeExonResult</a></p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#imfusion.build.indexers.Reference" title="imfusion.build.indexers.Reference">Reference</a></p>
 </td>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="class">
-<dt id="imfusion.expression.de_test.DeExonSingleResult">
-<em class="property">class </em><code class="descclassname">imfusion.expression.de_test.</code><code class="descname">DeExonSingleResult</code><span class="sig-paren">(</span><em>sums</em>, <em>sample_split</em>, <em>exon_split</em>, <em>nb_fit</em>, <em>direction</em>, <em>p_value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/de_test/test.html#DeExonSingleResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.de_test.DeExonSingleResult" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class containing the results of the single-sample exon-level DE test.</p>
-<dl class="attribute">
-<dt id="DeExonSingleResult.sums">
-<code class="descname">sums</code><a class="headerlink" href="#DeExonSingleResult.sums" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>pandas.DataFrame</em> &#8211; DataFrame of before/after expression counts for all samples.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="DeExonSingleResult.sample_split">
-<code class="descname">sample_split</code><a class="headerlink" href="#DeExonSingleResult.sample_split" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>tuple(List[str], List[str])</em> &#8211; Split of samples into positive/negative samples.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="DeExonSingleResult.exon_split">
-<code class="descname">exon_split</code><a class="headerlink" href="#DeExonSingleResult.exon_split" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>tuple</em> &#8211; Split of exons into before/after groups.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="DeExonSingleResult.nb_fit">
-<code class="descname">nb_fit</code><a class="headerlink" href="#DeExonSingleResult.nb_fit" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>imfusion.expression.de_test.stats.NegativeBinomial</em> &#8211; Fit negative-binomial background distribution.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="DeExonSingleResult.direction">
-<code class="descname">direction</code><a class="headerlink" href="#DeExonSingleResult.direction" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Direction of the differential expression (1 = positive, -1 = negative).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="DeExonSingleResult.p_value">
-<code class="descname">p_value</code><a class="headerlink" href="#DeExonSingleResult.p_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; P-value of the differential expression test.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="imfusion.expression.de_test.DeExonSingleResult.plot_fit">
-<code class="descname">plot_fit</code><span class="sig-paren">(</span><em>ax=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/de_test/test.html#DeExonSingleResult.plot_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.de_test.DeExonSingleResult.plot_fit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots the sample expression on the background distribution.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="imfusion.expression.de_test.DeExonSingleResult.plot_sums">
-<code class="descname">plot_sums</code><span class="sig-paren">(</span><em>log=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/de_test/test.html#DeExonSingleResult.plot_sums"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.de_test.DeExonSingleResult.plot_sums" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots the distribution of before/after counts for the samples.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="imfusion-merge">
-<h2>imfusion.merge<a class="headerlink" href="#imfusion-merge" title="Permalink to this headline">¶</a></h2>
-<p>The <strong>merge</strong> module contains functions for merging the results of
-the individual sample analyses (the insertions and expression counts) into
-a single combined dataset. This combined dataset is used as input
-for the CTG and differential expression analysis.</p>
-<dl class="function">
-<dt id="imfusion.merge.merge_samples">
-<code class="descclassname">imfusion.merge.</code><code class="descname">merge_samples</code><span class="sig-paren">(</span><em>dir_paths</em>, <em>samples=None</em>, <em>with_expression=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/merge.html#merge_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.merge.merge_samples" title="Permalink to this definition">¶</a></dt>
-<dd><p>Merges samples in dir_paths to a single insertions/exon counts frame.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>dir_paths</strong> (<em>List[pathlib.Path]</em>) &#8211; Paths to the sample directories.</li>
-<li><strong>samples</strong> (<em>List[str]</em>) &#8211; Samples to subset the results to.</li>
-<li><strong>with_expression</strong> (<em>bool</em>) &#8211; Whether to include expression.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Two DataFrames respectively containing the merged insertions
-and the merged exon counts. If with_expression is False, the
-merged counts frame is returned as None.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple(pandas.DataFrame, pandas.DataFrame)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="imfusion-model">
-<h2>imfusion.model<a class="headerlink" href="#imfusion-model" title="Permalink to this headline">¶</a></h2>
-<p>Two model classes, <cite>Fusion</cite> and <cite>Insertion</cite>, are used to represent fusions and
-insertions respectively. These classes are mainly used to track which
-attributes fusions and insertions have and to convert between model instances
-and DataFrame representations.</p>
-<dl class="class">
-<dt id="imfusion.model.Fusion">
-<em class="property">class </em><code class="descclassname">imfusion.model.</code><code class="descname">Fusion</code><a class="reference internal" href="_modules/imfusion/model.html#Fusion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.model.Fusion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class representing a gene-transposon fusion.</p>
-<p>Used by fusion identification tools (such as Tophat2) to return the
-fusions that are identified. Not all fields are required if these
-are not available. However, the following fields should at least
-be provided: <cite>seqname</cite>, <cite>anchor_genome</cite>, <cite>anchor_transposon</cite>,
-<cite>strand_genome</cite>, <cite>strand_transposon</cite>.</p>
-<dl class="attribute">
-<dt id="Fusion.seqname">
-<code class="descname">seqname</code><a class="headerlink" href="#Fusion.seqname" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Chromosome involved in the fusion.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.anchor_genome">
-<code class="descname">anchor_genome</code><a class="headerlink" href="#Fusion.anchor_genome" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Genomic fusion breakpoint.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.anchor_transposon">
-<code class="descname">anchor_transposon</code><a class="headerlink" href="#Fusion.anchor_transposon" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Transposon fusion breakpoint.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.strand_genome">
-<code class="descname">strand_genome</code><a class="headerlink" href="#Fusion.strand_genome" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Strand of fusion in genome (-1 or 1)</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.strand_transposon">
-<code class="descname">strand_transposon</code><a class="headerlink" href="#Fusion.strand_transposon" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Strand of fusion in transposon (-1 or 1)</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.flank_genome">
-<code class="descname">flank_genome</code><a class="headerlink" href="#Fusion.flank_genome" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Size of flanking region on genome.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.flank_transposon">
-<code class="descname">flank_transposon</code><a class="headerlink" href="#Fusion.flank_transposon" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Size of flanking region in transposon.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.gene_id">
-<code class="descname">gene_id</code><a class="headerlink" href="#Fusion.gene_id" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; ID of affected gene.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.gene_name">
-<code class="descname">gene_name</code><a class="headerlink" href="#Fusion.gene_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Name of affected gene.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.gene_strand">
-<code class="descname">gene_strand</code><a class="headerlink" href="#Fusion.gene_strand" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Strand of affected gene.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.feature_name">
-<code class="descname">feature_name</code><a class="headerlink" href="#Fusion.feature_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Name of affected transposon feature.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.feature_type">
-<code class="descname">feature_type</code><a class="headerlink" href="#Fusion.feature_type" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Feature type (SD/SA).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.feature_strand">
-<code class="descname">feature_strand</code><a class="headerlink" href="#Fusion.feature_strand" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Strand of affected transposon feature.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.spanning_reads">
-<code class="descname">spanning_reads</code><a class="headerlink" href="#Fusion.spanning_reads" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Number of supporting single-end reads.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.supporting_mates">
-<code class="descname">supporting_mates</code><a class="headerlink" href="#Fusion.supporting_mates" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Number of mate pairs that support the fusion,
-but do not span the breakpoint with either mate.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Fusion.supporting_spanning_mates">
-<code class="descname">supporting_spanning_mates</code><a class="headerlink" href="#Fusion.supporting_spanning_mates" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Number of mate pairs that support
-the fusion and have at least one mate spanning the breakpoint.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="imfusion.model.Insertion">
-<em class="property">class </em><code class="descclassname">imfusion.model.</code><code class="descname">Insertion</code><a class="reference internal" href="_modules/imfusion/model.html#Insertion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.model.Insertion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class respresenting a RNA-seq transposon insertion site.</p>
-<p>Used to represent insertions derived from RNA-seq fusions. Not all fields
-are required, though at least the following should be specified: <cite>id</cite>,
-<cite>seqname</cite>, <cite>position</cite>, <cite>strand</cite> and <cite>sample</cite>.</p>
-<dl class="attribute">
-<dt id="Insertion.id">
-<code class="descname">id</code><a class="headerlink" href="#Insertion.id" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; ID of the insertion.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.seqname">
-<code class="descname">seqname</code><a class="headerlink" href="#Insertion.seqname" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Chromosome of the insertion.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.position">
-<code class="descname">position</code><a class="headerlink" href="#Insertion.position" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Genomic position of the insertion.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.strand">
-<code class="descname">strand</code><a class="headerlink" href="#Insertion.strand" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Strand of the insertion (-1 or 1).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.sample_id">
-<code class="descname">sample_id</code><a class="headerlink" href="#Insertion.sample_id" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Sample in which the insertion was identified.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.gene_id">
-<code class="descname">gene_id</code><a class="headerlink" href="#Insertion.gene_id" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; ID of the gene involved in the fusion.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.gene_name">
-<code class="descname">gene_name</code><a class="headerlink" href="#Insertion.gene_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Name of the gene involved in the fusion.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.gene_strand">
-<code class="descname">gene_strand</code><a class="headerlink" href="#Insertion.gene_strand" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Strand of the gene involved in the fusion.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.orientation">
-<code class="descname">orientation</code><a class="headerlink" href="#Insertion.orientation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Relative orientation of the insertion.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.feature_name">
-<code class="descname">feature_name</code><a class="headerlink" href="#Insertion.feature_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> &#8211; Name of the transposon feature involved
-in the fusion.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.feature_strand">
-<code class="descname">feature_strand</code><a class="headerlink" href="#Insertion.feature_strand" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Strand of transposon feature involved
-in the fusion.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.anchor_genome">
-<code class="descname">anchor_genome</code><a class="headerlink" href="#Insertion.anchor_genome" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Genomic fusion breakpoint.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.anchor_transposon">
-<code class="descname">anchor_transposon</code><a class="headerlink" href="#Insertion.anchor_transposon" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Transposon fusion breakpoint.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.flank_genome">
-<code class="descname">flank_genome</code><a class="headerlink" href="#Insertion.flank_genome" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Size of flanking region on genome.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.flank_transposon">
-<code class="descname">flank_transposon</code><a class="headerlink" href="#Insertion.flank_transposon" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Size of flanking region in transposon.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.spanning_reads">
-<code class="descname">spanning_reads</code><a class="headerlink" href="#Insertion.spanning_reads" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Number of supporting single-end reads.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.supporting_mates">
-<code class="descname">supporting_mates</code><a class="headerlink" href="#Insertion.supporting_mates" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Number of mate pairs that support the fusion,
-but do not span the breakpoint with either mate.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Insertion.spanning_mates">
-<code class="descname">spanning_mates</code><a class="headerlink" href="#Insertion.spanning_mates" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Number of mate pairs that support
-the fusion and have at least one mate spanning the breakpoint.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="imfusion-util">
-<h2>imfusion.util<a class="headerlink" href="#imfusion-util" title="Permalink to this headline">¶</a></h2>
-<p>The <strong>util</strong> module contains various helper modules shared between
-different parts of im-fusion. The most important submodules are <strong>fusions</strong>,
-<strong>insertions</strong> and  <strong>reference</strong>, which contain functions that are used by the
-aligners (currently only Tophat2) to generate augmented reference genomes and
-identify insertion sites.</p>
-<div class="section" id="imfusion-util-check">
-<h3>imfusion.util.check<a class="headerlink" href="#imfusion-util-check" title="Permalink to this headline">¶</a></h3>
-<p>Utility functions for checking the validity of inputs.</p>
-<dl class="function">
-<dt id="imfusion.util.check.check_features">
-<code class="descclassname">imfusion.util.check.</code><code class="descname">check_features</code><span class="sig-paren">(</span><em>transposon_features</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/check.html#check_features"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.check.check_features" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks if a transposon feature frame is valid.</p>
-</dd></dl>
-
-</div>
-<div class="section" id="imfusion-util-fusions">
-<h3>imfusion.util.fusions<a class="headerlink" href="#imfusion-util-fusions" title="Permalink to this headline">¶</a></h3>
-<p>Utility functions for annotating fusions and converting fusions into
-insertions by determining the approximate position of the corresponding
-insertion in the genome (&#8216;placing&#8217; the fusion).</p>
-<dl class="function">
-<dt id="imfusion.util.fusions.annotate_fusions">
-<code class="descclassname">imfusion.util.fusions.</code><code class="descname">annotate_fusions</code><span class="sig-paren">(</span><em>fusions</em>, <em>reference_gtf</em>, <em>transposon_features</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/fusions.html#annotate_fusions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.fusions.annotate_fusions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Annotates fusions with gene and transposon features.</p>
-<p>Main function for annotating identified gene-transposon fusions.
-Adds the following annotations to fusions: gene features, transposon
-features and the relative orientation of the corresponding insertion
-with respect to the identified gene.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>fusions</strong> (<em>List[Fusion]</em>) &#8211; Fusions to annotate.</li>
-<li><strong>reference_gtf</strong> (<a class="reference internal" href="#imfusion.util.tabix.GtfFile" title="imfusion.util.tabix.GtfFile"><em>GtfFile</em></a>) &#8211; GtfFile instance containing reference gene features.</li>
-<li><strong>transposon_features</strong> (<em>pandas.DataFrame</em>) &#8211; Dataframe containing positions for the features present in
-the transposon sequence. Used to identify transposon features
-(such as splice acceptors or donors) that are involved in the
-identified fusions.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><em>Fusion</em> &#8211; Next fusion, annotated with gene/transposon features.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.util.fusions.place_fusions">
-<code class="descclassname">imfusion.util.fusions.</code><code class="descname">place_fusions</code><span class="sig-paren">(</span><em>fusions</em>, <em>sample_id</em>, <em>reference_gtf</em>, <em>offset=20</em>, <em>max_dist=5000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/fusions.html#place_fusions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.fusions.place_fusions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Derives insertions by placing fusions at approximate genomic locations.</p>
-<p>Main function for deriving insertions from annotated gene-transposon
-fusions. Derives insertions by determining an approximate genomic
-location that is compatible with the gene/transposon feature annotations
-of the fusions. Fusions are therefore expected to be properly annotated
-for gene/transposon features.</p>
-<p>An insertion is essentially &#8216;placed&#8217; by looking for the first genomic
-position that does not overlap with a reference feature, in the direction
-that is compatible with the insertions orientation w.r.t. its target gene.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>fusions</strong> (<em>List[Fusion]</em>) &#8211; List of fusions to convert.</li>
-<li><strong>sample_id</strong> (<em>str</em>) &#8211; Sample id that should be used for the insertions.</li>
-<li><strong>reference_gtf</strong> (<a class="reference internal" href="#imfusion.util.tabix.GtfFile" title="imfusion.util.tabix.GtfFile"><em>GtfFile</em></a>) &#8211; GtfFile containing the reference features. Expected to conform
-to the Ensembl reference gtf format.</li>
-<li><strong>offset</strong> (<em>int</em>) &#8211; Minimum offset of the transposon to the closest reference gene feature.</li>
-<li><strong>max_dist</strong> (<em>int</em>) &#8211; Maximum distance that an insertion may be placed from the
-genomic anchor of the fusion.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><em>Insertion</em> &#8211; Next insertion derived from the given fusions.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="imfusion-util-insertions">
-<h3>imfusion.util.insertions<a class="headerlink" href="#imfusion-util-insertions" title="Permalink to this headline">¶</a></h3>
-<p>Utility functions for filtering invalid/unwanted insertions.</p>
-<dl class="function">
-<dt id="imfusion.util.insertions.filter_invalid_insertions">
-<code class="descclassname">imfusion.util.insertions.</code><code class="descname">filter_invalid_insertions</code><span class="sig-paren">(</span><em>insertions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/insertions.html#filter_invalid_insertions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.insertions.filter_invalid_insertions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filters invalid insertions.</p>
-<p>Main function for filtering invalid insertions. Effectively applies
-both the <cite>filter_wrong_orientation</cite> and <cite>filter_unexpected_sites</cite> filters
-to filter insertions that have the wrong orientation (w.r.t the transposon
-feature and the annotated gene) or involve features of the transposon
-that we are not interested in (typically non-splice acceptor/donor
-features).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>insertions</strong> (<em>List[Insertion]</em>) &#8211; Insertions to filter.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><em>Insertion</em> &#8211; Next filtered insertion.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.util.insertions.filter_wrong_orientation">
-<code class="descclassname">imfusion.util.insertions.</code><code class="descname">filter_wrong_orientation</code><span class="sig-paren">(</span><em>insertions</em>, <em>drop_na=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/insertions.html#filter_wrong_orientation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.insertions.filter_wrong_orientation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filters insertions with wrong feature orientations w.r.t. their genes.</p>
-<p>This filter removes any insertions with a transposon feature that is
-in the wrong orientation with respect to the annotated gene. This is
-based on the premise that, for example, a splice acceptor can only
-splice to a gene that is in the same orientation as the acceptor.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>insertions</strong> (<em>List[Insertion]</em>) &#8211; Insertions to filter.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><em>Insertion</em> &#8211; Next filtered insertion.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.util.insertions.filter_unexpected_sites">
-<code class="descclassname">imfusion.util.insertions.</code><code class="descname">filter_unexpected_sites</code><span class="sig-paren">(</span><em>insertions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/insertions.html#filter_unexpected_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.insertions.filter_unexpected_sites" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filters insertions that have non splice-acceptor/donor features.</p>
-<p>This filter removes any insertions that splice to tranposon features
-that aren&#8217;t splice-acceptors or splice-donors. This is based on the
-premise that these other sites are unlikely to be involved in any
-splicing and that therefore these insertions are likely to be false
-positives of the fusion identification.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>insertions</strong> (<em>List[Insertion]</em>) &#8211; Insertions to filter.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><em>Insertion</em> &#8211; Next filtered insertion.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.util.insertions.filter_blacklist">
-<code class="descclassname">imfusion.util.insertions.</code><code class="descname">filter_blacklist</code><span class="sig-paren">(</span><em>insertions</em>, <em>gene_ids</em>, <em>reference_gtf=None</em>, <em>filter_overlap=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/insertions.html#filter_blacklist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.insertions.filter_blacklist" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filters insertions for blacklisted genes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>insertions</strong> (<em>List[Insertion]</em>) &#8211; Insertions to filter.</li>
-<li><strong>gene_ids</strong> (<em>set[str]</em>) &#8211; IDs of the blacklisted genes.</li>
-<li><strong>reference_gtf</strong> (<a class="reference internal" href="#imfusion.util.tabix.GtfFile" title="imfusion.util.tabix.GtfFile"><em>GtfFile</em></a>) &#8211; GtfFile instance containing reference gene features.
-(Only needed if filter_overlap is True).</li>
-<li><strong>filter_overlap</strong> (<em>bool</em>) &#8211; Whether to filter any insertions overlapping with the listed genes.
-If False (default), only genes explicitly splicing to the
-gene are filtered.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><em>Insertion</em> &#8211; Next filtered insertion.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="imfusion-util-reference">
-<h3>imfusion.util.reference<a class="headerlink" href="#imfusion-util-reference" title="Permalink to this headline">¶</a></h3>
-<p>Utility functions used for generating augmented reference genomes.</p>
-<dl class="function">
-<dt id="imfusion.util.reference.concatenate_fastas">
-<code class="descclassname">imfusion.util.reference.</code><code class="descname">concatenate_fastas</code><span class="sig-paren">(</span><em>fasta_paths</em>, <em>output_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/reference.html#concatenate_fastas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.reference.concatenate_fastas" title="Permalink to this definition">¶</a></dt>
-<dd><p>Concatenates multiple fasta files into a single file.</p>
-<p>This function combines multiple fasta files into a single output
-file. It is mainly used to generate the combined reference genome
-that contains both the reference genome sequence and the
-transposon sequence.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>fasta_paths</strong> (<em>List[pathlib.Path]</em>) &#8211; Paths to fasta files that should be concatentated.</li>
-<li><strong>output_path</strong> (<em>pathlib.Paths</em>) &#8211; Path for the combined output file.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.util.reference.mask_regions">
-<code class="descclassname">imfusion.util.reference.</code><code class="descname">mask_regions</code><span class="sig-paren">(</span><em>refseq_path</em>, <em>blacklist_regions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/reference.html#mask_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.reference.mask_regions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Masks blacklisted regions in a given reference sequence.</p>
-<p>This function removes blacklisted regions from a given reference genome.
-Blacklisted regions are removed by replacing their original sequence
-with a sequences of &#8216;N&#8217; nucleotides.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>refseq_path</strong> (<em>pathlib.Path</em>) &#8211; Path to the reference sequence in fasta format.</li>
-<li><strong>blacklist_regions</strong> (<em>List[tuple(str, int, int)]:</em>) &#8211; List of regions that should be blacklisted in the reference
-sequence. Regions should be specified as a tuple of (chromosome,
-start_position, end_position). For example: (&#8216;1&#8217;, 2000, 2200).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Path to edited reference sequence.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pathlib.Path</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.util.reference.blacklist_for_regions">
-<code class="descclassname">imfusion.util.reference.</code><code class="descname">blacklist_for_regions</code><span class="sig-paren">(</span><em>region_strs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/reference.html#blacklist_for_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.reference.blacklist_for_regions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds blacklist region list for region strings.</p>
-<p>Parses region strings into a list of blacklist region tuples.
-Region strings should be provided in the following format:
-&#8216;chromosome:start-end&#8217;. For example, &#8216;X:1000-2000&#8217; denotes a
-a region on chromosome X from position 1000 to 2000.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>region_strs</strong> (<em>List[str]</em>) &#8211; List of region strings.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of blacklist region tuples.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">tuple(str, int, int)</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="imfusion.util.reference.blacklist_for_genes">
-<code class="descclassname">imfusion.util.reference.</code><code class="descname">blacklist_for_genes</code><span class="sig-paren">(</span><em>gene_ids</em>, <em>reference_gtf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/reference.html#blacklist_for_genes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.reference.blacklist_for_genes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds blacklist frame for given genes.</p>
-<p>Returns a list of blacklist regions encompassing the regions
-spanned by the genes corresponding to the given gene ids.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>gene_ids</strong> (<em>List[str]</em>) &#8211; List of (Ensembl) gene ids.</li>
-<li><strong>reference_gtf</strong> (<a class="reference internal" href="#imfusion.util.tabix.GtfFile" title="imfusion.util.tabix.GtfFile"><em>GtfFile</em></a>) &#8211; GtfFile instance containing reference gene features.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of blacklist region tuples.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple(str, int, int)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="imfusion-util-tabix">
-<h3>imfusion.util.tabix<a class="headerlink" href="#imfusion-util-tabix" title="Permalink to this headline">¶</a></h3>
-<p>Utility classes used for fast access to Gtf and Bed files.</p>
-<dl class="class">
-<dt id="imfusion.util.tabix.GtfFile">
-<em class="property">class </em><code class="descclassname">imfusion.util.tabix.</code><code class="descname">GtfFile</code><span class="sig-paren">(</span><em>file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/tabix.html#GtfFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.tabix.GtfFile" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="classmethod">
-<dt id="imfusion.util.tabix.GtfFile.compress">
-<em class="property">classmethod </em><code class="descname">compress</code><span class="sig-paren">(</span><em>file_path</em>, <em>out_path=None</em>, <em>sort=True</em>, <em>create_index=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/tabix.html#GtfFile.compress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.tabix.GtfFile.compress" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compresses and indexes a gtf file using bgzip and tabix.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="imfusion.util.tabix.GtfFile.fetch">
-<code class="descname">fetch</code><span class="sig-paren">(</span><em>reference=None</em>, <em>start=None</em>, <em>end=None</em>, <em>filters=None</em>, <em>incl_left=True</em>, <em>incl_right=True</em><span class="sig-paren">)</span><a class="headerlink" href="#imfusion.util.tabix.GtfFile.fetch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetches records for the given region.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="imfusion.util.tabix.GtfFile.get_gene">
-<code class="descname">get_gene</code><span class="sig-paren">(</span><em>gene_id</em>, <em>feature_type='gene'</em>, <em>field_name='gene_id'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/tabix.html#GtfFile.get_gene"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.tabix.GtfFile.get_gene" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetchs a given gene by id.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="imfusion.util.tabix.GtfFile.get_region">
-<code class="descname">get_region</code><span class="sig-paren">(</span><em>reference=None</em>, <em>start=None</em>, <em>end=None</em>, <em>filters=None</em>, <em>incl_left=True</em>, <em>incl_right=True</em><span class="sig-paren">)</span><a class="headerlink" href="#imfusion.util.tabix.GtfFile.get_region" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fetches DataFrame of features for the given region.</p>
+<dt id="imfusion.build.indexers.Indexer.check_dependencies">
+<code class="descname">check_dependencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/base.html#Indexer.check_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.Indexer.check_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if all required external dependencies are in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
+<p>Raises a ValueError if any dependencies are missing.</p>
 </dd></dl>
 
 <dl class="classmethod">
-<dt id="imfusion.util.tabix.GtfFile.sort">
-<em class="property">classmethod </em><code class="descname">sort</code><span class="sig-paren">(</span><em>file_path</em>, <em>out_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/util/tabix.html#GtfFile.sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.util.tabix.GtfFile.sort" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sorts a gtf file by position, required for indexing by tabix.</p>
+<dt id="imfusion.build.indexers.Indexer.configure_args">
+<em class="property">classmethod </em><code class="descname">configure_args</code><span class="sig-paren">(</span><em>parser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/base.html#Indexer.configure_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.Indexer.configure_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configures an argument parser for the Indexer.</p>
+<p>Used by <code class="docutils literal"><span class="pre">imfusion-build</span></code> to configure the sub-command for
+this indexer (if registered as an Indexer using the
+<code class="docutils literal"><span class="pre">register_indexer</span></code> function).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>parser</strong> (<em>argparse.ArgumentParser</em>) &#8211; Argument parser to configure.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.build.indexers.Indexer.dependencies">
+<code class="descname">dependencies</code><a class="headerlink" href="#imfusion.build.indexers.Indexer.dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>External dependencies required by Indexer.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="imfusion.build.indexers.Indexer.from_args">
+<em class="property">classmethod </em><code class="descname">from_args</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/base.html#Indexer.from_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.Indexer.from_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs an Indexer instance from given arguments.</p>
+<p>Instantiates an Indexer instance from the given argparse arguments.
+Uses the <code class="docutils literal"><span class="pre">_parse_args</span></code> method internally, which performs the actual
+argument-to-parameter extraction. As such, the <code class="docutils literal"><span class="pre">_parse_args</span></code> method
+should be overridden in any subclasses with extra parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>argparse.Namespace</em>) &#8211; Arguments to parse.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="imfusion.build.indexers.StarIndexer">
+<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">StarIndexer</code><span class="sig-paren">(</span><em>logger=None</em>, <em>overhang=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/star.html#StarIndexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.StarIndexer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indexer that builds references for the STAR aligner.</p>
+<p>Performs the same steps as the base <code class="docutils literal"><span class="pre">Indexer</span></code> class, but additionally
+generates an index for alignment with STAR using STAR&#8217;s <code class="docutils literal"><span class="pre">genomeGenerate</span></code>
+command. Special attention should be paid to the <code class="docutils literal"><span class="pre">overhang</span></code> parameter,
+which defines the overhang used by STAR in the build reference
+(see the <code class="docutils literal"><span class="pre">sjdbOverhang</span></code> parameter in the STAR documentation for more
+details). Ideally, the value for this parameter should be one less than the
+length of the used reads.</p>
+<dl class="classmethod">
+<dt id="imfusion.build.indexers.StarIndexer.configure_args">
+<em class="property">classmethod </em><code class="descname">configure_args</code><span class="sig-paren">(</span><em>parser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/star.html#StarIndexer.configure_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.StarIndexer.configure_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configures an argument parser for the Indexer.</p>
+<p>Used by <code class="docutils literal"><span class="pre">imfusion-build</span></code> to configure the sub-command for
+this indexer (if registered as an Indexer using the
+<code class="docutils literal"><span class="pre">register_indexer</span></code> function).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>parser</strong> (<em>argparse.ArgumentParser</em>) &#8211; Argument parser to configure.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.build.indexers.StarIndexer.dependencies">
+<code class="descname">dependencies</code><a class="headerlink" href="#imfusion.build.indexers.StarIndexer.dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>External dependencies required by this indexer.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="imfusion.build.indexers.TophatIndexer">
+<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">TophatIndexer</code><span class="sig-paren">(</span><em>logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/tophat.html#TophatIndexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.TophatIndexer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indexer that builds references for the Tophat-Fusion aligner.</p>
+<p>Performs the same steps as the base <code class="docutils literal"><span class="pre">Indexer</span></code> class, but additionally
+generates an index for alignment with Tophat-Fusion using Bowtie and
+Tophat2.</p>
+<dl class="attribute">
+<dt id="imfusion.build.indexers.TophatIndexer.dependencies">
+<code class="descname">dependencies</code><a class="headerlink" href="#imfusion.build.indexers.TophatIndexer.dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>External dependencies required by this indexer.</p>
 </dd></dl>
 
 </dd></dl>
 
 </div>
+<div class="section" id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal"><span class="pre">Indexer</span></code> classes return <code class="docutils literal"><span class="pre">Reference</span></code> objects after building
+references, which define paths to specific files within the reference.
+This includes, for example, paths to the augmented fasta file, to the file
+describing transposon features and to the reference index. The <code class="docutils literal"><span class="pre">Reference</span></code>
+base class defines paths that should be available for all references.
+Subclasses may define additional paths that are specific to the
+corresponding aligner.</p>
+<dl class="class">
+<dt id="imfusion.build.indexers.Reference">
+<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">Reference</code><span class="sig-paren">(</span><em>reference_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/base.html#Reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.Reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base Reference class.</p>
+<p>Reference classes define paths to specific files within the reference. This
+includes, for example, paths to the augmented fasta file and to the r
+eference index. This base class defines paths that should be available
+for all references. Subclasses may define additional paths that are
+specific to the corresponding aligner.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>reference_path</strong> (<em>Path</em>) &#8211; Path to the reference directory.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="imfusion.build.indexers.Reference.base_path">
+<code class="descname">base_path</code><a class="headerlink" href="#imfusion.build.indexers.Reference.base_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to reference base directory.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.build.indexers.Reference.fasta_path">
+<code class="descname">fasta_path</code><a class="headerlink" href="#imfusion.build.indexers.Reference.fasta_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to reference sequence.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.build.indexers.Reference.features_path">
+<code class="descname">features_path</code><a class="headerlink" href="#imfusion.build.indexers.Reference.features_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to transposon features.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.build.indexers.Reference.gtf_path">
+<code class="descname">gtf_path</code><a class="headerlink" href="#imfusion.build.indexers.Reference.gtf_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to reference gtf.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.build.indexers.Reference.index_path">
+<code class="descname">index_path</code><a class="headerlink" href="#imfusion.build.indexers.Reference.index_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to index.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.build.indexers.Reference.indexed_gtf_path">
+<code class="descname">indexed_gtf_path</code><a class="headerlink" href="#imfusion.build.indexers.Reference.indexed_gtf_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to reference gtf.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.build.indexers.Reference.transposon_name">
+<code class="descname">transposon_name</code><a class="headerlink" href="#imfusion.build.indexers.Reference.transposon_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of transposon sequence.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.build.indexers.Reference.transposon_path">
+<code class="descname">transposon_path</code><a class="headerlink" href="#imfusion.build.indexers.Reference.transposon_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of transposon sequence.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="imfusion.build.indexers.StarReference">
+<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">StarReference</code><span class="sig-paren">(</span><em>reference_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/star.html#StarReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.StarReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Star Reference class.</p>
+<p>Defines paths to files within the STAR reference. Currently the same
+as the base <code class="docutils literal"><span class="pre">Reference</span></code> class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="imfusion.build.indexers.TophatReference">
+<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">TophatReference</code><span class="sig-paren">(</span><em>reference_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/tophat.html#TophatReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.TophatReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tophat Reference class.</p>
+<p>Defines paths to files within the Tophat-Fusion reference. Compared to the
+base reference, this class adds an additional path to the transcriptome
+index that is used by Tophat during alignment.</p>
+<dl class="attribute">
+<dt id="imfusion.build.indexers.TophatReference.index_path">
+<code class="descname">index_path</code><a class="headerlink" href="#imfusion.build.indexers.TophatReference.index_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to index.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.build.indexers.TophatReference.transcriptome_path">
+<code class="descname">transcriptome_path</code><a class="headerlink" href="#imfusion.build.indexers.TophatReference.transcriptome_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to transcriptome index.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="identifying-insertions">
+<h2>Identifying insertions<a class="headerlink" href="#identifying-insertions" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">Aligner</span></code> classes are used to identify insertions using the different RNA-seq
+aligners, with one class provided for each supported aligner. The main
+methods provided by the Indexers are the <code class="docutils literal"><span class="pre">check_dependencies</span></code> and
+<code class="docutils literal"><span class="pre">identify_insertions</span></code> methods. The latter should be called with a reference
+instance and the sequence read files to identify insertions.</p>
+<dl class="class">
+<dt id="imfusion.insertions.aligners.Aligner">
+<em class="property">class </em><code class="descclassname">imfusion.insertions.aligners.</code><code class="descname">Aligner</code><span class="sig-paren">(</span><em>reference</em>, <em>logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/insertions/aligners/base.html#Aligner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.insertions.aligners.Aligner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base aligner class.</p>
+<p>This base class defines the interface for <code class="docutils literal"><span class="pre">Aligner</span></code> classes. The main
+methods provided by <code class="docutils literal"><span class="pre">Aligners</span></code> are the <code class="docutils literal"><span class="pre">check_dependencies</span></code> and
+<code class="docutils literal"><span class="pre">identify_insertions</span></code> methods. The former is used to check whether
+required external dependencies are present in <code class="docutils literal"><span class="pre">$PATH</span></code>, whilst the latter
+should be called with a reference instance and the sequence read files
+to identify insertions. The implementation of the <code class="docutils literal"><span class="pre">identify_insertions</span></code>
+method is specific to each aligner and should be overridden in each
+subclass.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>reference</strong> (<a class="reference internal" href="#imfusion.build.indexers.Reference" title="imfusion.build.indexers.Reference"><em>Reference</em></a>) &#8211; Reference class describing the reference paths.</li>
+<li><strong>logger</strong> (<em>logging.Logger</em>) &#8211; Logger to be used for logging messages.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="imfusion.insertions.aligners.Aligner.check_dependencies">
+<code class="descname">check_dependencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/insertions/aligners/base.html#Aligner.check_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.insertions.aligners.Aligner.check_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if all required external dependencies are in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
+<p>Raises a ValueError if any dependencies are missing.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="imfusion.insertions.aligners.Aligner.configure_args">
+<em class="property">classmethod </em><code class="descname">configure_args</code><span class="sig-paren">(</span><em>parser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/insertions/aligners/base.html#Aligner.configure_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.insertions.aligners.Aligner.configure_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configures an argument parser for the Indexer.</p>
+<p>Used by <code class="docutils literal"><span class="pre">imfusion-build</span></code> to configure the sub-command for
+this indexer (if registered as an Indexer using the
+<code class="docutils literal"><span class="pre">register_indexer</span></code> function).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>parser</strong> (<em>argparse.ArgumentParser</em>) &#8211; Argument parser to configure.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.insertions.aligners.Aligner.dependencies">
+<code class="descname">dependencies</code><a class="headerlink" href="#imfusion.insertions.aligners.Aligner.dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>External dependencies required by aligner.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="imfusion.insertions.aligners.Aligner.from_args">
+<em class="property">classmethod </em><code class="descname">from_args</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/insertions/aligners/base.html#Aligner.from_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.insertions.aligners.Aligner.from_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs an Indexer instance from given arguments.</p>
+<p>Instantiates an Indexer instance from the given argparse arguments.
+Uses the <code class="docutils literal"><span class="pre">_parse_args</span></code> method internally, which performs the actual
+argument-to-parameter extraction. As such, the <code class="docutils literal"><span class="pre">_parse_args</span></code> method
+should be overridden in any subclasses with extra parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>argparse.Namespace</em>) &#8211; Arguments to parse.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="imfusion.insertions.aligners.Aligner.identify_insertions">
+<code class="descname">identify_insertions</code><span class="sig-paren">(</span><em>fastq_path</em>, <em>output_dir</em>, <em>fastq2_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/insertions/aligners/base.html#Aligner.identify_insertions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.insertions.aligners.Aligner.identify_insertions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifies insertions from given reads.</p>
+<p>Aligns RNA-seq reads to the reference genome and uses this alignment
+to identify gene-transposon fusions. These gene-transposon fusions
+are summarized to transposon insertions and returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fastq_path</strong> (<em>Path</em>) &#8211; Path to fastq file containing sequence reads. For paired-end data,
+this should refer to the first read of the pair.</li>
+<li><strong>output_dir</strong> (<em>Path</em>) &#8211; Output directory, to use for output files such as the alignment.</li>
+<li><strong>fastq2_path</strong> (<em>Path</em>) &#8211; For paired-end sequencing data, path to fastq file containing
+the second read of the pair.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><em>Insertion</em> &#8211; Yields the identified insertions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="imfusion.insertions.aligners.StarAligner">
+<em class="property">class </em><code class="descclassname">imfusion.insertions.aligners.</code><code class="descname">StarAligner</code><span class="sig-paren">(</span><em>reference</em>, <em>assemble=False</em>, <em>assemble_args=None</em>, <em>min_flank=12</em>, <em>threads=1</em>, <em>extra_args=None</em>, <em>logger=None</em>, <em>filter_features=True</em>, <em>filter_orientation=True</em>, <em>filter_blacklist=None</em>, <em>external_sort=False</em>, <em>merge_junction_dist=10</em>, <em>max_spanning_dist=300</em>, <em>max_junction_dist=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/insertions/aligners/star.html#StarAligner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.insertions.aligners.StarAligner" title="Permalink to this definition">¶</a></dt>
+<dd><p>STAR aligner.</p>
+<p>Aligner that identifies insertions using STAR, by aligning reads using STAR
+(including chimeric alignments) and identifying gene-transposon fusions
+from chimeric read alignments.</p>
+<p>As STAR provides chimeric alignment information but does not provide a
+an actual list of fusions, we identify fusions by summarizing these
+alignments ourselves. The strategy to do so is as follows:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p class="first">We filter for chimeric reads involving the transposon and genomic
+loci, to reduce the number of reads we need to consider.</p>
+</li>
+<li><p class="first">We select chimeric reads (or mates) that actually overlap the
+breakpoint of the fusion, as these alignments provide the exact
+position of the fusion. These reads are grouped by their positions
+to determine the number of reads that support each fusion. Fusions
+with close distance (on both the genomic and transposon loci) are
+merged to account for slight variations in the alignment.</p>
+</li>
+<li><dl class="first docutils">
+<dt>For paired-end data:</dt>
+<dd><ul class="first last simple">
+<li>We select mates that span the fusion site
+(meaning that they do not overlap the breakpoint, therefore we
+only have an approximate position) and group mates of which both
+ends are with close proximity of eachother.</li>
+<li>We then try to assign these groups of spanning mates to
+previously identified &#8216;junction&#8217; fusions that are in the close
+vicinity. If we find a match, the number of mates in the group is
+registered as &#8216;spanning support&#8217; for that fusion. If no match is
+found, we consider the group to identify a unique fusion and
+derive an approximate location for the fusion from the
+mate locations.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">We return the combined list of fusions. For single-end data, this
+only contains junction fusions, whilst for paired-end data this is
+the combined list of junction and unassigned spanning fusions.</p>
+</li>
+</ol>
+</div></blockquote>
+<p>To avoid memory issues with STAR during the sorting of bam files, sorting
+can be performed using Sambamba. Other external dependencies of this
+aligner are STAR itself and Stringtie, which is used for the assembly of
+novel transcripts (if requested).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>reference</strong> (<a class="reference internal" href="#imfusion.build.indexers.Reference" title="imfusion.build.indexers.Reference"><em>Reference</em></a>) &#8211; Reference class describing the reference paths.</li>
+<li><strong>assemble</strong> (<em>bool</em>) &#8211; Whether to perform the assembly of novel transcripts using Stringie.</li>
+<li><strong>assemble_args</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em></em>) &#8211; Extra arguments to pass to Stringie during assembly.</li>
+<li><strong>min_flank</strong> (<em>int</em>) &#8211; Minimum number of flanking bases required on both sides of the
+breakpoint for a fusion to be considered valid. This means that, for
+a split read overlapping the fusion boundary, at least <code class="docutils literal"><span class="pre">min_flank</span></code>
+bases should be on either sides of the fusion.</li>
+<li><strong>threads</strong> (<em>int</em>) &#8211; Number of threads to use.</li>
+<li><strong>extra_args</strong> &#8211; Extra arguments to pass to STAR for alignment.</li>
+<li><strong>logger</strong> (<em>logging.Logger</em>) &#8211; Logger to be used for logging messages.</li>
+<li><strong>filter_features</strong> (<em>bool</em>) &#8211; Whether insertions should be filtered to remove non SA/SD insertions.</li>
+<li><strong>filter_orientation</strong> (<em>bool</em>) &#8211; Whether insertions should be filtered for fusions in which the
+transposon feature is in the wrong orientation.</li>
+<li><strong>filter_blacklist</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em></em>) &#8211; List of gene ids to filter insertions for.</li>
+<li><strong>external_sort</strong> (<em>bool</em>) &#8211; Whether sorting should be performed using STAR (False) or using
+Sambamba (True). Sambamba uses less memory than STAR, but is slower.</li>
+<li><strong>merge_junction_dist</strong> (<em>int</em>) &#8211; Maximum distance within which fusions supported by split reads
+(overlapping the junction, so that the exact breakpoint is known) are
+merged. This merging avoids calling multiple fusions due to slight
+variations in the alignment, although this value should not be chosen
+too large to avoid merging distinct insertions.</li>
+<li><strong>max_spanning_dist</strong> (<em>int</em>) &#8211; Maximum distance within which spanning mate pairs (mates that do not
+overlap the fusion junction) are grouped when summarizing spanning
+chimeric reads. Both mates from two pairs need to be within this
+distance of each other to be merged. The value should be chosen to
+reflect the expected or emprical insert size.</li>
+<li><strong>max_junction_dist</strong> (<em>int</em>) &#8211; Maxixmum distance within which groups of spanning mates are assigned
+to a junction fusion (which is supported by split reads, so that its
+exact position is known). Groups that cannot be assigned to a junction
+fusion are considered to arise from a separate insertion.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="classmethod">
+<dt id="imfusion.insertions.aligners.StarAligner.configure_args">
+<em class="property">classmethod </em><code class="descname">configure_args</code><span class="sig-paren">(</span><em>parser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/insertions/aligners/star.html#StarAligner.configure_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.insertions.aligners.StarAligner.configure_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configures an argument parser for the Indexer.</p>
+<p>Used by <code class="docutils literal"><span class="pre">imfusion-build</span></code> to configure the sub-command for
+this indexer (if registered as an Indexer using the
+<code class="docutils literal"><span class="pre">register_indexer</span></code> function).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>parser</strong> (<em>argparse.ArgumentParser</em>) &#8211; Argument parser to configure.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="imfusion.insertions.aligners.StarAligner.dependencies">
+<code class="descname">dependencies</code><a class="headerlink" href="#imfusion.insertions.aligners.StarAligner.dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>External dependencies required by aligner.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imfusion.insertions.aligners.StarAligner.identify_insertions">
+<code class="descname">identify_insertions</code><span class="sig-paren">(</span><em>fastq_path</em>, <em>output_dir</em>, <em>fastq2_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/insertions/aligners/star.html#StarAligner.identify_insertions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.insertions.aligners.StarAligner.identify_insertions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifies insertions from given reads.</p>
+<p>Aligns RNA-seq reads to the reference genome and uses this alignment
+to identify gene-transposon fusions. These gene-transposon fusions
+are summarized to transposon insertions and returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fastq_path</strong> (<em>Path</em>) &#8211; Path to fastq file containing sequence reads. For paired-end data,
+this should refer to the first read of the pair.</li>
+<li><strong>output_dir</strong> (<em>Path</em>) &#8211; Output directory, to use for output files such as the alignment.</li>
+<li><strong>fastq2_path</strong> (<em>Path</em>) &#8211; For paired-end sequencing data, path to fastq file containing
+the second read of the pair.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><em>Insertion</em> &#8211; Yields the identified insertions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="imfusion.insertions.aligners.TophatAligner">
+<em class="property">class </em><code class="descclassname">imfusion.insertions.aligners.</code><code class="descname">TophatAligner</code><span class="sig-paren">(</span><em>reference</em>, <em>assemble=False</em>, <em>assemble_args=None</em>, <em>min_flank=12</em>, <em>threads=1</em>, <em>extra_args=None</em>, <em>logger=None</em>, <em>filter_features=True</em>, <em>filter_orientation=True</em>, <em>filter_blacklist=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/insertions/aligners/tophat.html#TophatAligner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.insertions.aligners.TophatAligner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tophat2 aligner.</p>
+<p>Aligner that identifies insertions using Tophat-Fusion (as implemented in
+Tophat2), which aligns RNA-seq reads and returns a summary file detailing
+the identified fusions. Gene-transposon fusions are identified directly
+from this summary file.</p>
+<p>External dependencies include Tophat2 and Bowtie1, which are both used for
+alignment. Stringtie is required for the detection of novel transcripts.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>reference</strong> (<a class="reference internal" href="#imfusion.build.indexers.Reference" title="imfusion.build.indexers.Reference"><em>Reference</em></a>) &#8211; Reference class describing the reference paths.</li>
+<li><strong>assemble</strong> (<em>bool</em>) &#8211; Whether to perform the assembly of novel transcripts using Stringie.</li>
+<li><strong>assemble_args</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em></em>) &#8211; Extra arguments to pass to Stringie during assembly.</li>
+<li><strong>min_flank</strong> (<em>int</em>) &#8211; Minimum number of flanking bases required on both sides of the
+breakpoint for a fusion to be considered valid. This means that, for
+a split read overlapping the fusion boundary, at least <code class="docutils literal"><span class="pre">min_flank</span></code>
+bases should be on either sides of the fusion.</li>
+<li><strong>threads</strong> (<em>int</em>) &#8211; Number of threads to use.</li>
+<li><strong>extra_args</strong> &#8211; Extra arguments to pass to Tophat2 for alignment.</li>
+<li><strong>logger</strong> (<em>logging.Logger</em>) &#8211; Logger to be used for logging messages.</li>
+<li><strong>filter_features</strong> (<em>bool</em>) &#8211; Whether insertions should be filtered to remove non SA/SD insertions.</li>
+<li><strong>filter_orientation</strong> (<em>bool</em>) &#8211; Whether insertions should be filtered for fusions in which the
+transposon feature is in the wrong orientation.</li>
+<li><strong>filter_blacklist</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em></em>) &#8211; List of gene ids to filter insertions for.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="imfusion.insertions.aligners.TophatAligner.identify_insertions">
+<code class="descname">identify_insertions</code><span class="sig-paren">(</span><em>fastq_path</em>, <em>output_dir</em>, <em>fastq2_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/insertions/aligners/tophat.html#TophatAligner.identify_insertions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.insertions.aligners.TophatAligner.identify_insertions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifies insertions from given reads.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="testing-for-differential-expression">
+<h2>Testing for differential expression<a class="headerlink" href="#testing-for-differential-expression" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
 </div>
 </div>
 
@@ -1283,10 +740,10 @@ spanned by the genes corresponding to the given gene ids.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="development.html" class="btn btn-neutral float-right" title="Development" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="contributing.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="command_line_usage.html" class="btn btn-neutral" title="Command-line usage" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="usage.html" class="btn btn-neutral" title="Usage" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -1295,7 +752,7 @@ spanned by the genes corresponding to the given gene ids.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Julian de Ruiter.
+        &copy; Copyright 2017, Julian de Ruiter.
 
     </p>
   </div>
@@ -1317,10 +774,11 @@ spanned by the genes corresponding to the given gene ids.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1+1.g9b7cc62',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

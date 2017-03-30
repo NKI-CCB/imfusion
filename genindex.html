@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; IM-Fusion 0.1+1.g9b7cc62 documentation</title>
+  <title>Index &mdash; IM-Fusion 0.2.0 documentation</title>
   
 
   
@@ -31,7 +31,10 @@
   
 
   
-    <link rel="top" title="IM-Fusion 0.1+1.g9b7cc62 documentation" href="index.html"/> 
+        <link rel="index" title="Index"
+              href="#"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                0.1
+                0.2.0
               </div>
             
           
@@ -81,12 +84,11 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="home.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home.html">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="command_line_usage.html">Command-line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 </ul>
 
             
@@ -137,484 +139,166 @@
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
- | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
- | <a href="#M"><strong>M</strong></a>
- | <a href="#N"><strong>N</strong></a>
- | <a href="#O"><strong>O</strong></a>
- | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  
 </div>
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#Fusion.anchor_genome">anchor_genome (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.anchor_genome">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#Fusion.anchor_transposon">anchor_transposon (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.anchor_transposon">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.util.fusions.annotate_fusions">annotate_fusions() (in module imfusion.util.fusions)</a>
-  </dt>
-
-  </dl></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.insertions.aligners.Aligner">Aligner (class in imfusion.insertions.aligners)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.util.reference.blacklist_for_genes">blacklist_for_genes() (in module imfusion.util.reference)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.util.reference.blacklist_for_regions">blacklist_for_regions() (in module imfusion.util.reference)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.aligners.tophat2.build_reference">build_reference() (in module imfusion.aligners.tophat2)</a>
-  </dt>
-
-  </dl></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.Reference.base_path">base_path (imfusion.build.indexers.Reference attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.Indexer.build">build() (imfusion.build.indexers.Indexer method)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.util.check.check_features">check_features() (in module imfusion.util.check)</a>
-  </dt>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.Indexer.check_dependencies">check_dependencies() (imfusion.build.indexers.Indexer method)</a>
 
-      
-  <dt><a href="api.html#imfusion.util.tabix.GtfFile.compress">compress() (imfusion.util.tabix.GtfFile class method)</a>
-  </dt>
+      <ul>
+        <li><a href="api.html#imfusion.insertions.aligners.Aligner.check_dependencies">(imfusion.insertions.aligners.Aligner method)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#imfusion.build.indexers.Indexer.configure_args">configure_args() (imfusion.build.indexers.Indexer class method)</a>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.util.reference.concatenate_fastas">concatenate_fastas() (in module imfusion.util.reference)</a>
-  </dt>
-
-  </dl></td>
+      <ul>
+        <li><a href="api.html#imfusion.build.indexers.StarIndexer.configure_args">(imfusion.build.indexers.StarIndexer class method)</a>
+</li>
+        <li><a href="api.html#imfusion.insertions.aligners.Aligner.configure_args">(imfusion.insertions.aligners.Aligner class method)</a>
+</li>
+        <li><a href="api.html#imfusion.insertions.aligners.StarAligner.configure_args">(imfusion.insertions.aligners.StarAligner class method)</a>
+</li>
+      </ul></li>
+  </ul></td>
 </tr></table>
 
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.expression.de_test.de_exon">de_exon() (in module imfusion.expression.de_test)</a>
-  </dt>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.Indexer.dependencies">dependencies (imfusion.build.indexers.Indexer attribute)</a>
 
-      
-  <dt><a href="api.html#imfusion.expression.de_test.de_exon_single">de_exon_single() (in module imfusion.expression.de_test)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.expression.de_test.DeExonResult">DeExonResult (class in imfusion.expression.de_test)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.expression.de_test.DeExonSingleResult">DeExonSingleResult (class in imfusion.expression.de_test)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#DeExonResult.direction">direction (DeExonResult attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#DeExonSingleResult.direction">(DeExonSingleResult attribute)</a>
-  </dt>
-
-      </dl></dd>
-  </dl></td>
-</tr></table>
-
-<h2 id="E">E</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.expression.counts.exon_counts">exon_counts() (in module imfusion.expression.counts)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#DeExonResult.exon_split">exon_split (DeExonResult attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#DeExonSingleResult.exon_split">(DeExonSingleResult attribute)</a>
-  </dt>
-
-      </dl></dd>
-  </dl></td>
+      <ul>
+        <li><a href="api.html#imfusion.build.indexers.StarIndexer.dependencies">(imfusion.build.indexers.StarIndexer attribute)</a>
+</li>
+        <li><a href="api.html#imfusion.build.indexers.TophatIndexer.dependencies">(imfusion.build.indexers.TophatIndexer attribute)</a>
+</li>
+        <li><a href="api.html#imfusion.insertions.aligners.Aligner.dependencies">(imfusion.insertions.aligners.Aligner attribute)</a>
+</li>
+        <li><a href="api.html#imfusion.insertions.aligners.StarAligner.dependencies">(imfusion.insertions.aligners.StarAligner attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
 </tr></table>
 
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.expression.counts.feature_counts">feature_counts() (in module imfusion.expression.counts)</a>
-  </dt>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.Reference.fasta_path">fasta_path (imfusion.build.indexers.Reference attribute)</a>
+</li>
+      <li><a href="api.html#imfusion.build.indexers.Reference.features_path">features_path (imfusion.build.indexers.Reference attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.Indexer.from_args">from_args() (imfusion.build.indexers.Indexer class method)</a>
 
-      
-  <dt><a href="api.html#Fusion.feature_name">feature_name (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.feature_name">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#Fusion.feature_strand">feature_strand (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.feature_strand">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#Fusion.feature_type">feature_type (Fusion attribute)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.util.tabix.GtfFile.fetch">fetch() (imfusion.util.tabix.GtfFile method)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.util.insertions.filter_blacklist">filter_blacklist() (in module imfusion.util.insertions)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.util.insertions.filter_invalid_insertions">filter_invalid_insertions() (in module imfusion.util.insertions)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.util.insertions.filter_unexpected_sites">filter_unexpected_sites() (in module imfusion.util.insertions)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.util.insertions.filter_wrong_orientation">filter_wrong_orientation() (in module imfusion.util.insertions)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#Fusion.flank_genome">flank_genome (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.flank_genome">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#Fusion.flank_transposon">flank_transposon (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.flank_transposon">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#imfusion.model.Fusion">Fusion (class in imfusion.model)</a>
-  </dt>
-
-  </dl></td>
+      <ul>
+        <li><a href="api.html#imfusion.insertions.aligners.Aligner.from_args">(imfusion.insertions.aligners.Aligner class method)</a>
+</li>
+      </ul></li>
+  </ul></td>
 </tr></table>
 
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#Fusion.gene_id">gene_id (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.gene_id">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#Fusion.gene_name">gene_name (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.gene_name">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#Fusion.gene_strand">gene_strand (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.gene_strand">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#imfusion.aligners.tophat2.get_bowtie_version">get_bowtie_version() (in module imfusion.aligners.tophat2)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.util.tabix.GtfFile.get_gene">get_gene() (imfusion.util.tabix.GtfFile method)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.util.tabix.GtfFile.get_region">get_region() (imfusion.util.tabix.GtfFile method)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.aligners.tophat2.get_version">get_version() (in module imfusion.aligners.tophat2)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.util.tabix.GtfFile">GtfFile (class in imfusion.util.tabix)</a>
-  </dt>
-
-  </dl></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.Reference.gtf_path">gtf_path (imfusion.build.indexers.Reference attribute)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#Insertion.id">id (Insertion attribute)</a>
-  </dt>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.insertions.aligners.Aligner.identify_insertions">identify_insertions() (imfusion.insertions.aligners.Aligner method)</a>
 
-      
-  <dt><a href="api.html#imfusion.aligners.tophat2.identify_insertions">identify_insertions() (in module imfusion.aligners.tophat2)</a>
-  </dt>
+      <ul>
+        <li><a href="api.html#imfusion.insertions.aligners.StarAligner.identify_insertions">(imfusion.insertions.aligners.StarAligner method)</a>
+</li>
+        <li><a href="api.html#imfusion.insertions.aligners.TophatAligner.identify_insertions">(imfusion.insertions.aligners.TophatAligner method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.Reference.index_path">index_path (imfusion.build.indexers.Reference attribute)</a>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.model.Insertion">Insertion (class in imfusion.model)</a>
-  </dt>
-
-  </dl></td>
+      <ul>
+        <li><a href="api.html#imfusion.build.indexers.TophatReference.index_path">(imfusion.build.indexers.TophatReference attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#imfusion.build.indexers.Reference.indexed_gtf_path">indexed_gtf_path (imfusion.build.indexers.Reference attribute)</a>
+</li>
+      <li><a href="api.html#imfusion.build.indexers.Indexer">Indexer (class in imfusion.build.indexers)</a>
+</li>
+  </ul></td>
 </tr></table>
 
-<h2 id="M">M</h2>
+<h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.util.reference.mask_regions">mask_regions() (in module imfusion.util.reference)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.merge.merge_samples">merge_samples() (in module imfusion.merge)</a>
-  </dt>
-
-  </dl></td>
-</tr></table>
-
-<h2 id="N">N</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#DeExonSingleResult.nb_fit">nb_fit (DeExonSingleResult attribute)</a>
-  </dt>
-
-  </dl></td>
-</tr></table>
-
-<h2 id="O">O</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#Insertion.orientation">orientation (Insertion attribute)</a>
-  </dt>
-
-  </dl></td>
-</tr></table>
-
-<h2 id="P">P</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#DeExonResult.p_value">p_value (DeExonResult attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#DeExonSingleResult.p_value">(DeExonSingleResult attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#imfusion.util.fusions.place_fusions">place_fusions() (in module imfusion.util.fusions)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.expression.de_test.DeExonResult.plot_boxplot">plot_boxplot() (imfusion.expression.de_test.DeExonResult method)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.expression.de_test.DeExonSingleResult.plot_fit">plot_fit() (imfusion.expression.de_test.DeExonSingleResult method)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#imfusion.expression.de_test.DeExonResult.plot_sums">plot_sums() (imfusion.expression.de_test.DeExonResult method)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#imfusion.expression.de_test.DeExonSingleResult.plot_sums">(imfusion.expression.de_test.DeExonSingleResult method)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#Insertion.position">position (Insertion attribute)</a>
-  </dt>
-
-  </dl></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.Reference">Reference (class in imfusion.build.indexers)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#Insertion.sample_id">sample_id (Insertion attribute)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#DeExonResult.sample_split">sample_split (DeExonResult attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#DeExonSingleResult.sample_split">(DeExonSingleResult attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#Fusion.seqname">seqname (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.seqname">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#imfusion.util.tabix.GtfFile.sort">sort() (imfusion.util.tabix.GtfFile class method)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#Insertion.spanning_mates">spanning_mates (Insertion attribute)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#Fusion.spanning_reads">spanning_reads (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.spanning_reads">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#Insertion.strand">strand (Insertion attribute)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#Fusion.strand_genome">strand_genome (Fusion attribute)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#Fusion.strand_transposon">strand_transposon (Fusion attribute)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#DeExonResult.sums">sums (DeExonResult attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#DeExonSingleResult.sums">(DeExonSingleResult attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#Fusion.supporting_mates">supporting_mates (Fusion attribute)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api.html#Insertion.supporting_mates">(Insertion attribute)</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="api.html#Fusion.supporting_spanning_mates">supporting_spanning_mates (Fusion attribute)</a>
-  </dt>
-
-  </dl></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.insertions.aligners.StarAligner">StarAligner (class in imfusion.insertions.aligners)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.StarIndexer">StarIndexer (class in imfusion.build.indexers)</a>
+</li>
+      <li><a href="api.html#imfusion.build.indexers.StarReference">StarReference (class in imfusion.build.indexers)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.ctg.test_ctgs">test_ctgs() (in module imfusion.ctg)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="api.html#imfusion.ctg.test_de">test_de() (in module imfusion.ctg)</a>
-  </dt>
-
-  </dl></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.insertions.aligners.TophatAligner">TophatAligner (class in imfusion.insertions.aligners)</a>
+</li>
+      <li><a href="api.html#imfusion.build.indexers.TophatIndexer">TophatIndexer (class in imfusion.build.indexers)</a>
+</li>
+      <li><a href="api.html#imfusion.build.indexers.TophatReference">TophatReference (class in imfusion.build.indexers)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#imfusion.build.indexers.TophatReference.transcriptome_path">transcriptome_path (imfusion.build.indexers.TophatReference attribute)</a>
+</li>
+      <li><a href="api.html#imfusion.build.indexers.Reference.transposon_name">transposon_name (imfusion.build.indexers.Reference attribute)</a>
+</li>
+      <li><a href="api.html#imfusion.build.indexers.Reference.transposon_path">transposon_path (imfusion.build.indexers.Reference attribute)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 
@@ -628,7 +312,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Julian de Ruiter.
+        &copy; Copyright 2017, Julian de Ruiter.
 
     </p>
   </div>
@@ -650,10 +334,11 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1+1.g9b7cc62',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

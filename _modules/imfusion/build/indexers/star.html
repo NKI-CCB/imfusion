@@ -1,0 +1,296 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.build.indexers.star &mdash; IM-Fusion 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../home.html">IM-Fusion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imfusion.build.indexers.star</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.build.indexers.star</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Implements indexer for building STAR references.&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span> <span class="nn">toolz</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.util</span> <span class="k">import</span> <span class="n">shell</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">Indexer</span><span class="p">,</span> <span class="n">Reference</span><span class="p">,</span> <span class="n">register_indexer</span>
+
+
+<div class="viewcode-block" id="StarIndexer"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.StarIndexer">[docs]</a><span class="k">class</span> <span class="nc">StarIndexer</span><span class="p">(</span><span class="n">Indexer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Indexer that builds references for the STAR aligner.</span>
+
+<span class="sd">    Performs the same steps as the base ``Indexer`` class, but additionally</span>
+<span class="sd">    generates an index for alignment with STAR using STAR&#39;s ``genomeGenerate``</span>
+<span class="sd">    command. Special attention should be paid to the ``overhang`` parameter,</span>
+<span class="sd">    which defines the overhang used by STAR in the build reference</span>
+<span class="sd">    (see the ``sjdbOverhang`` parameter in the STAR documentation for more</span>
+<span class="sd">    details). Ideally, the value for this parameter should be one less than the</span>
+<span class="sd">    length of the used reads.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overhang</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="c1"># type: (Any, int) -&gt; None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">overhang</span> <span class="o">=</span> <span class="n">overhang</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_reference_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reference class to use for this indexer.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">StarReference</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;External dependencies required by this indexer.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;STAR&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_build_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+        <span class="c1"># type: (StarReference) -&gt; None</span>
+
+        <span class="c1"># Create index directory.</span>
+        <span class="n">index_dir</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">index_path</span>
+        <span class="n">index_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Run STAR.</span>
+        <span class="n">cmdline_args</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;STAR&#39;</span><span class="p">,</span> <span class="s1">&#39;--runMode&#39;</span><span class="p">,</span> <span class="s1">&#39;genomeGenerate&#39;</span><span class="p">,</span> <span class="s1">&#39;--genomeDir&#39;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">index_dir</span><span class="p">),</span> <span class="s1">&#39;--genomeFastaFiles&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">fasta_path</span><span class="p">),</span>
+            <span class="s1">&#39;--sjdbGTFfile&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf_path</span><span class="p">),</span> <span class="s1">&#39;--sjdbOverhang&#39;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">overhang</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="n">log_path</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">base_path</span> <span class="o">/</span> <span class="s1">&#39;star.log&#39;</span>
+        <span class="k">with</span> <span class="n">log_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log_file</span><span class="p">:</span>
+            <span class="n">shell</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span><span class="n">cmdline_args</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">log_file</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StarIndexer.configure_args"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.StarIndexer.configure_args">[docs]</a>    <span class="k">def</span> <span class="nf">configure_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configures an argument parser for the Indexer.</span>
+
+<span class="sd">        Used by ``imfusion-build`` to configure the sub-command for</span>
+<span class="sd">        this indexer (if registered as an Indexer using the</span>
+<span class="sd">        ``register_indexer`` function).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parser : argparse.ArgumentParser</span>
+<span class="sd">            Argument parser to configure.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">configure_args</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+        <span class="n">star_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;STAR arguments&#39;</span><span class="p">)</span>
+        <span class="n">star_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--overhang&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">super_args</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">toolz</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">super_args</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;overhang&#39;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">overhang</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="StarReference"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.StarReference">[docs]</a><span class="k">class</span> <span class="nc">StarReference</span><span class="p">(</span><span class="n">Reference</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Star Reference class.</span>
+
+<span class="sd">    Defines paths to files within the STAR reference. Currently the same</span>
+<span class="sd">    as the base ``Reference`` class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<span class="n">register_indexer</span><span class="p">(</span><span class="s1">&#39;star&#39;</span><span class="p">,</span> <span class="n">StarIndexer</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,354 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.build.indexers.tophat &mdash; IM-Fusion 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../home.html">IM-Fusion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">IM-Fusion</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>imfusion.build.indexers.tophat</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.build.indexers.tophat</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Implements indexer for building Tophat references.&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pathlib2</span> <span class="k">as</span> <span class="nn">pathlib</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.util</span> <span class="k">import</span> <span class="n">shell</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">Indexer</span><span class="p">,</span> <span class="n">register_indexer</span><span class="p">,</span> <span class="n">Reference</span>
+
+
+<div class="viewcode-block" id="TophatIndexer"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.TophatIndexer">[docs]</a><span class="k">class</span> <span class="nc">TophatIndexer</span><span class="p">(</span><span class="n">Indexer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Indexer that builds references for the Tophat-Fusion aligner.</span>
+
+<span class="sd">    Performs the same steps as the base ``Indexer`` class, but additionally</span>
+<span class="sd">    generates an index for alignment with Tophat-Fusion using Bowtie and</span>
+<span class="sd">    Tophat2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_reference_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reference class to use for this indexer.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TophatReference</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;External dependencies required by this indexer.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;bowtie-build&#39;</span><span class="p">,</span> <span class="s1">&#39;tophat2&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_build_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+        <span class="c1"># type: (TophatReference) -&gt; None</span>
+
+        <span class="c1"># Build bowtie index.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Building bowtie index&#39;</span><span class="p">)</span>
+
+        <span class="n">bowtie_idx_path</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">index_path</span>
+        <span class="n">bowtie_log_path</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">base_path</span> <span class="o">/</span> <span class="s1">&#39;bowtie.log&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_bowtie_index</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">.</span><span class="n">fasta_path</span><span class="p">,</span> <span class="n">bowtie_idx_path</span><span class="p">,</span> <span class="n">log_path</span><span class="o">=</span><span class="n">bowtie_log_path</span><span class="p">)</span>
+
+        <span class="c1"># Build transcriptome index.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Building transcriptome index&#39;</span><span class="p">)</span>
+        <span class="n">transcriptome_path</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">transcriptome_path</span>
+        <span class="n">transcriptome_log_path</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">base_path</span> <span class="o">/</span> <span class="s1">&#39;transcriptome.log&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_transcriptome_index</span><span class="p">(</span><span class="n">bowtie_idx_path</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf_path</span><span class="p">,</span>
+                                        <span class="n">transcriptome_path</span><span class="p">,</span>
+                                        <span class="n">transcriptome_log_path</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_build_bowtie_index</span><span class="p">(</span>
+            <span class="n">reference_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">output_base_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">log_path</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># type: pathlib.Path</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds a bowtie index for a reference genome.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reference_path : pathlib.Path</span>
+<span class="sd">            Path to the reference genome.</span>
+<span class="sd">        out_base_path : pathlib.Path</span>
+<span class="sd">            Base output path for the built index.</span>
+<span class="sd">        log_path : pathlib.Path</span>
+<span class="sd">            Where to write the log output.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cmdline_args</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;bowtie-build&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference_path</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">output_base_path</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">log_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">log_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log_file</span><span class="p">:</span>
+                <span class="n">shell</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">cmdline_args</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">log_file</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shell</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">cmdline_args</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_build_transcriptome_index</span><span class="p">(</span>
+            <span class="n">index_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">gtf_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">output_base_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+            <span class="n">log_path</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># type: pathlib.Path</span>
+    <span class="p">):</span>  <span class="c1"># type:  (...) -&gt; None</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds a transcriptome index for a reference genome.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reference_path : pathlib.Path</span>
+<span class="sd">            Path to the reference genome.</span>
+<span class="sd">        gtf_path : pathlib.Path</span>
+<span class="sd">            Path to the reference gtf file.</span>
+<span class="sd">        out_base_path pathlib.Path:</span>
+<span class="sd">            Base output path for the built index.</span>
+<span class="sd">        log_path : pathlib.Path</span>
+<span class="sd">            Where to write the log output.</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cmdline_args</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;tophat2&#39;</span><span class="p">,</span> <span class="s1">&#39;--GTF&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">gtf_path</span><span class="p">),</span>
+                <span class="s1">&#39;--transcriptome-index=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_base_path</span><span class="p">),</span>
+                <span class="s1">&#39;--bowtie1&#39;</span><span class="p">,</span> <span class="s1">&#39;--output-dir&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">index_path</span><span class="p">)</span>
+            <span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">log_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">log_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log_file</span><span class="p">:</span>
+                    <span class="n">shell</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">cmdline_args</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">log_file</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shell</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">cmdline_args</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span></div>
+
+
+<span class="n">register_indexer</span><span class="p">(</span><span class="s1">&#39;tophat&#39;</span><span class="p">,</span> <span class="n">TophatIndexer</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TophatReference"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.TophatReference">[docs]</a><span class="k">class</span> <span class="nc">TophatReference</span><span class="p">(</span><span class="n">Reference</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tophat Reference class.</span>
+
+<span class="sd">    Defines paths to files within the Tophat-Fusion reference. Compared to the</span>
+<span class="sd">    base reference, this class adds an additional path to the transcriptome</span>
+<span class="sd">    index that is used by Tophat during alignment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transcriptome_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; pathlib.Path</span>
+        <span class="sd">&quot;&quot;&quot;Path to transcriptome index.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">/</span> <span class="s1">&#39;transcriptome&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; pathlib.Path</span>
+        <span class="sd">&quot;&quot;&quot;Path to index.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">/</span> <span class="s1">&#39;reference&#39;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
