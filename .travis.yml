@@ -24,8 +24,8 @@ install:
   - "conda create -q -n test -c jrderuiter -c bioconda -c r
     python=$TRAVIS_PYTHON_VERSION intervaltree future pandas
     numexpr pysam=0.8.4 toolz scipy seaborn pyfaidx intervaltree pathlib2
-    r rpy2 tophat bowtie subread mock pytest pytest-datafiles
-    pytest-mock pytest-helpers-namespace tabix"
+    r rpy2 samtools bowtie subread mock pytest pytest-datafiles
+    pytest-mock pytest-helpers-namespace 'htslib<1.4'"
 
   # Activate environment and install im-fusion.
   - source activate test
