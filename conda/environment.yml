@@ -10,7 +10,7 @@ dependencies:
     - intervaltree
     - pandas =0.19.2
     - numexpr
-    - pysam >=0.8.4
+    - pysam >=0.9.1
     - toolz
     - scipy
     - seaborn
