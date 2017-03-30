@@ -16,7 +16,16 @@ from .base import Indexer, Reference, register_indexer
 
 
 class StarIndexer(Indexer):
-    """Indexer that builds indexes for the STAR aligner."""
+    """Indexer that builds references for the STAR aligner.
+
+    Performs the same steps as the base ``Indexer`` class, but additionally
+    generates an index for alignment with STAR using STAR's ``genomeGenerate``
+    command. Special attention should be paid to the ``overhang`` parameter,
+    which defines the overhang used by STAR in the build reference
+    (see the ``sjdbOverhang`` parameter in the STAR documentation for more
+    details). Ideally, the value for this parameter should be one less than the
+    length of the used reads.
+    """
 
     def __init__(self, logger=None, overhang=100):
         # type: (Any, int) -> None
@@ -54,18 +63,34 @@ class StarIndexer(Indexer):
 
     @classmethod
     def configure_args(cls, parser):
+        """Configures an argument parser for the Indexer.
+
+        Used by ``imfusion-build`` to configure the sub-command for
+        this indexer (if registered as an Indexer using the
+        ``register_indexer`` function).
+
+        Parameters
+        ----------
+        parser : argparse.ArgumentParser
+            Argument parser to configure.
+
+        """
         super().configure_args(parser)
         star_group = parser.add_argument_group('STAR arguments')
         star_group.add_argument('--overhang', type=int, default=100)
 
     @classmethod
-    def parse_args(cls, args):
-        super_args = super().parse_args(args)
+    def _parse_args(cls, args):
+        super_args = super()._parse_args(args)
         return toolz.merge(super_args, {'overhang': args.overhang})
 
 
 class StarReference(Reference):
-    """Star Reference class."""
+    """Star Reference class.
+
+    Defines paths to files within the STAR reference. Currently the same
+    as the base ``Reference`` class.
+    """
     pass
 
 

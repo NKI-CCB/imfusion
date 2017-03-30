@@ -1,3 +1,3 @@
-from .base import get_indexers
-from .tophat import TophatIndexer
-from .star import StarIndexer
+from .base import Indexer, Reference, get_indexers, register_indexer
+from .tophat import TophatIndexer, TophatReference
+from .star import StarIndexer, StarReference

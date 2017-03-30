@@ -5,12 +5,12 @@ Using conda (recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The recommended way to install IM-Fusion is using conda, as this allows us to
-install IM-Fusion together with its external dependencies (tophat2, bowtie and
-subread) into an isolated environment using a single command:
+install IM-Fusion together with its external dependencies (Tophat2/Bowtie,
+STAR and subread) into an isolated environment using a single command:
 
 .. code:: bash
 
-  conda create -n imfusion -c jrderuiter -c bioconda -c r im-fusion
+  conda create -n imfusion -c jrderuiter -c bioconda -c r imfusion
 
 Note that this uses the bioconda channel to install the external
 dependencies (tophat2, bowtie and subread) and the r channel to install R
@@ -20,7 +20,7 @@ Alternatively, IM-Fusion can be installed in an existing environent using:
 
 .. code:: bash
 
-  conda install -c jrderuiter -c bioconda -c r im-fusion
+  conda install -c jrderuiter -c bioconda -c r imfusion
 
 Using pip
 ~~~~~~~~~
@@ -33,17 +33,18 @@ IM-Fusion can also be installed using pip:
 
 Note that in this case, rpy2 is not installed by default as it can be
 difficult to install and is only required for the single-sample differential
-expression test. To use the test, ensure a working version of rpy2 is installed or install the required rpy2 dependencies using:
+expression test. To use the test, ensure a working version of rpy2 is
+installed or install the required rpy2 dependencies using:
 
 .. code:: bash
 
-    pip install git+https://github.com/jrderuiter/im-fusion.git[de_single]
+    pip install git+https://github.com/jrderuiter/imfusion.git[de_single]
 
 To also install the development dependencies of IM-Fusion use:
 
 .. code:: bash
 
-    pip install git+https://github.com/jrderuiter/im-fusion.git[dev]
+    pip install git+https://github.com/jrderuiter/imfusion.git[dev]
 
 Dependencies
 ~~~~~~~~~~~~
@@ -52,9 +53,8 @@ Python dependencies
 -------------------
 
 IM-Fusion is compatible with both Python 2.7 and Python 3.4+. However,
-identifying insertions only works in Python 3.4+ if a Python
-3 compatible version of Tophat2 is installed. Such a version can be obtained
-from bioconda or by applying the 2to3 conversion to Tophats scripts.
+identifying insertions using Tophat-Fusion only works in Python 2.7, as Tophat2
+is not compatible with Python 3.
 
 IM-Fusion was tested using the following versions for its dependencies:
 
@@ -67,59 +67,85 @@ IM-Fusion was tested using the following versions for its dependencies:
 - pysam -- 0.8.4
 - intervaltree -- 2.1.0
 
-The following additional dependencies are required for running tests
-and building the docs:
-
-- pytest
-- pytest-mock
-- pytest-datafiles
-- pytest-helpers-namespace
-- sphinx
-
 External dependencies
 ---------------------
 
 IM-Fusion has three external dependencies:
 
-- Tophat2 -- for the alignment and detection of gene fusions
-- Bowtie1 -- used by Tophat2 for the alignment
-- featureCounts -- for generating expression counts
+- STAR - for the alignment and detection of gene fusions.
+- Tophat2/Bowtie1 -- for the alignment and detection of gene fusions.
+- Stringtie - For performing reference-guided transcript assembly.
+- featureCounts -- for generating expression counts.
 
 These tools must be available in the current PATH for the insertion
-detection to work properly. For help with their installation, see below.
+detection to work properly. Note that either STAR or Tophat2 needs to be
+installed, depending on your preference for the aligner. For help with
+their installation, see below.
 
-Tophat2
-*******
+Tophat2/Bowtie1
+***************
 
-Tophat2 is a RNA-seq read aligner that also includes Tophat-Fusion,
+Tophat2 is an RNA-seq read aligner that also includes Tophat-Fusion,
 an aligner that can identify gene fusions from single- and paired-end
 RNA-sequencing data. A binary version of Tophat2 can be downloaded from the
 Tophat `website <https://ccb.jhu.edu/software/tophat/index.shtml>`_.
-After unpacking, make sure that the binary *Tophat2* is available in PATH.
+After unpacking, make sure that the Tophat2 binary is available in ``$PATH``.
 
-Alternatively, Tophat2 can also be installed using bioconda, or using
-`homebrew <http://brew.sh>`_ or `linuxbrew <http://linuxbrew.sh>`_. For
-homebrew/linuxbrew, first install homebrew or linuxbrew and then install
-Tophat2 using:
+Alternatively, Tophat2 can also be installed using bioconda:
+
+.. code:: bash
+
+    conda install tophat
+
+Tophat2 can also be installed using `homebrew <http://brew.sh>`_ or
+`linuxbrew <http://linuxbrew.sh>`_. For this option, first install
+homebrew or linuxbrew and then install Tophat2 using:
 
 .. code:: bash
 
     brew update
     brew install tophat
 
-Bowtie
-******
-
 Bowtie can be installed in the same fashion as Tophat, by downloading a binary
 version from the `bowtie website
 <http://bowtie-bio.sourceforge.net/index.shtml>`_ and ensuring that bowtie
-is available in PATH. Bowtie can also be installed using bioconda or using
-homebrew/linuxbrew:
+is available in ``$PATH``.
+
+Bowtie can also be installed using bioconda:
+
+.. code:: bash
+
+    conda install bowtie
+
+Or using homebrew/linuxbrew:
 
 .. code:: bash
 
     brew update
     brew install bowtie
+
+STAR
+****
+
+STAR is an RNA-seq aligner that can also perform chimeric read alignment,
+enabling the detection of gene-transposon fusions. STAR can be downloaded
+from the `STAR GitHub repository`_. After unpacking, make sure that the
+STAR binary is available in ``$PATH``.
+
+STAR can also be installed using bioconda:
+
+.. code:: bash
+
+    conda install star
+
+Or using homebrew/linuxbrew:
+
+.. code:: bash
+
+    brew update
+    brew install star
+
+.. _`STAR GitHub repository`: https://github.com/alexdobin/STAR
 
 featureCounts
 *************
@@ -130,8 +156,13 @@ from `sourceforge <http://subread.sourceforge.net>`_. After downloading and
 unpacking the correct binary version for your machine, make sure the binary
 featureCounts is available in PATH.
 
-Subread can also be installed using bioconda, or by using
-`homebrew <http://brew.sh>`_ or `linuxbrew <http://linuxbrew.sh>`_
+Subread can also be installed using bioconda:
+
+.. code:: bash
+
+    conda install subread
+
+Or by using `homebrew <http://brew.sh>`_ or `linuxbrew <http://linuxbrew.sh>`_
 with a custom tap:
 
 .. code:: bash

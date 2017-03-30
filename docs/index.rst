@@ -9,9 +9,11 @@ Contents:
    home
    installation
    getting_started
-   command_line_usage
+   usage
    api
-   development
+   contributing
+   authors
+   history
 
 
 Indices and tables

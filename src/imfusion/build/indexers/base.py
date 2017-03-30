@@ -40,7 +40,36 @@ def get_indexers():
 
 
 class Indexer(object):
-    """Base Indexer class."""
+    """Base Indexer class.
+
+    This base class defines the interface for Indexer classes and provides
+    basic functionality for building augmented reference genomes. Functionality
+    for building the indices for alignment is provided by sub-classes
+    (as this is aligner specific), typically by overriding the protected
+    ``_build_indices`` method.
+
+    The main interface of the class is formed by the ``check_dependencies``
+    and ``build`` methods. The former is used to check whether required
+    external dependencies are present in ``$PATH``, whilst the latter is
+    called with the required reference files to build the actual reference.
+    On completion, the ``build`` method returns a ``Reference`` object, which
+    defines paths to the various reference files. The class of this object is
+    defined by the ``_reference_class`` method, which may be overridden to
+    return aligner-specific ``Reference`` subclasses.
+
+    Additionally, the class provides the methods ``configure_args`` and
+    ``from_args``, which are used to configure the argument parser for
+    ``imfusion-build`` and to instantate instances from parsed arguments.
+    Subclasses with extra options should override the protected ``_parse_args``
+    method, which extracts constructor parameters from argparse arguments
+    for ``from_args``, allowing for flexible interpretation of these arguments.
+
+    Parameters
+    ----------
+    logger : logging.Logger
+        Logger to be used for logging messages.
+
+    """
 
     def __init__(self, logger=None):
         # type: (Any) -> None
@@ -57,7 +86,11 @@ class Indexer(object):
         return []
 
     def check_dependencies(self):
-        """Checks if all required external dependencies are available."""
+        """Checks if all required external dependencies are in ``$PATH``.
+
+        Raises a ValueError if any dependencies are missing.
+        """
+
         shell.check_dependencies(self.dependencies)
 
     def build(
@@ -70,7 +103,42 @@ class Indexer(object):
             blacklist_regions=None,  # type: List[Tuple[str, int, int]]
             blacklist_genes=None  # type: List[str]
     ):  # type: (...) -> None
-        """Builds an indexed reference containing the transposon sequence."""
+        """Builds an augmented reference containing the transposon sequence.
+
+        The reference is built by first copying the original reference
+        sequence into the output directory and then augmenting this reference
+        with the transposon sequence. If needed, blacklisted genes/regions are
+        then masked within this reference. Next, other supporting files
+        (such as the reference GTF) are copied and indexed as needed. As a
+        final step, aligner-specific indices are built for the augmented
+        reference.
+
+        Parameters
+        ----------
+        refseq_path : Path
+            Path to the reference sequence (in Fasta format).
+        gtf_path : Path
+            Path to the reference GTF file.
+        transposon_path : Path
+            Path to the transposon sequence (in Fasta format).
+        transposon_features_path : Path
+            Path to the transposon features (tab-separated file).
+        output_dir : Path
+            Path to the output directory. Should not yet exist.
+        blacklist_regions: List[Tuple[str, int, int]]
+            List or regions that should be blacklisted, specified as a tuple
+            of (chromosome, start, end).
+        blacklist_genes : List[str]
+            List of genes that should be blacklisted. Should correspond to
+            ``gene_id`` entries in the passed GTF file.
+
+        Returns
+        -------
+        Reference
+            Returns a ``Reference`` object, which describes the paths to
+            various files within the generated reference.
+
+        """
 
         # Create output directory.
         output_dir.mkdir(parents=True, exist_ok=False)
@@ -148,7 +216,18 @@ class Indexer(object):
     @classmethod
     def configure_args(cls, parser):
         # type: (argparse.ArgumentParser) -> None
-        """Configures an argument parser for the Indexer."""
+        """Configures an argument parser for the Indexer.
+
+        Used by ``imfusion-build`` to configure the sub-command for
+        this indexer (if registered as an Indexer using the
+        ``register_indexer`` function).
+
+        Parameters
+        ----------
+        parser : argparse.ArgumentParser
+            Argument parser to configure.
+
+        """
 
         # Basic arguments.
         base_group = parser.add_argument_group('Basic arguments')
@@ -198,7 +277,7 @@ class Indexer(object):
             'the gene ids used in the reference gtf file.')
 
     @classmethod
-    def parse_args(cls, args):
+    def _parse_args(cls, args):
         # type: (argparse.Namespace) -> Dict[str, Any]
         """Parses argparse argument to a dict."""
         return {}
@@ -206,12 +285,36 @@ class Indexer(object):
     @classmethod
     def from_args(cls, args):
         # type: (argparse.Namespace) -> Indexer
-        """Constructs an Indexer instance from given arguments."""
-        return cls(**cls.parse_args(args))
+        """Constructs an Indexer instance from given arguments.
+
+        Instantiates an Indexer instance from the given argparse arguments.
+        Uses the ``_parse_args`` method internally, which performs the actual
+        argument-to-parameter extraction. As such, the ``_parse_args`` method
+        should be overridden in any subclasses with extra parameters.
+
+        Parameters
+        ----------
+        args : argparse.Namespace
+            Arguments to parse.
+        """
+        return cls(**cls._parse_args(args))
 
 
 class Reference(object):
-    """Reference class."""
+    """Base Reference class.
+
+    Reference classes define paths to specific files within the reference. This
+    includes, for example, paths to the augmented fasta file and to the r
+    eference index. This base class defines paths that should be available
+    for all references. Subclasses may define additional paths that are
+    specific to the corresponding aligner.
+
+    Parameters
+    ----------
+    reference_path : Path
+        Path to the reference directory.
+
+    """
 
     def __init__(self, reference_path):
         # type: (pathlib.Path) -> None

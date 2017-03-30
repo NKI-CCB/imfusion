@@ -29,7 +29,93 @@ CIGAR_MATCH_REGEX = re.compile(r'(\d+)M')
 
 
 class StarAligner(Aligner):
-    """STAR aligner."""
+    """STAR aligner.
+
+    Aligner that identifies insertions using STAR, by aligning reads using STAR
+    (including chimeric alignments) and identifying gene-transposon fusions
+    from chimeric read alignments.
+
+    As STAR provides chimeric alignment information but does not provide a
+    an actual list of fusions, we identify fusions by summarizing these
+    alignments ourselves. The strategy to do so is as follows:
+
+        1. We filter for chimeric reads involving the transposon and genomic
+           loci, to reduce the number of reads we need to consider.
+        2. We select chimeric reads (or mates) that actually overlap the
+           breakpoint of the fusion, as these alignments provide the exact
+           position of the fusion. These reads are grouped by their positions
+           to determine the number of reads that support each fusion. Fusions
+           with close distance (on both the genomic and transposon loci) are
+           merged to account for slight variations in the alignment.
+        3. For paired-end data:
+            - We select mates that span the fusion site
+              (meaning that they do not overlap the breakpoint, therefore we
+              only have an approximate position) and group mates of which both
+              ends are with close proximity of eachother.
+            - We then try to assign these groups of spanning mates to
+              previously identified 'junction' fusions that are in the close
+              vicinity. If we find a match, the number of mates in the group is
+              registered as 'spanning support' for that fusion. If no match is
+              found, we consider the group to identify a unique fusion and
+              derive an approximate location for the fusion from the
+              mate locations.
+        4. We return the combined list of fusions. For single-end data, this
+           only contains junction fusions, whilst for paired-end data this is
+           the combined list of junction and unassigned spanning fusions.
+
+    To avoid memory issues with STAR during the sorting of bam files, sorting
+    can be performed using Sambamba. Other external dependencies of this
+    aligner are STAR itself and Stringtie, which is used for the assembly of
+    novel transcripts (if requested).
+
+    Parameters
+    ----------
+    reference : Reference
+        Reference class describing the reference paths.
+    assemble : bool
+        Whether to perform the assembly of novel transcripts using Stringie.
+    assemble_args : Dict[str, Any]
+        Extra arguments to pass to Stringie during assembly.
+    min_flank : int
+        Minimum number of flanking bases required on both sides of the
+        breakpoint for a fusion to be considered valid. This means that, for
+        a split read overlapping the fusion boundary, at least ``min_flank``
+        bases should be on either sides of the fusion.
+    threads : int
+        Number of threads to use.
+    extra_args :
+        Extra arguments to pass to STAR for alignment.
+    logger : logging.Logger
+        Logger to be used for logging messages.
+    filter_features : bool
+        Whether insertions should be filtered to remove non SA/SD insertions.
+    filter_orientation : bool
+        Whether insertions should be filtered for fusions in which the
+        transposon feature is in the wrong orientation.
+    filter_blacklist : List[str]
+        List of gene ids to filter insertions for.
+    external_sort : bool
+        Whether sorting should be performed using STAR (False) or using
+        Sambamba (True). Sambamba uses less memory than STAR, but is slower.
+    merge_junction_dist : int
+        Maximum distance within which fusions supported by split reads
+        (overlapping the junction, so that the exact breakpoint is known) are
+        merged. This merging avoids calling multiple fusions due to slight
+        variations in the alignment, although this value should not be chosen
+        too large to avoid merging distinct insertions.
+    max_spanning_dist : int
+        Maximum distance within which spanning mate pairs (mates that do not
+        overlap the fusion junction) are grouped when summarizing spanning
+        chimeric reads. Both mates from two pairs need to be within this
+        distance of each other to be merged. The value should be chosen to
+        reflect the expected or emprical insert size.
+    max_junction_dist : int
+        Maxixmum distance within which groups of spanning mates are assigned
+        to a junction fusion (which is supported by split reads, so that its
+        exact position is known). Groups that cannot be assigned to a junction
+        fusion are considered to arise from a separate insertion.
+
+    """
 
     def __init__(
             self,
@@ -38,15 +124,15 @@ class StarAligner(Aligner):
             assemble_args=None,  # type: Dict[str, Any]
             min_flank=12,  # type: int
             threads=1,  # type: int
-            external_sort=False,  # type: bool
             extra_args=None,  # type: Dict[str, Any]
             logger=None,  # type: Any
-            merge_junction_dist=10,  # type: int
-            max_spanning_dist=300,  # type: int
-            max_junction_dist=10000,  # type: int
             filter_features=True,  # type: bool
             filter_orientation=True,  # type: bool
-            filter_blacklist=None  # type: List[str]
+            filter_blacklist=None,  # type: List[str]
+            external_sort=False,  # type: bool
+            merge_junction_dist=10,  # type: int
+            max_spanning_dist=300,  # type: int
+            max_junction_dist=10000  # type: int
     ):  # type: (...) -> None
 
         super().__init__(reference=reference, logger=logger)
@@ -68,6 +154,8 @@ class StarAligner(Aligner):
 
     @property
     def dependencies(self):
+        """External dependencies required by aligner."""
+
         programs = ['STAR']
 
         if self._external_sort:
@@ -83,7 +171,28 @@ class StarAligner(Aligner):
         return programs
 
     def identify_insertions(self, fastq_path, output_dir, fastq2_path=None):
-        """Identifies insertions from given reads."""
+        """Identifies insertions from given reads.
+
+        Aligns RNA-seq reads to the reference genome and uses this alignment
+        to identify gene-transposon fusions. These gene-transposon fusions
+        are summarized to transposon insertions and returned.
+
+        Parameters
+        ----------
+        fastq_path : Path
+            Path to fastq file containing sequence reads. For paired-end data,
+            this should refer to the first read of the pair.
+        output_dir : Path
+            Output directory, to use for output files such as the alignment.
+        fastq2_path : Path
+            For paired-end sequencing data, path to fastq file containing
+            the second read of the pair.
+
+        Yields
+        ------
+        Insertion
+            Yields the identified insertions.
+        """
 
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -203,6 +312,19 @@ class StarAligner(Aligner):
 
     @classmethod
     def configure_args(cls, parser):
+        """Configures an argument parser for the Indexer.
+
+        Used by ``imfusion-build`` to configure the sub-command for
+        this indexer (if registered as an Indexer using the
+        ``register_indexer`` function).
+
+        Parameters
+        ----------
+        parser : argparse.ArgumentParser
+            Argument parser to configure.
+
+        """
+
         super().configure_args(parser)
 
         star_group = parser.add_argument_group('STAR arguments')
@@ -235,7 +357,7 @@ class StarAligner(Aligner):
         filt_group.add_argument('--blacklisted_genes', nargs='+')
 
     @classmethod
-    def parse_args(cls, args):
+    def _parse_args(cls, args):
         kws = dict(
             reference=StarReference(args.reference),
             min_flank=args.star_min_flank,

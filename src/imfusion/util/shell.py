@@ -90,7 +90,7 @@ def which(program):
 
 def check_dependencies(programs):
     # type: (Iterable[str]) -> None
-    """Checks if listed executables are all available in PATH."""
+    """Checks if listed executables are all available in $PATH."""
 
     missing = [prog for prog in programs if which(prog) is None]
 
