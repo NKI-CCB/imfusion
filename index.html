@@ -34,7 +34,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="IM-Fusion 0.2.0 documentation" href="#"/>
-        <link rel="next" title="IM-Fusion" href="home.html"/> 
+        <link rel="next" title="Installation" href="installation.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -83,8 +83,8 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference internal" href="home.html">IM-Fusion</a></li>
+                <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
@@ -138,61 +138,37 @@
             
   <div class="section" id="im-fusion">
 <h1>IM-Fusion<a class="headerlink" href="#im-fusion" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="home.html">IM-Fusion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#using-conda-recommended">Using conda (recommended)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#using-pip">Using pip</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#required-files">Required files</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#building-a-reference">Building a reference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#detecting-insertions-per-sample">Detecting insertions (per sample)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#quantifying-expression-per-sample">Quantifying expression (per sample)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#merging-sample-results">Merging sample results</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#selecting-de-ctgs">Selecting (DE) CTGs</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#building-references">Building references</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#identifying-insertions">Identifying insertions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#testing-for-differential-expression">Testing for differential expression</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="authors.html#development-lead">Development Lead</a></li>
-<li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="history.html">History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.2.0 (2017-03-09)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.1.0 (2016-03-26)</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<p>IM-Fusion is a tool for identifying transposon insertion sites in
+insertional mutagenesis screens using single- and paired-end RNA-sequencing
+data. It essentially identifies insertion sites from gene-transposon fusions
+in the RNA-sequencing data, which represent splicing events between the
+transposon and endogeneous genes.</p>
+<p>IM-Fusion also identifies candidate genes for a given screen using a
+statistical test (based on the Poisson distribution) that identifies Commonly
+Targeted Genes (CTGs) &#8211; genes that are more frequently affected by insertions
+than would be expected by chance. To further narrow down a list of CTGs, which
+may contain hundreds of genes, IM-Fusion also tests if insertions in a CTG have
+a significant effect on the expression of the gene, which is a strong indicator
+of them having an actual biological effect.</p>
+<p>IM-Fusion has the following key features:</p>
 <ul class="simple">
-<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+<li>It identifies transposon insertion sites from both single- and paired-end
+RNA-sequencing data, without having any special sequencing requirements.</li>
+<li>It uses a gene-centric approach &#8211; both for the identification of insertions
+and for testing of differential expression for identified candidate genes &#8211;
+which greatly reduces the number of false positive candidate genes.</li>
+<li>It implements several exon-level and gene-level differential expression
+tests, which provide detailed insight into the effects of insertions on
+the expression of their target  gene(s). By providing both a group-wise and
+a single-sample version of the test, IM-Fusion can identify effects for a
+single insertion in a specific sample, or determine the general
+effect of insertions on a given gene within the tumor cohort.</li>
 </ul>
+<p>For more details on the approach and a comparison with existing DNA-sequencing
+approaches, please see our paper <strong>&#8220;Identifying transposon insertions and
+their effects from RNA-sequencing data&#8221;</strong> (<em>Currently under revision</em>).</p>
+<div class="toctree-wrapper compound">
+</div>
 </div>
 
 
@@ -202,7 +178,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="home.html" class="btn btn-neutral float-right" title="IM-Fusion" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
