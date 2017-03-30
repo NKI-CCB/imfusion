@@ -24,7 +24,44 @@ from .. import util
 
 
 class TophatAligner(Aligner):
-    """Tophat2 aligner."""
+    """Tophat2 aligner.
+
+    Aligner that identifies insertions using Tophat-Fusion (as implemented in
+    Tophat2), which aligns RNA-seq reads and returns a summary file detailing
+    the identified fusions. Gene-transposon fusions are identified directly
+    from this summary file.
+
+    External dependencies include Tophat2 and Bowtie1, which are both used for
+    alignment. Stringtie is required for the detection of novel transcripts.
+
+    Parameters
+    ----------
+    reference : Reference
+        Reference class describing the reference paths.
+    assemble : bool
+        Whether to perform the assembly of novel transcripts using Stringie.
+    assemble_args : Dict[str, Any]
+        Extra arguments to pass to Stringie during assembly.
+    min_flank : int
+        Minimum number of flanking bases required on both sides of the
+        breakpoint for a fusion to be considered valid. This means that, for
+        a split read overlapping the fusion boundary, at least ``min_flank``
+        bases should be on either sides of the fusion.
+    threads : int
+        Number of threads to use.
+    extra_args :
+        Extra arguments to pass to Tophat2 for alignment.
+    logger : logging.Logger
+        Logger to be used for logging messages.
+    filter_features : bool
+        Whether insertions should be filtered to remove non SA/SD insertions.
+    filter_orientation : bool
+        Whether insertions should be filtered for fusions in which the
+        transposon feature is in the wrong orientation.
+    filter_blacklist : List[str]
+        List of gene ids to filter insertions for.
+
+    """
 
     def __init__(self,
                  reference,
@@ -188,7 +225,7 @@ class TophatAligner(Aligner):
         filt_group.add_argument('--blacklisted_genes', nargs='+')
 
     @classmethod
-    def parse_args(cls, args):
+    def _parse_args(cls, args):
         return dict(
             reference=TophatReference(args.reference),
             min_flank=args.tophat_min_flank,

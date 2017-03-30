@@ -29,7 +29,25 @@ def get_aligners():
 
 
 class Aligner(object):
-    """Basic aligner class."""
+    """Base aligner class.
+
+    This base class defines the interface for ``Aligner`` classes. The main
+    methods provided by ``Aligners`` are the ``check_dependencies`` and
+    ``identify_insertions`` methods. The former is used to check whether
+    required external dependencies are present in ``$PATH``, whilst the latter
+    should be called with a reference instance and the sequence read files
+    to identify insertions. The implementation of the ``identify_insertions``
+    method is specific to each aligner and should be overridden in each
+    subclass.
+
+    Parameters
+    ----------
+    reference : Reference
+        Reference class describing the reference paths.
+    logger : logging.Logger
+        Logger to be used for logging messages.
+
+    """
 
     def __init__(self, reference, logger=None):
         self._reference = reference
@@ -41,12 +59,26 @@ class Aligner(object):
         return []
 
     def check_dependencies(self):
-        """Checks if all required external dependencies are available."""
+        """Checks if all required external dependencies are in ``$PATH``.
+
+        Raises a ValueError if any dependencies are missing.
+        """
         shell.check_dependencies(self.dependencies)
 
     @classmethod
     def configure_args(cls, parser):
-        """Configures argument parser for aligner."""
+        """Configures an argument parser for the Indexer.
+
+        Used by ``imfusion-build`` to configure the sub-command for
+        this indexer (if registered as an Indexer using the
+        ``register_indexer`` function).
+
+        Parameters
+        ----------
+        parser : argparse.ArgumentParser
+            Argument parser to configure.
+
+        """
 
         # Required arguments.
         base_group = parser.add_argument_group('Basic arguments')
@@ -78,16 +110,48 @@ class Aligner(object):
             help='The samples output directory.')
 
     @classmethod
-    def parse_args(cls, args):
+    def _parse_args(cls, args):
         """Parses arguments from argparse into a dict."""
         raise NotImplementedError()
 
     @classmethod
     def from_args(cls, args):
-        """Constructs aligner instance from argparse arguments."""
-        return cls(**cls.parse_args(args))
+        """Constructs an Indexer instance from given arguments.
+
+        Instantiates an Indexer instance from the given argparse arguments.
+        Uses the ``_parse_args`` method internally, which performs the actual
+        argument-to-parameter extraction. As such, the ``_parse_args`` method
+        should be overridden in any subclasses with extra parameters.
+
+        Parameters
+        ----------
+        args : argparse.Namespace
+            Arguments to parse.
+        """
+        return cls(**cls._parse_args(args))
 
     def identify_insertions(self, fastq_path, output_dir, fastq2_path=None):
-        """Identifies insertions from given reads."""
+        """Identifies insertions from given reads.
+
+        Aligns RNA-seq reads to the reference genome and uses this alignment
+        to identify gene-transposon fusions. These gene-transposon fusions
+        are summarized to transposon insertions and returned.
+
+        Parameters
+        ----------
+        fastq_path : Path
+            Path to fastq file containing sequence reads. For paired-end data,
+            this should refer to the first read of the pair.
+        output_dir : Path
+            Output directory, to use for output files such as the alignment.
+        fastq2_path : Path
+            For paired-end sequencing data, path to fastq file containing
+            the second read of the pair.
+
+        Yields
+        ------
+        Insertion
+            Yields the identified insertions.
+        """
 
         raise NotImplementedError()

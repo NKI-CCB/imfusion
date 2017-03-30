@@ -20,7 +20,12 @@ from .base import Indexer, register_indexer, Reference
 
 
 class TophatIndexer(Indexer):
-    """Indexer that builds indexes for the TophatFusion."""
+    """Indexer that builds references for the Tophat-Fusion aligner.
+
+    Performs the same steps as the base ``Indexer`` class, but additionally
+    generates an index for alignment with Tophat-Fusion using Bowtie and
+    Tophat2.
+    """
 
     def __init__(self, logger=None):
         super().__init__(logger=logger)
@@ -32,6 +37,7 @@ class TophatIndexer(Indexer):
 
     @property
     def dependencies(self):
+        """External dependencies required by this indexer."""
         return ['bowtie-build', 'tophat2']
 
     def _build_indices(self, reference):
@@ -129,7 +135,12 @@ register_indexer('tophat', TophatIndexer)
 
 
 class TophatReference(Reference):
-    """Tophat Reference class."""
+    """Tophat Reference class.
+
+    Defines paths to files within the Tophat-Fusion reference. Compared to the
+    base reference, this class adds an additional path to the transcriptome
+    index that is used by Tophat during alignment.
+    """
 
     @property
     def transcriptome_path(self):

@@ -29,6 +29,8 @@ dependencies:
 
     # Development dependencies.
     - sphinx
+    - sphinx_rtd_theme
+
     - pytest
     - pytest-mock
     - pytest-datafiles
@@ -36,3 +38,7 @@ dependencies:
     - pytest-helpers-namespace
     - pylint
     - yapf
+
+    - pip:
+        - bumpversion
+        - sphinx=autobuild
