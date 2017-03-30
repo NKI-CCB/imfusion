@@ -25,7 +25,7 @@ install:
     python=$TRAVIS_PYTHON_VERSION intervaltree future pandas
     numexpr pysam=0.8.4 toolz scipy seaborn pyfaidx intervaltree pathlib2
     r rpy2 tophat bowtie subread mock pytest pytest-datafiles
-    pytest-mock pytest-helpers-namespace"
+    pytest-mock pytest-helpers-namespace tabix"
 
   # Activate environment and install im-fusion.
   - source activate test

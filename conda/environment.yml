@@ -6,7 +6,6 @@ channels:
     - bioconda
 dependencies:
     # Python dependencies.
-    - python =3.5.2
     - future =0.16
     - intervaltree
     - pandas =0.19.2
@@ -26,6 +25,9 @@ dependencies:
     - star
     - subread
     - stringtie
+    - tophat
+    - bowtie # [py27]
+    - tophat # [py27]
 
     # Development dependencies.
     - sphinx
@@ -41,4 +43,4 @@ dependencies:
 
     - pip:
         - bumpversion
-        - sphinx=autobuild
+        - sphinx-autobuild
