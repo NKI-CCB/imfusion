@@ -17,7 +17,7 @@ requirements:
     - future
     - pandas
     - numexpr
-    - pysam >=0.8.4
+    - pysam >=0.9.1
     - toolz
     - scipy
     - seaborn
@@ -27,6 +27,7 @@ requirements:
     - typing # [py27]
     - r
     - rpy2 >=2.7.4
+    - htslib <1.4
 
   run:
     # Python dependencies.
@@ -35,7 +36,7 @@ requirements:
     - future
     - pandas
     - numexpr
-    - pysam >=0.8.4
+    - pysam >=0.9.1
     - toolz
     - scipy
     - seaborn
@@ -45,11 +46,14 @@ requirements:
     - typing # [py27]
     - r
     - rpy2 >=2.7.4
+    - htslib <1.4
 
     # External dependencies.
     - star
     - subread
     - stringtie
+    - tophat2 # [py27]
+    - bowtie # [py27]
 
 test:
   imports:
@@ -65,7 +69,7 @@ test:
     - featureCounts -v
 
 about:
-  home: https://github.com/jrderuiter/im-fusion
+  home: https://github.com/jrderuiter/imfusion
   license: MIT
   summary: "IM-Fusion - Tool for identifying transposon insertions
     and their effects from RNA-sequencing data"

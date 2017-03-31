@@ -52,6 +52,7 @@ setuptools.setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
+            'imfusion = imfusion.main.dispatch:main',
             'imfusion-build = imfusion.main.build:main',
             'imfusion-insertions = imfusion.main.insertions:main',
             'imfusion-ctg = imfusion.main.ctg:main',

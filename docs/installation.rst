@@ -6,21 +6,21 @@ Using conda (recommended)
 
 The recommended way to install IM-Fusion is using conda, as this allows us to
 install IM-Fusion together with its external dependencies (Tophat2/Bowtie,
-STAR and subread) into an isolated environment using a single command:
+STAR and Subread) into an isolated environment using a single command:
 
 .. code:: bash
 
-  conda create -n imfusion -c jrderuiter -c bioconda -c r imfusion
+  conda create -n imfusion -c bioconda -c r -c jrderuiter imfusion
 
 Note that this uses the bioconda channel to install the external
-dependencies (tophat2, bowtie and subread) and the r channel to install R
+dependencies (Tophat2/STAR, Bowtie and Subread) and the r channel to install R
 and rpy2.
 
-Alternatively, IM-Fusion can be installed in an existing environent using:
+Alternatively, IM-Fusion can be installed in an existing environment using:
 
 .. code:: bash
 
-  conda install -c jrderuiter -c bioconda -c r imfusion
+  conda install -c bioconda -c r -c jrderuiter imfusion
 
 Using pip
 ~~~~~~~~~
@@ -29,7 +29,7 @@ IM-Fusion can also be installed using pip:
 
 .. code:: bash
 
-    pip install git+https://github.com/jrderuiter/im-fusion.git
+    pip install git+https://github.com/jrderuiter/imfusion.git
 
 Note that in this case, rpy2 is not installed by default as it can be
 difficult to install and is only required for the single-sample differential
@@ -53,8 +53,8 @@ Python dependencies
 -------------------
 
 IM-Fusion is compatible with both Python 2.7 and Python 3.4+. However,
-identifying insertions using Tophat-Fusion only works in Python 2.7, as Tophat2
-is not compatible with Python 3.
+identifying insertions using Tophat-Fusion only works in Python 2.7, as
+Tophat2 is not compatible with Python 3.
 
 IM-Fusion was tested using the following versions for its dependencies:
 
@@ -64,7 +64,7 @@ IM-Fusion was tested using the following versions for its dependencies:
 - numexpr -- 2.5
 - scipy -- 0.17
 - seaborn -- 0.7
-- pysam -- 0.8.4
+- pysam -- 0.9.1
 - intervaltree -- 2.1.0
 
 External dependencies
@@ -95,7 +95,7 @@ Alternatively, Tophat2 can also be installed using bioconda:
 
 .. code:: bash
 
-    conda install tophat
+    conda install -c bioconda tophat
 
 Tophat2 can also be installed using `homebrew <http://brew.sh>`_ or
 `linuxbrew <http://linuxbrew.sh>`_. For this option, first install
@@ -115,7 +115,7 @@ Bowtie can also be installed using bioconda:
 
 .. code:: bash
 
-    conda install bowtie
+    conda install -c bioconda bowtie
 
 Or using homebrew/linuxbrew:
 
@@ -136,7 +136,7 @@ STAR can also be installed using bioconda:
 
 .. code:: bash
 
-    conda install star
+    conda install -c bioconda star
 
 Or using homebrew/linuxbrew:
 
@@ -160,7 +160,7 @@ Subread can also be installed using bioconda:
 
 .. code:: bash
 
-    conda install subread
+    conda install -c bioconda subread
 
 Or by using `homebrew <http://brew.sh>`_ or `linuxbrew <http://linuxbrew.sh>`_
 with a custom tap:
