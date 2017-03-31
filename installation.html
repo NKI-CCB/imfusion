@@ -157,22 +157,22 @@
 <h2>Using conda (recommended)<a class="headerlink" href="#using-conda-recommended" title="Permalink to this headline">¶</a></h2>
 <p>The recommended way to install IM-Fusion is using conda, as this allows us to
 install IM-Fusion together with its external dependencies (Tophat2/Bowtie,
-STAR and subread) into an isolated environment using a single command:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">imfusion</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="o">-</span><span class="n">c</span> <span class="n">r</span> <span class="n">imfusion</span>
+STAR and Subread) into an isolated environment using a single command:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">imfusion</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="o">-</span><span class="n">c</span> <span class="n">r</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="n">imfusion</span>
 </pre></div>
 </div>
 <p>Note that this uses the bioconda channel to install the external
-dependencies (tophat2, bowtie and subread) and the r channel to install R
+dependencies (Tophat2/STAR, Bowtie and Subread) and the r channel to install R
 and rpy2.</p>
-<p>Alternatively, IM-Fusion can be installed in an existing environent using:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="o">-</span><span class="n">c</span> <span class="n">r</span> <span class="n">imfusion</span>
+<p>Alternatively, IM-Fusion can be installed in an existing environment using:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="o">-</span><span class="n">c</span> <span class="n">r</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="n">imfusion</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="using-pip">
 <h2>Using pip<a class="headerlink" href="#using-pip" title="Permalink to this headline">¶</a></h2>
 <p>IM-Fusion can also be installed using pip:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">jrderuiter</span><span class="o">/</span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span><span class="o">.</span><span class="n">git</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">jrderuiter</span><span class="o">/</span><span class="n">imfusion</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
 <p>Note that in this case, rpy2 is not installed by default as it can be
@@ -192,8 +192,8 @@ installed or install the required rpy2 dependencies using:</p>
 <div class="section" id="python-dependencies">
 <h3>Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h3>
 <p>IM-Fusion is compatible with both Python 2.7 and Python 3.4+. However,
-identifying insertions using Tophat-Fusion only works in Python 2.7, as Tophat2
-is not compatible with Python 3.</p>
+identifying insertions using Tophat-Fusion only works in Python 2.7, as
+Tophat2 is not compatible with Python 3.</p>
 <p>IM-Fusion was tested using the following versions for its dependencies:</p>
 <ul class="simple">
 <li>future &#8211; 0.15.2</li>
@@ -202,7 +202,7 @@ is not compatible with Python 3.</p>
 <li>numexpr &#8211; 2.5</li>
 <li>scipy &#8211; 0.17</li>
 <li>seaborn &#8211; 0.7</li>
-<li>pysam &#8211; 0.8.4</li>
+<li>pysam &#8211; 0.9.1</li>
 <li>intervaltree &#8211; 2.1.0</li>
 </ul>
 </div>
@@ -227,7 +227,7 @@ RNA-sequencing data. A binary version of Tophat2 can be downloaded from the
 Tophat <a class="reference external" href="https://ccb.jhu.edu/software/tophat/index.shtml">website</a>.
 After unpacking, make sure that the Tophat2 binary is available in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
 <p>Alternatively, Tophat2 can also be installed using bioconda:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">tophat</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">tophat</span>
 </pre></div>
 </div>
 <p>Tophat2 can also be installed using <a class="reference external" href="http://brew.sh">homebrew</a> or
@@ -241,7 +241,7 @@ homebrew or linuxbrew and then install Tophat2 using:</p>
 version from the <a class="reference external" href="http://bowtie-bio.sourceforge.net/index.shtml">bowtie website</a> and ensuring that bowtie
 is available in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
 <p>Bowtie can also be installed using bioconda:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">bowtie</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">bowtie</span>
 </pre></div>
 </div>
 <p>Or using homebrew/linuxbrew:</p>
@@ -257,7 +257,7 @@ enabling the detection of gene-transposon fusions. STAR can be downloaded
 from the <a class="reference external" href="https://github.com/alexdobin/STAR">STAR GitHub repository</a>. After unpacking, make sure that the
 STAR binary is available in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
 <p>STAR can also be installed using bioconda:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">star</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">star</span>
 </pre></div>
 </div>
 <p>Or using homebrew/linuxbrew:</p>
@@ -274,7 +274,7 @@ from <a class="reference external" href="http://subread.sourceforge.net">sourcef
 unpacking the correct binary version for your machine, make sure the binary
 featureCounts is available in PATH.</p>
 <p>Subread can also be installed using bioconda:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">subread</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">subread</span>
 </pre></div>
 </div>
 <p>Or by using <a class="reference external" href="http://brew.sh">homebrew</a> or <a class="reference external" href="http://linuxbrew.sh">linuxbrew</a>
