@@ -1,9 +1,9 @@
 package:
-  name: im-fusion
-  version: {{ environ.get('GIT_DESCRIBE_TAG', '')[1:] }}
+  name: imfusion
+  version: 0.2.0
 
 build:
-  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
+  number: 0
 
 source:
   path: ../
@@ -12,62 +12,64 @@ requirements:
   build:
     - setuptools
 
-    # Basic dependencies.
+    # Python dependencies.
     - python
     - future
     - pandas
     - numexpr
-    - pysam ==0.8.4
+    - pysam >=0.9.1
     - toolz
     - scipy
     - seaborn
-    - pyfaidx
+    - pyfaidx >=0.4.8.1
     - intervaltree
     - pathlib2 # [py27]
+    - typing # [py27]
     - r
-    - rpy2
+    - rpy2 >=2.7.4
+    - htslib <1.4
 
   run:
-    # Basic dependencies.
+    # Python dependencies.
     - python
     - intervaltree
     - future
     - pandas
     - numexpr
-    - pysam ==0.8.4
+    - pysam >=0.9.1
     - toolz
     - scipy
     - seaborn
-    - pyfaidx
+    - pyfaidx >=0.4.8.1
     - intervaltree
     - pathlib2 # [py27]
+    - typing # [py27]
     - r
-    - rpy2
+    - rpy2 >=2.7.4
+    - htslib <1.4
 
-    # Bioconda dependencies.
-    - tophat
-    - bowtie
+    # External dependencies.
+    - star
     - subread
+    - stringtie
+    - tophat2 # [py27]
+    - bowtie # [py27]
 
 test:
   imports:
     - imfusion
 
   commands:
-    - im-fusion -h
-    - tophat --version
+    - imfusion-build -h
+    - imfusion-insertions -h
+    - imfusion-expression -h
+    - imfusion-merge -h
+    - imfusion-ctg -h
+    - STAR --version
     - featureCounts -v
-    - py.test $SRC_DIR
-
-  requires:
-    - mock
-    - pytest
-    - pytest-datafiles
-    - pytest-mock
-    - pytest-helpers-namespace
 
 about:
-  home: https://github.com/jrderuiter/im-fusion
+  home: https://github.com/jrderuiter/imfusion
   license: MIT
   summary: "IM-Fusion - Tool for identifying transposon insertions
     and their effects from RNA-sequencing data"

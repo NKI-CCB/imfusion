@@ -1,9 +1,12 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Script for merging insertion and expression datasets."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
-import logging
+import argparse
 
 try:
     from pathlib import Path
@@ -11,45 +14,63 @@ except ImportError:
     from pathlib2 import Path
 
 from imfusion.merge import merge_samples
+from imfusion.model import Insertion
 
 
-def setup_parser(subparsers):
-    subparser = subparsers.add_parser('merge')
+def main():
+    """Main function of im-fusion-merge."""
 
-    subparser.add_argument('--base_dir', type=Path, required=True,
-                           help='Path to a base directory that contains '
-                                'outputs for individual samples as ' 'sub-directories.')
-    subparser.add_argument('--output_base', type=Path, required=True,
-                           help='Base name of the merged output files.')
-    subparser.add_argument('--samples', nargs='+', default=None,
-                           help='IDs of samples to subset the output to.')
-    subparser.add_argument('--no_expression', default=True,
-                           dest='with_expression', action='store_false',
-                           help='Don\'t include expression counts.')
+    args = _parse_args()
 
-    subparser.set_defaults(main=main)
+    # Use directory names to name samples if no names given.
+    names = args.names or [fp.name for fp in args.sample_dirs]
+
+    # Merge samples into single dataset.
+    merged_ins, merged_expr = merge_samples(
+        args.sample_dirs,
+        sample_names=names,
+        with_expression=args.output_expression is not None)
+
+    # Write output(s).
+    Insertion.to_csv(str(args.output), merged_ins, sep='\t', index=False)
+
+    if args.output_expression is not None:
+        merged_expr.to_csv(str(args.output_expression), sep='\t', index=True)
 
 
-def main(args):
-    """Merges insertions from different samples into a single file."""
+def _parse_args():
+    """Parses command-line arguments for im-fusion-merge."""
 
-    logger = logging.getLogger()
+    parser = argparse.ArgumentParser()
 
-    # Get sample paths.
-    sample_dirs = [fp.parent for fp in args.base_dir.glob('**/insertions.txt')]
-    logger.info('Found %s input sample(s)', len(sample_dirs))
+    parser.add_argument(
+        '--sample_dirs',
+        type=Path,
+        nargs='+',
+        required=True,
+        help='Path to sample directories.')
 
-    # Read and merge insertions.
-    logger.info('Merging samples')
-    merged_ins, merged_counts = merge_samples(
-        sample_dirs, samples=args.samples,
-        with_expression=args.with_expression)
+    parser.add_argument(
+        '--output',
+        type=Path,
+        required=True,
+        help='Output path for merged insertion file.')
 
-    # Write outputs.
-    logger.info('Writing outputs')
-    ins_out_path = args.output_base.with_suffix('.insertions.txt')
-    merged_ins.to_csv(str(ins_out_path), sep='\t', index=False)
+    parser.add_argument(
+        '--names',
+        nargs='+',
+        required=False,
+        default=None,
+        help='Alternative sample names to use for samples in merged dataset.')
 
-    if args.with_expression:
-        exon_out_path = args.output_base.with_suffix('.exon_counts.txt')
-        merged_counts.to_csv(str(exon_out_path), sep='\t', index=True)
+    parser.add_argument(
+        '--output_expression',
+        type=Path,
+        default=None,
+        help='Output path for merged expression file.')
+
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    main()

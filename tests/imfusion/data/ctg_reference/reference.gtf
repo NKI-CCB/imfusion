@@ -1,0 +1,3 @@
+1	protein_coding	gene	8	10	.	+	.	gene_id "gene_a"
+1	protein_coding	gene	30	40	.	+	.	gene_id "gene_b"
+2	protein_coding	gene	10	20	.	-	.	gene_id "gene_c"

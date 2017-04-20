@@ -1,95 +1,112 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Implements functions for merging datasets from multiple samples."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
-import collections
+from typing import Iterable, Optional, Tuple
+import itertools
+
+try:
+    import pathlib
+except ImportError:
+    import pathlib2 as pathlib
+
 import pandas as pd
+import toolz
 
-from imfusion.expression.util import read_exon_counts
+from imfusion.expression import read_exon_counts
 from imfusion.model import Insertion
 
 
-def merge_samples(dir_paths, samples=None, with_expression=True):
-    """Merges samples in dir_paths to a single insertions/exon counts frame.
+def merge_samples(
+        dir_paths,  # type: Iterable[pathlib.Path]
+        sample_names=None,  # type: List[str]
+        with_expression=True  # type: bool
+):  # type: (...) -> Tuple[Iterable[Insertion], Optional[pd.DataFrame]]
+    """Merges samples in dir_paths to a single set of insertions and counts.
 
     Parameters
     ----------
     dir_paths : List[pathlib.Path]
         Paths to the sample directories.
     samples : List[str]
-        Samples to subset the results to.
+        Names to use the merged samples.
     with_expression : bool
-        Whether to include expression.
+        Whether to also merge expression counts (assumes that expression.txt
+        files have been generated using imfusion-expression).
 
     Returns
     -------
-    tuple(pandas.DataFrame, pandas.DataFrame)
+    Tuple[pandas.DataFrame, pandas.DataFrame]
         Two DataFrames respectively containing the merged insertions
         and the merged exon counts. If with_expression is False, the
         merged counts frame is returned as None.
 
     """
 
+    # Use directory names as sample names if none given.
+    if sample_names is None:
+        sample_names = [dp.name for dp in dir_paths]
+
+    # Check for duplicate names.
+    if len(sample_names) != len(set(sample_names)):
+        raise ValueError('Sample names contains duplicates')
+
     # Merge insertions.
     ins_paths = [dp / 'insertions.txt' for dp in dir_paths]
-    ins_frames = [Insertion.read_frame(ip) for ip in ins_paths]
-    merged_insertions = merge_insertion_frames(ins_frames)
+    ins_groups = (Insertion.from_csv(fp, sep='\t') for fp in ins_paths)
+    merged_insertions = merge_insertions(ins_groups, sample_names)
 
     # Merge counts.
     if with_expression:
-        count_paths = [dp / 'exon_counts.txt' for dp in dir_paths]
-        count_frames = [read_exon_counts(cp) for cp in count_paths]
-        merged_counts = merge_exon_counts(count_frames)
+        count_paths = [dp / 'expression.txt' for dp in dir_paths]
+        count_frames = (read_exon_counts(cp) for cp in count_paths)
+        merged_counts = merge_exon_counts(count_frames, sample_names)
     else:
         merged_counts = None
-
-    # Subset to samples if given.
-    if samples is not None:
-        merged_insertions = merged_insertions.ix[
-            merged_insertions['sample_id'].isin(samples)]
-        merged_counts = merged_counts[samples]
 
     return merged_insertions, merged_counts
 
 
-def merge_insertion_frames(insertion_frames):
-    """Merges insertion frames into a single frame."""
+def merge_insertions(insertion_groups, sample_names):
+    # type: (Iterable[Iterable[Insertion]], List[str]) -> Iterable[Insertion]
+    """Merges insertions from different samples."""
 
-    # Check for duplicate samples.
-    seen_samples = set()
-    for frame in insertion_frames:
-        frame_samples = set(frame['sample_id'])
-        overlap = frame_samples & seen_samples
+    # Check for duplicate names.
+    if len(sample_names) != len(set(sample_names)):
+        raise ValueError('Sample names contains duplicates')
 
-        if len(overlap) > 0:
-            raise ValueError('Duplicate samples ({})'
-                             .format(', '.join(overlap)))
+    # Merge renamed insertions into single generator.
+    sample_ins = (_apply_sample_name(grp, sample)
+                  for (grp, sample) in zip(insertion_groups, sample_names))
+    merged = itertools.chain.from_iterable(sample_ins)
 
-        seen_samples = seen_samples | frame_samples
-
-    # Merge insertions.
-    merged = pd.concat(insertion_frames, ignore_index=True)
-
-    # Augment original ids with sample names to keep them unique.
-    merged['id'] = (merged['sample_id'] + '.' + merged['id'])
-
-    return merged
+    # Yield result.
+    for insertion in merged:
+        yield insertion
 
 
-def merge_exon_counts(count_frames):
+def _apply_sample_name(insertions, sample_name):
+    # type: (Iterable[Insertion], str) -> Iterable[Insertion]
+    for ins in insertions:
+        new_metadata = toolz.merge(ins.metadata, {'sample': sample_name})
+        yield ins._replace(id='{}.{}'.format(sample_name, ins.id),
+                           metadata=new_metadata) # yapf: disable
+
+
+def merge_exon_counts(count_frames, sample_names):
+    # type: (Iterable[pd.DataFrame], List[str]) -> pd.DataFrame
     """Merges expression count frames into a single frame."""
+
+    # Check for duplicate names.
+    if len(sample_names) != len(set(sample_names)):
+        raise ValueError('Sample names contains duplicates')
 
     # Merge counts.
     merged = pd.concat(count_frames, axis=1)
-
-    # Check for duplicate samples.
-    col_counts = collections.Counter(merged.columns)
-    duplicates = {sample: count for sample, count in col_counts.items()
-                  if count > 1}
-
-    if len(duplicates) > 0:
-        raise ValueError('Duplicate samples ({})'
-                         .format(', '.join(duplicates.keys())))
+    merged.columns = sample_names
 
     return merged

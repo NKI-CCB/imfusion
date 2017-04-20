@@ -1,4 +1,0 @@
-# Program:featureCounts v1.4.6-p5; Command:"featureCounts" "-a" "/home/NFS/users/j.d.ruiter/references/mus_musculus/mm10/gtf/Mus_musculus.GRCm38.76.gtf" "-o" "./counts.txt" "a.bam" "b.bam"
-Geneid	Chr	Start	End	Strand	Length	a.bam	b.bam
-ENSMUSG00000090025	1	3054233	3054733	+	501	0	1
-ENSMUSG00000064842	1	3102016	3102125	+	110	0	0

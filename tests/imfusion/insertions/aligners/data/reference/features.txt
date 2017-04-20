@@ -1,0 +1,6 @@
+name	start	end	strand	type
+LTR	597	997	1
+polyA	1234	1284	-1
+SA	323	428	1	SA
+SD	1007	1184	1	SD
+En2SA	1479	1824	-1	SA

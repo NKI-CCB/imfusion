@@ -1,60 +1,99 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Provides functionality for interacting with shell calls and arguments."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
-import itertools
-import re
+import os
+import subprocess
+from typing import Any, Iterable, Optional
 
-
-def format_kwargs(kwargs):
-    fmt_kwargs = map(lambda kv: _format_kwarg(*kv), kwargs.items())
-    filtered_kwargs = filter(bool, fmt_kwargs)
-    flattened_kwargs = itertools.chain.from_iterable(filtered_kwargs)
-    return map(str, flattened_kwargs)
+import pyparsing as pp
 
 
-def _format_kwarg(key, value, delimiter=' '):
-    fmt_kwarg = None
-    if type(value) == bool:
-        if value:
-            fmt_kwarg = (key,)
-    elif value is not None:
-        if delimiter == ' ':
-            fmt_kwarg = key, value
+def run_command(args, stdout=None, stderr=None, logger=None, **kwargs):
+    # type(List[str], Any, Any, Any, **Any) -> None
+    """Runs command using subprocess.check_call, with extra logging options."""
+    if logger is not None:
+        logger.info('Running command: %s', ' '.join(args))
+    subprocess.check_call(args, stdout=stdout, stderr=stderr, **kwargs)
+
+
+def parse_arguments(arg_str):
+    # type: (List[str]) -> Dict[str, Iterable[str]]
+    """Parses command line arguments from a string."""
+
+    parser = _setup_parser()
+    parsed = parser.parseString(arg_str)
+
+    return dict(parsed.asList())
+
+
+def _setup_parser():
+    arg_prefix = pp.Literal('-')
+    arg_prefix2 = pp.Literal('--')
+
+    arg_name = pp.Word(pp.alphanums)
+
+    non_shell_chars = pp.alphanums + ':/*%_'
+    arg_value = pp.Word(non_shell_chars)
+
+    argument = (
+        pp.Or([arg_prefix, arg_prefix2]) + arg_name + pp.ZeroOrMore(arg_value))
+    argument.setParseAction(
+        lambda tokens: (tokens[0] + tokens[1], tuple(tokens[2:])))
+
+    argument_list = pp.ZeroOrMore(argument)
+
+    return argument_list
+
+
+def flatten_arguments(arg_dict):
+    # type: (Dict[str, Iterable[Any]]) -> List[str]
+    """Flattens a dict of arguments into a list for subprocess."""
+
+    args = []  # type: List[str]
+
+    for arg_name, arg_value in sorted(arg_dict.items()):
+        if isinstance(arg_value, bool):
+            args += [arg_name]
+        elif hasattr(arg_value, '__iter__') and not isinstance(arg_value, str):
+            args += [arg_name] + list(arg_value)
         else:
-            fmt_kwarg = (delimiter.join((key, value)), )
-    return fmt_kwarg
+            args += [arg_name, str(arg_value)]
+
+    return args
 
 
-def parse_kwarg_str(kwarg_str):
-    # Pad kwarg_str with space, used to avoid recognizing
-    # '-' in between words as a separator.
-    kwarg_str = ' ' + kwarg_str
+def which(program):
+    # type: (str) -> Optional[str]
+    """Determine the location of given executable, if present."""
 
-    # Split into separate arg entries.
-    arg_list = re.split(r'\s+(-{1,2})', kwarg_str)[1:]
-    arg_list = (a + b for a, b in grouped(arg_list, 2))
+    def _is_execuable(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
-    # Process entries into k, v entries in dict.
-    kwargs = {}
-    for arg in arg_list:
-        kv = arg.split()
+    fpath, _ = os.path.split(program)
+    if fpath:
+        if _is_execuable(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if _is_execuable(exe_file):
+                return exe_file
 
-        if len(kv) == 1:
-            kwargs[kv[0]] = True
-        elif len(kv) == 2:
-            kwargs[kv[0]] = kv[1]
-        else:
-            raise NotImplementedError(
-                'Multiple argument values are not yet supported.')
-
-    return kwargs
+    return None
 
 
-def grouped(iterable, n):
-    """ s -> (s0,s1,s2,...sn-1),
-            (sn,sn+1,sn+2,...s2n-1),
-            (s2n,s2n+1,s2n+2,...s3n-1), ...
-    """
-    return zip(*[iter(iterable)]*n)
+def check_dependencies(programs):
+    # type: (Iterable[str]) -> None
+    """Checks if listed executables are all available in $PATH."""
+
+    missing = [prog for prog in programs if which(prog) is None]
+
+    if len(missing) > 0:
+        raise ValueError('Missing required external dependencies: {}'
+                         .format(', '.join(missing)))

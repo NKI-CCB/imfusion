@@ -1,129 +1,101 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Tests for imfusion.expression.counts module."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
+
+import shutil
 
 try:
     from pathlib import Path
 except ImportError:
     from pathlib2 import Path
 
-import mock
 import pytest
 
 from imfusion.expression import counts
 
-# pylint: disable=redefined-outer-name, no-self-use,too-few-public-methods
+# pylint: disable=no-self-use,redefined-outer-name
+
+# Disable E1101 checks which stumble on pandas classes.
+# pylint: disable=E1101
 
 
 @pytest.fixture
-def fc_kws(tmpdir):
+def fc_counts(tmpdir):
+    """Example exon count output file from featureCounts."""
+
+    # Copy file into place.
+    src = pytest.helpers.data_path('fc_counts.txt', relative_to=__file__)
+    dest = tmpdir / 'counts.txt'
+    shutil.copy(str(src), str(dest))
+
+    # Return copied file path.
+    return dest
+
+
+@pytest.fixture
+def count_kws(tmpdir):
+    """Basic keyword arguments for generate_exon_counts."""
+
     return {
         'bam_files': [Path('a.bam'), Path('b.bam')],
-        'gff_path': Path('/path/to/gff'),
-        'names': {'a.bam': 'a', 'b.bam': 'b'},
-        'tmp_dir': Path(str(tmpdir / 'counts'))
+        'gtf_path': Path('/path/to/gtf'),
+        'names': {
+            'a.bam': 'a',
+            'b.bam': 'b'
+        },
+        'tmp_dir': tmpdir
     }
 
 
-@pytest.fixture
-def gene_counts_path():
-    return pytest.helpers.data_path('gene_counts.txt', relative_to=__file__)
+class TestGenerateExonCounts(object):
+    """Tests for the generate_exon_counts function."""
 
+    def test_example(self, count_kws, fc_counts, mocker):
+        """Tests function using example output file from feature counts."""
 
-@pytest.fixture
-def gene_counts(gene_counts_path, fc_kws):
-    return counts.read_feature_counts(gene_counts_path, names=fc_kws['names'])
+        # Mock and copy result into place.
+        mock = mocker.patch.object(counts.subprocess, 'check_output')
 
+        # Call function.
+        exon_counts = counts.generate_exon_counts(**count_kws)
 
-class TestFeatureCounts(object):
+        # Check call + result.
+        mock.assert_called_once_with([
+            'featureCounts', '--minOverlap', '1', '-O', '-f', '-t',
+            'exonic_part', '-a', '/path/to/gtf', '-o', str(fc_counts), 'a.bam',
+            'b.bam'
+        ])
 
-    def test_example(self, fc_kws, gene_counts):
-        with mock.patch('subprocess.check_output') as call:
-            with mock.patch.object(counts, 'read_feature_counts',
-                                   return_value=gene_counts):
-                fcounts = counts.feature_counts(**fc_kws)
-
-        # Check args.
-        expected_args = (['featureCounts',
-                          '-a', str(fc_kws['gff_path']),
-                          '-o', str(fc_kws['tmp_dir'] / 'counts.txt')] +
-                         list(map(str, fc_kws['bam_files'])))
-        call.assert_called_once_with(expected_args)
-
-        # Check shape of results.
-        assert fcounts.shape[0] > 0
-        assert list(fcounts.columns[-2:]) == ['a', 'b']
-
-        # Check if tmpdir was removed.
-        assert not fc_kws['tmp_dir'].exists()
-
-    def test_read_counts(self, gene_counts_path):
-        fcounts = counts.read_feature_counts(gene_counts_path)
-
-        # Check shape of results.
-        assert fcounts.shape[0] > 0
-        assert list(fcounts.columns[-2:]) == ['a.bam', 'b.bam']
-
-    def test_read_counts_rename(self, gene_counts_path, fc_kws):
-        fcounts = counts.read_feature_counts(
-            gene_counts_path, names=fc_kws['names'])
-
-        # Check shape of results.
-        assert fcounts.shape[0] > 0
-        assert list(fcounts.columns[-2:]) == ['a', 'b']
-
-
-class TestGeneCounts(object):
-
-    def test_example(self, fc_kws, gene_counts):
-        with mock.patch.object(counts, 'feature_counts',
-                               return_value=gene_counts) as mock_fc:
-            result = counts.gene_counts(**fc_kws)
-
-            mock_fc.assert_called_once_with(
-                fc_kws['bam_files'],
-                fc_kws['gff_path'],
-                names=fc_kws['names'],
-                extra_kws={},
-                tmp_dir=fc_kws['tmp_dir'])
-
-            # Check result shape.
-            assert result.shape == (2, 2)
-            assert list(result.columns) == ['a', 'b']
-            assert result.index.name == 'gene_id'
+        assert exon_counts.shape == (7, 2)
+        assert list(exon_counts.columns) == ['a', 'b']
 
 
 @pytest.fixture
 def exon_counts_path():
+    """Example exon counts file."""
     return pytest.helpers.data_path('exon_counts.txt', relative_to=__file__)
 
 
-@pytest.fixture
-def exon_counts(exon_counts_path, fc_kws):
-    return counts.read_feature_counts(exon_counts_path, names=fc_kws['names'])
+class TestReadExonCounts(object):
+    """Tests for the read_exon_counts function."""
 
+    def test_example(self, exon_counts_path):
+        """Tests reading example output from the generate_exon_counts test."""
 
-class TestExonCounts(object):
+        exon_counts = counts.read_exon_counts(exon_counts_path)
 
-    def test_example(self, fc_kws, exon_counts):
-        with mock.patch.object(counts, 'feature_counts',
-                               return_value=exon_counts) as mock_fc:
-            result = counts.exon_counts(**fc_kws)
+        assert exon_counts.shape == (7, 2)
+        assert list(exon_counts.columns) == ['a', 'b']
 
-            mock_fc.assert_called_once_with(
-                fc_kws['bam_files'],
-                fc_kws['gff_path'],
-                names=fc_kws['names'],
-                tmp_dir=fc_kws['tmp_dir'],
-                extra_kws={
-                    '-t': 'exonic_part',
-                    '-O': True,
-                    '-f': True,
-                    '--minOverlap': '1'})
+    def test_example_with_gene_id(self, exon_counts_path):
+        """Tests filtering for a given gene id."""
 
-            # Check result shape.
-            assert result.shape == (2, 2)
-            assert list(result.columns) == ['a', 'b']
-            assert result.index.names == ['gene_id', 'chr', 'start',
-                                          'end', 'strand']
+        exon_counts = counts.read_exon_counts(
+            exon_counts_path, gene_id='ENSMUSG00000051951')
+
+        assert exon_counts.shape == (5, 2)
+        assert list(exon_counts.columns) == ['a', 'b']

@@ -1,0 +1,45 @@
+from os import path
+import pandas as pd
+
+def get_samples(sample_def_path):
+    sample_def = pd.read_csv(sample_def_path, sep='\t')
+    names = [n.split('.')[0] for n in sample_def['name']]
+    return list(set(names))
+
+def get_fastq_path(sample_def_path, sample, base_dir='fastq'):
+    sample_def = pd.read_csv(sample_def_path, sep='\t', index_col=0)
+    file_name = sample_def.ix[sample, 'source']
+    return os.path.join(base_dir, file_name)
+
+configfile: 'star.yml'
+
+rule all:
+    input: expand('output/{sample}/insertions.txt', sample=get_samples(config['samples']))
+
+rule identify_insertions:
+    input: lambda wc: get_fastq_path(config['samples'], wc.sample)
+    output:
+        insertions='output/{sample}/insertions.txt',
+        alignment='output/{sample}/alignment.bam'
+    params:
+        index=config['identify_insertions']['reference_index'],
+        ref_gtf=config['identify_insertions']['reference_gtf'],
+        tr_name=config['identify_insertions']['transposon_name'],
+        tr_features=config['identify_insertions']['transposon_features'],
+        options=config['identify_insertions']['options'] or '',
+        output_dir='output/{sample}'
+    resources:
+        memory=30
+    threads: config['identify_insertions']['threads']
+    log: 'output/{sample}/logs/insertions.log'
+    shell:
+        'im-fusion insertions star'
+        ' --fastq {input}'
+        ' --reference_index {params.index}'
+        ' --reference_gtf {params.ref_gtf}'
+        ' --transposon_name {params.tr_name}'
+        ' --transposon_features {params.tr_features}'
+        ' --output_dir {params.output_dir}'
+        ' --star_threads {threads}'
+        ' --assemble'
+        ' {params.options} > {log} 2>&1'

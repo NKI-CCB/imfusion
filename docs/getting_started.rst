@@ -1,226 +1,77 @@
 Getting started
 ===============
 
-Building a reference
---------------------
 
-Before detecting insertion sites, IM-Fusion first needs to build an
-augmented version of the host reference genome that contains the
-sequence of the transposon as additional sequence. This augmented reference
-is created using **im-fusion build**, which essentially concatenates
-the host reference genome and the transposon sequence (both in Fasta
-format) into a new Fasta file and builds any indices needed for the
-alignment to the augmented reference.
+Overview
+--------
 
-The basic command for **im-fusion build** is:
+An IM-Fusion analysis consists of the following steps:
 
-.. code:: bash
+    1. **Building a reference** - An augmented reference genome is created,
+       which contains both the host reference sequence and the transposon
+       sequence. This reference genome is also indexed for use in alignment.
+    2. **Identifying insertions** - Insertions are identified (per sample)
+       using one of the fusion-aware aligners (currently STAR or
+       Tophat-Fusion), which are used to align reads to the reference genome
+       and identify gene-transposon fusions from chimeric read alignments.
+       These fusions are analyzed to identify the corresponding transposon
+       insertions.
+    3. **Quantifying exon expression** - Exon level expression counts are
+       generated (per sample) using the RNA-seq alignment from the previous
+       step. These counts can be used to (interactively) visualize insertions
+       together with the expression of affected genes, or to test for the
+       differential expression of candidate genes identified in Step 5.
+    4. **Merging samples** - Insertions and expression counts from multiple
+       samples are merged into a single dataset, which is more convenient for
+       downstream analyses.
+    5. **Selecting (DE) CTGs** - The merged dataset is analyzed to identify
+       Commonly Targeted Genes (CTGs) – genes that are more frequently affected
+       by insertions (across samples) than would be expected by chance. The
+       exon expression counts are used to test whether the expression of CTGs
+       is significantly affected by their insertions. This provides an
+       additional 'biological' filter, allowing us to specifically select for
+       these differentially expressed CTGs (DE CTGs), which are more likely to
+       have a true biological effect.
 
-    im-fusion build --reference_seq ./reference.fa \
-                    --reference_gtf ./reference.gtf \
-                    --transposon_sequence ./transposon.fa \
-                    --output ./augmented.fa
+Each of these steps is implemented using a dedicated command. For more details
+on the individual steps and their commands, see :doc:`usage`. Additionally,
+supporting code is provided for interactive analyses (such as plotting
+differential expression) and manually running certain steps of the pipeline.
+For more details, see :doc:`api`.
 
-Here, the *reference_seq* argument points to a fasta file containing
-the sequence of the reference genome, *reference_gtf* points to the gtf
-file containing the reference gene features and *transposon.fa* points to
-the transposon sequence. The augmented reference is written to the path
-specified by *output*.
+Required files
+--------------
 
-Optionally, specific genomic regions can be blacklisted as follows:
+IM-Fusion does not require any special preparation for sequencing and should
+be applicable to standard RNA-sequencing data, as long as these data are not
+somehow depleted for the transposon sequences. Both single- and paired-end
+sequencing data is supported, although paired-end data is likely to provide
+more sensitivity in the results.
 
-.. code:: bash
+For building a reference, the following files are required:
 
-    im-fusion build --reference_seq reference.fa \
-                    --reference_gtf reference.gtf \
-                    --transposon_seq transposon.fa \
-                    --blacklist_regions 13:31623816-31633406 \
-                    --output ./augmented.fa
+    - The reference genome sequence, in Fasta format.
+    - The reference gene features, adhering to Ensembl's GTF format.
+    - The transposon sequence, in Fasta format.
+    - A tab-separated file describing the different features of the transposon.
 
-Blacklisting is used to avoid remove sequences that are homologous between
-the reference and the transposon sequence, which present issues during
-the read alignment. These homologous sequences typically are the result
-of re-using endogeneous splice acceptor/donor sequences for the construction
-of the transposon.
+The transposon feature file describes the locations of the splice-donor and
+splice-acceptor sites that are present in the transposon. The file should
+contain the following columns: name, start, end, strand and type; with each
+row describing a single feature. The first four of these columns describe the
+name, location and orientation of each feature. The last column specifies the
+type of the feature, which should be either ‘SD’ or ‘SA’ for splice-donor or
+splice-acceptor sites respectively. The field may also be left empty for other
+types of features, however these features will not be used by IM-Fusion.
 
-Alternatively, entire genes may be blacklisted using their IDs:
-
-.. code:: bash
-
-    im-fusion build --reference_sequence reference.fa \
-                    --reference_gtf reference.gtf \
-                    --transposon_seq transposon.fa \
-                    --blacklist_genes ENSMUSG00000039095 \
-                    --output ./augmented.fa
-
-For a more detailed description and additional arguments,
-see :ref:`imfusion-build-usage`.
-
-Analyzing individual samples
-----------------------------
-
-Detecting insertions
-~~~~~~~~~~~~~~~~~~~~
-
-Transposon insertions are detected for each sample individually using the
-command **im-fusion insertions**. This command essentially runs Tophat2 to
-align the RNA-seq reads and identify gene fusions, extracts gene-transposon
-fusions from the result and derives the corresponding insertions. The
-insertions are written as the tab-separated file *insertions.txt* in
-the output directory.
-
-The basic command for **im-fusion insertions** is:
-
-.. code:: bash
-
-    im-fusion insertions --fastq sample_s1.R1.fastq.gz \
-                         --reference_index augmented \
-                         --reference_gtf reference.gtf \
-                         --transposon_name T2Onc2 \
-                         --transposon_features T2Onc2.features.txt \
-                         --output_dir ./output/s1 \
-                         --sample_id s1
-
-The *fastq* argument should specify paths to the fastq file files containing
-the RNA-seq reads for the given sample. For paired-end samples, the
-corresponding second pair should be provided in the same order using the
-optional *fastq2* argument. The argument *reference_index* should point to
-the bowtie index of the augmented reference genome, *reference_gtf* to
-the reference gene gtf file and *tranposon_name* should reflect the name of
-the transposon sequence. The *output_dir* argument specifies where the
-sample output should be written.
-
-The *transposon_features* argument should specify the path to a TSV file
-describing the different features of the used transposon. The file should
-contain the columns 'name', 'start', 'end', 'strand' and 'type'.
-Start, end and strand are used to define the position and orientation of the
-features. The type column indicates whether a feature represents a splice
-acceptor or donor feature and should contain only SA, SD or empty values. See
-the data directory on Github for some examples.
-
-For a more detailed description and additional arguments,
-see :ref:`imfusion-insertions-usage`.
-
-Quantifying expression
-~~~~~~~~~~~~~~~~~~~~~~
-
-After detecting insertions, we use **im-fusion expression** to quantify
-exon expression for the given sample using the generated RNA-seq alignment.
-The counts are generated using the **featureCounts** tool, which must be
-available in PATH.
-
-The basic command is as follows:
-
-.. code:: bash
-
-    im-fusion expression --sample_dir ./output/s1 \
-                         --exon_gtf exons.gtf \
-                         --sample_id s1
-
-Here, the *exon_gtf* argument refers to a gtf file containing the flattened
-exon representation of previously used reference gtf. The
-*input_dir* argument should point to a sample directory (which was previously
-generated by **im-fusion insertions**). The generated counts are written to
-this sample directory as the TSV file *exon_counts.txt*.
-
-The easiest way to generate the required exon gtf file is to generate
-it from the previously used reference.gtf file using the
-dexseq_prepare_annotation.py script from
-`DEXSeq <http://bioconductor.org/packages/release/bioc/html/DEXSeq.html>`_.
-After extracting the script from the DEXSeq package, the exon gtf can be
-generated using the following command:
+Finally, for generating the exon-level expression counts, IM-Fusion needs a
+flattened exon representation of the reference gene features (in GTF format).
+This file is most easily generated from the reference gene features using the
+``dexseq_prepare_annotation.py`` script from DEXSeq_. Using this script,
+the exon gtf file can be generated as follows:
 
 .. code:: bash
 
     python dexseq_prepare_annotation.py --aggr no reference.gtf exons.gtf
 
-For a more detailed description and additional arguments,
-see :ref:`imfusion-expression-usage`.
-
-Identifying candidate genes
----------------------------
-
-Merging sample results
-~~~~~~~~~~~~~~~~~~~~~~
-
-To detect genes that are recurrently mutated across samples, we first merge
-the individual sample results into a combined dataset using **im-fusion merge**.
-This command effectively concatenates the individual results into combined
-*insertions.txt* and *exon_counts.txt* files.
-
-The basic command is as follows:
-
-.. code:: bash
-
-    im-fusion merge --base_dir ./output \
-                    --output_base ./output/merged
-
-The argument *base_dir* refers to a directory that contains the output
-for individual samples as sub-directories. Any sub-directories containing
-an *insertions.txt* file are taken as a sample directory.  The argument
-*output_base* specifies the basename for the merged outputs.
-
-Specific sets of samples can be selected using the *samples* argument:
-
-.. code:: bash
-
-    im-fusion merge --base_dir ./output \
-                    --output_base ./output/merged \
-                    --samples s1 s2 s3
-
-For a more detailed description and additional arguments,
-see :ref:`imfusion-merge-usage`.
-
-Selecting (DE) CTGs
-~~~~~~~~~~~~~~~~~~~
-
-To select candidate genes, we use **im-fusion ctg** to identify differentially
-expressed CTGs from the combined dataset generated by **im-fusion merge**.
-In essence, the **ctg** command first applies the CTG signifiance test to
-identify a list of possible candidate genes and then tests each of the genes for differential expression to narrow down the list.
-
-The basic command is as follows:
-
-.. code:: bash
-
-    im-fusion ctg --insertions ./output/merged.insertions.txt  \
-                  --expression ./output/merged.exon_counts.txt \
-                  --reference_seq ./reference.fa \
-                  --reference_gtf ./reference.gtf \
-                  --exon_gtf ./exons.gtf \
-                  --output ctgs.txt
-
-Here, *insertions* and *expression* should point to the merged insertions
-and expression files generated by **im-fusion merge**. The argument
-*reference_seq* should refer to the reference fasta file, *reference_gtf* to
-the reference gtf file, *exon_gtf* to the flattened exon gtf file used for
-**imfusion expression** and *output* specifies the output file to which
-CTGs will be written.
-
-The significance thresholds for the CTG and DE tests can be specified
-using the arguments *threshold* and *de_threshold*:
-
-.. code:: bash
-
-    im-fusion ctg --insertions ./output/merged.insertions.txt  \
-                  --expression ./output/merged.exon_counts.txt \
-                  --reference_seq ./reference.fa \
-                  --reference_gtf ./reference.gtf \
-                  --exon_gtf ./exons.gtf \
-                  --output ctgs.txt \
-                  --threshold 0.05 \
-                  --de_threshold 0.05
-
-Optionally, the differential expression test can be skipped by not providing
-the expression file. In this case, only the CTG test is performed:
-
-.. code:: bash
-
-    im-fusion ctg --insertions ./merged.insertions.txt  \
-                  --reference_seq ./reference.fa \
-                  --reference_gtf ./reference.gtf \
-                  --output ctgs.txt \
-                  --threshold 0.05 \
-
-For a more detailed description and additional arguments,
-see :ref:`imfusion-ctg-usage`.
+.. _dexseq: http://bioconductor.org/packages/release/bioc/html/DEXSeq.html

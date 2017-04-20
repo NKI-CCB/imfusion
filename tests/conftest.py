@@ -1,18 +1,21 @@
-pytest_plugins = ['helpers_namespace']
+import os
 
 try:
     from pathlib import Path
 except ImportError:
     from pathlib2 import Path
 
-import pytest
+pytest_plugins = ['helpers_namespace']
 
+import pytest
 
 BASE_DIR = Path(__file__).parent
 
 
 @pytest.helpers.register
 def data_path(relative_path, relative_to=None):
+    """Returns data path to test file."""
+
     if relative_to is None:
         # Use BASE_DIR as default.
         relative_to = BASE_DIR
@@ -33,21 +36,24 @@ def mock_call(mock_obj, index=0):
     return args, kwargs
 
 
-@pytest.fixture
-def reference_seq_path():
-    return pytest.helpers.data_path('reference.fa')
+# For some reason, mock.ANY would not work.
+# Using own implementation for now.
+@pytest.helpers.register
+def mock_any(cls):
+    """Returns Any class to use in mock."""
+
+    class Any(cls):
+        """Any class used for mocks."""
+
+        def __eq__(self, other):
+            return True
+
+    return Any()
 
 
-@pytest.fixture
-def transposon_seq_path():
-    return pytest.helpers.data_path('transposon.fa')
-
-
-@pytest.fixture
-def reference_gtf_path(gtf_path):
-    return gtf_path
-
-
-@pytest.fixture
-def gtf_path():
-    return pytest.helpers.data_path('mm10.test.gtf.gz')
+@pytest.helpers.register
+def touch(path):
+    """Touch file."""
+    path = str(path)
+    with open(path, 'a'):
+        os.utime(path, None)

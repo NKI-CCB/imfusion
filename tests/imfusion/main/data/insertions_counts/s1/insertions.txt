@@ -1,3 +1,0 @@
-id	seqname	position	strand	gene_id	gene_name	gene_strand	orientation	feature_name	feature_type	feature_strand	anchor_genome	anchor_transposon	flank_genome	flank_transposon	spanning_reads	supporting_mates	spanning_mates	sample_id
-INS_1	1	91398630	-1	ENSMUSG00000026309	Ilkap		sense	CbASA	SA	1	91398650	851	42	23	1	0	1	s1
-INS_2	1	91432787	-1	ENSMUSG00000055866	Per2		sense	CbASA	SA	1	91432807	851	30	35	1	0	2	s1

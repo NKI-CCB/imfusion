@@ -33,9 +33,7 @@ from imfusion import __version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
+    'sphinx.ext.autodoc', 'sphinx.ext.mathjax', 'sphinx.ext.viewcode',
     'sphinx.ext.napoleon'
 ]
 
@@ -55,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'IM-Fusion'
-copyright = u'2016, Julian de Ruiter'
+copyright = u'2017, Julian de Ruiter'
 author = u'Julian de Ruiter'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -110,7 +108,6 @@ pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
-
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -215,26 +212,24 @@ htmlhelp_basename = 'IM-Fusiondoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 
-# Latex figure (float) alignment
-#'figure_align': 'htbp',
+    # Latex figure (float) alignment
+    #'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, 'IM-Fusion.tex', u'IM-Fusion Documentation',
-     u'Julian de Ruiter', 'manual'),
-]
+latex_documents = [(master_doc, 'IM-Fusion.tex', u'IM-Fusion Documentation',
+                    u'Julian de Ruiter', 'manual'), ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -256,19 +251,15 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_domain_indices = True
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'im-fusion', u'IM-Fusion Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, 'im-fusion', u'IM-Fusion Documentation', [author],
+              1)]
 
 # If true, show URL addresses after external links.
 #man_show_urls = False
-
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -276,9 +267,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'IM-Fusion', u'IM-Fusion Documentation',
-     author, 'IM-Fusion', 'One line description of project.',
-     'Miscellaneous'),
+    (master_doc, 'IM-Fusion', u'IM-Fusion Documentation', author, 'IM-Fusion',
+     'One line description of project.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

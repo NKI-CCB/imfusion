@@ -1,25 +1,45 @@
-# pylint: disable=W0622,W0614,W0401
+# -*- coding: utf-8 -*-
+"""Implements functions for testing for Commonly Targeted Genes (CTGs)."""
+
+# pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import
 from __future__ import absolute_import, division, print_function
 from builtins import *
-# pylint: enable=W0622,W0614,W0401
+# pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
+from typing import Tuple, Optional, Iterable, Callable, Pattern
 import itertools
 import logging
 import operator
 import re
 
-import toolz
+try:
+    import pathlib
+except ImportError:
+    import pathlib2 as pathlib
+
+import numpy as np
 import pandas as pd
+import pyfaidx
+import pysam
 
 from intervaltree import IntervalTree
 from scipy.stats import poisson
 
-from imfusion.expression.de_test import de_exon
+from imfusion.build import Reference
+from imfusion.model import Insertion
+from imfusion.util.genomic import GenomicIntervalTree
+from imfusion.util.tabix import GtfIterator
 
 
-def test_ctgs(insertion_frame, reference_seq, reference_gtf,
-              chromosomes=None, pattern=None, gene_ids=None,
-              per_sample=True, window=None, threshold=0.05):
+def test_ctgs(
+        insertions,  # type: List[Insertion]
+        reference,  # type: Reference
+        gene_ids=None,  # type: Set[str]
+        chromosomes=None,  # type: Set[str]
+        pattern=None,  # type: str
+        per_sample=True,  # type: bool
+        window=None  #type: Tuple[int, int]
+):
     """Identifies genes that are significantly enriched for insertions (CTGs).
 
     This function takes a DataFrame of insertions, coming from multiple samples,
@@ -32,181 +52,127 @@ def test_ctgs(insertion_frame, reference_seq, reference_gtf,
 
     Parameters
     ----------
-    insertion_frame : pd.DataFrame
-        Insertions to test (in DataFrame format).
-    reference_sequence : pyfaidx.Fasta
-        Fasta sequence of the reference genome.
-    reference_gtf : GtfFile
-        GtfFile containing reference genes.
-    chromosomes : list[str]
+    insertions : List[Insertion]
+        Insertions to test.
+    reference : Reference
+        Reference index used by the aligner to identify insertions.
+    genes : List[str]
+        List of genes to test (defaults to all genes with an insertion).
+    chromosomes : List[str]
         List of chromosomes to include, defaults to all chromosomes
-        in reference_gtf.
+        in the given reference GTF.
     pattern : str
         Specificity pattern of the used transposon.
-    genes : list[str]
-        List of genes to test (defaults to all genes with an insertion).
     per_sample : bool
         Whether to perform the per sample test (recommended), which
         effectively collapes insertions per sample/gene combination.
         This avoids issues in which insertions that are detected
         multiple times or that may have hopped inside the gene locus
         are counted multiple times.
-    window : tuple(int, int)
+    window : Tuple[int, int]
         Window to include around gene (in bp). Specified as (upstream_dist,
-        downstream_dist). For example: (-2000, 2000) specifies in a 2KB
+        downstream_dist). For example: (2000, 2000) specifies in a 2KB
         window around each gene.
-    threshold : float
-        Maximum p-value for selected CTGs.
 
     Returns
     -------
     pandas.DataFrame
-        Results of CTG test for tested genes. Contains three columns:
-        gene_id, p_val and p_val_corr. The last column, p_val_corr,
+        Results of CTG test for tested genes. Contains two columns:
+        p_value and q_value. The last column (q_value)
         represents the p-value of the gene after correcting for
         multiple testing using bonferroni correction.
 
     """
 
-    # Read reference genes from GTF.
-    logging.info('-- Reading reference genes')
-
-    ref_genes = reference_gtf.get_region(
-        filters={'feature': 'gene'})
-    ref_genes.set_index('gene_id', drop=False, inplace=True)
-
-    # Subset reference genes to given chromosomes.
-    if chromosomes is not None:
-
-        ref_genes = ref_genes[ref_genes['contig'].isin(chromosomes)]
-
-    # Determine gene intervals to include.
-    intervals = (_apply_gene_window(gene, window)
-                 for _, gene in ref_genes.iterrows())
-    intervals = [int_ for int_ in intervals if int_[1] < int_[2]]
+    # Determine gene windows using GTF.
+    logging.info('Generating gene windows')
+    gene_windows = _build_gene_windows(
+        reference.indexed_gtf_path, window=window, chromosomes=chromosomes)
 
     # Subset insertions to gene intervals.
-    insertion_frame = _subset_to_intervals(insertion_frame, intervals)
+    insertions = _subset_to_windows(insertions, gene_windows)
+
+    if gene_ids is None:
+        gene_ids = set(ins.metadata['gene_id'] for ins in insertions)
 
     # Collapse insertions per gene/sample (recommended).
     # Corrects for hopping/multiple detection issues.
     if per_sample:
-        insertion_frame = _collapse_per_sample(insertion_frame)
+        logging.info('Collapsing insertions')
+        insertions = list(_collapse_per_sample(insertions))
 
     # Calculate total number of pattern occurrences within intervals.
-    logging.info('-- Counting pattern occurrences')
-    total = count_total(reference_seq, pattern=pattern, intervals=intervals)
+    logging.info('Counting pattern occurrences')
+    reference_seq = pyfaidx.Fasta(str(reference.fasta_path))
 
-    # Determine which genes to test, defaulting to all genes with an insertion.
-    if gene_ids is None:
-        gene_ids = set(insertion_frame['gene_id'].dropna())
+    total = count_total(
+        reference_seq, pattern=pattern, intervals=gene_windows.values())
 
     # Calculate p-values for each gene.
-    logging.info('-- Calculating significance for genes')
+    logging.info('Calculating significance for genes')
+    insertion_trees = GenomicIntervalTree.from_objects_position(
+        insertions, chrom_attr='seqname')
 
+    p_values = {
+        gene_id: test_region(
+            insertions=insertions,
+            reference_seq=reference_seq,
+            region=gene_windows[gene_id],
+            total=total,
+            pattern=pattern,
+            filters=[lambda ins, gid=gene_id: ins.metadata['gene_id'] == gid],
+            insertion_trees=insertion_trees)
+        for gene_id in gene_ids
+    }
+
+    # Build result frame.
     result = pd.DataFrame.from_records(
-        ((gene_id, ref_genes.ix[gene_id]['gene_name'],
-          test_region(*_apply_gene_window(ref_genes.ix[gene_id], window),
-                     insertion_frame=insertion_frame,
-                     reference=reference_seq,
-                     total=total,
-                     pattern=pattern,
-                     filters={'gene_id': gene_id}))
-         for gene_id in gene_ids),
-        columns=['gene_id', 'gene_name', 'pval'])
+        iter(p_values.items()), columns=['gene_id', 'p_value'])
 
     # Calculate corrected p-value using bonferroni correction.
-    result['pval_corr'] = (result['pval'] * len(result)).clip_upper(1.0)
+    result['q_value'] = (result['p_value'] * len(result)).clip_upper(1.0)
 
-    # Threshold results and sort by p-value.
-    result = result.ix[result['pval_corr'] <= threshold]
-    result.sort_values(by='pval_corr', inplace=True)
+    # Sort by q-value and p-value.
+    result.sort_values(by=['q_value', 'p_value'], inplace=True)
+
+    # Annotate with gene_name if possible.
+    if 'gene_name' in insertions[0].metadata:
+        name_map = {
+            ins.metadata['gene_id']: ins.metadata['gene_name']
+            for ins in insertions
+        }
+        result.insert(1, 'gene_name', result['gene_id'].map(name_map))
+
+    # Annotate with frequency.
+    frequency = (Insertion.to_frame(insertions)
+                 .groupby('gene_id')['sample'].nunique()
+                 .reset_index(name='n_samples'))
+    result = pd.merge(result, frequency, on='gene_id', how='left')
 
     return result
 
 
-def test_de(ctgs, insertions, dexseq_gtf, exon_counts_path, threshold=0.05):
-    """Tests identified CTGs for differential expression.
+def _build_gene_windows(
+        gtf_path,  # type: pathlib.Path
+        window=None,  # type: Optional[Tuple[int, int]]
+        chromosomes=None  # type: Set[str]
+):
+    gtf_iter = GtfIterator(gtf_path)
 
-    This function takes CTG frame produced by `test_ctgs` and tests each
-    of the identified CTGs for differential expression using the groupwise
-    exon-level differential expression test (`de_exon`). The resulting
-    DE p-values are added to the DataFrame and CTGs that are not
-    differentially expressed are dropped.
+    if chromosomes is None:
+        chromosomes = set(gtf_iter.contigs)
 
-    Parameters
-    ----------
-    ctgs : pandas.DataFrame
-        DataFrame containing the identified CTGs (as generated by `test_ctgs`).
-    insertions : List[insertions]
-        List of insertions to use in the test. Should be the same insertions
-        as used to identify CTGs.
-    dexseq_gtf : imfusion.util.tabix.GtfFile
-        GtfFile instance containing the flattened exon representation of
-        the original reference_gtf. The corresponding gtf file is typically
-        generated using DEXSeqs script for preparing exon annotations.
-    exon_counts_path : pathlib:Path
-        Path to the file containing exon counts for all samples.
-    threshold : float
-        Maximum p-value for differential expression.
+    records = itertools.chain.from_iterable(
+        gtf_iter.fetch_genes(reference=chrom) for chrom in chromosomes)
 
-    Returns
-    -------
-    pandas.DataFrame
-        CTG dataFrame containing the differential expression test results.
-
-    """
-
-    # Test each CTG genes for differential expression.
-    de_results = {}
-    for gene_id in ctgs['gene_id']:
-        try:
-            de_results[gene_id] = de_exon(insertions, gene_id,
-                                          dexseq_gtf, exon_counts_path)
-        except ValueError:
-            pass
-
-    # Summarize result in a DataFrame.
-    de_results = pd.DataFrame(((gene_id, res.p_value, res.direction)
-                               for gene_id, res in de_results.items()),
-                              columns=['gene_id', 'de_pval', 'de_direction'])
-
-    # Merge with CTG frame.
-    merged = pd.merge(ctgs, de_results, on='gene_id')
-
-    # Select significant diff. expr. CTGs.
-    merged = merged.query('de_pval < {}'.format(threshold))
-
-    return merged
+    return {rec['gene_id']: _apply_gene_window(rec, window) for rec in records}
 
 
-def _subset_to_intervals(insertion_frame, intervals):
-    """Subsets insertions for a list of genomic intervals."""
+def _apply_gene_window(
+        gene,  # type: pysam.ctabixproxies.GTFProxy
+        window=None  # type: Tuple[int, int]
+):  # type: (...) -> Tuple[str, int, int]
 
-    # Create lookup trees.
-    trees = {chrom: IntervalTree.from_tuples((i[1:]) for i in chrom_int)
-             for chrom, chrom_int in
-             itertools.groupby(sorted(intervals), operator.itemgetter(0))}
-
-    # Determine which insertions overlap trees.
-    def _in_intervals(ins):
-        if ins.seqname not in trees:
-            return False
-        else:
-            return trees[ins.seqname].overlaps(ins.position)
-
-    return insertion_frame.ix[insertion_frame.apply(_in_intervals, axis=1)]
-
-
-def _collapse_per_sample(insertion_frame):
-    return (insertion_frame
-            .groupby(['sample_id', 'gene_id'])
-            .agg({'seqname': 'first',
-                  'position': 'mean'})
-            .reset_index())
-
-
-def _apply_gene_window(gene, window=None):
     if window is None:
         return gene.contig, gene.start, gene.end,
     else:
@@ -214,9 +180,9 @@ def _apply_gene_window(gene, window=None):
 
         if gene.strand == '-':
             start = gene.start - downstream_offset
-            end = gene.end - upstream_offset
+            end = gene.end + upstream_offset
         elif gene.strand == '+':
-            start = gene.start + upstream_offset
+            start = gene.start - upstream_offset
             end = gene.end + downstream_offset
         else:
             raise ValueError('Unknown value for strand')
@@ -224,56 +190,112 @@ def _apply_gene_window(gene, window=None):
         return gene.contig, start, end
 
 
-def test_region(chrom, start, end, insertion_frame, reference,
-                pattern=None, intervals=None, total=None, filters=None):
+def _subset_to_windows(
+        insertions,  # type: List[Insertion]
+        gene_windows  # type: Dict[str, Tuple[str, int, int]]
+):  # type: (...) -> List[Insertion]
+    """Subsets insertions for given gene windows."""
+
+    # Create lookup trees.
+    trees = {
+        chrom: IntervalTree.from_tuples((i[1:]) for i in chrom_int)
+        for chrom, chrom_int in itertools.groupby(
+            sorted(gene_windows.values()), operator.itemgetter(0))
+    }
+
+    # Determine which insertions overlap tree intervals and
+    # correspond to genes with known gene window.
+    def _in_windows(ins, trees):
+        try:
+            return trees[ins.seqname].overlaps(ins.position)
+        except KeyError:
+            return False
+
+    return [
+        ins for ins in insertions
+        if ins.metadata['gene_id'] in gene_windows and _in_windows(ins, trees)
+    ]
+
+
+def _collapse_per_sample(insertions):
+    # Type: (List[Insertion]) -> Generator
+    def _keyfunc(insertion):
+        return (insertion.metadata['sample'],
+                str(insertion.metadata['gene_id']))
+
+    grouped = itertools.groupby(sorted(insertions, key=_keyfunc), key=_keyfunc)
+
+    for _, grp in grouped:
+        grp = list(grp)
+
+        if len(grp) > 1:
+            mean_pos = int(np.mean([ins.position for ins in grp]))
+            yield grp[0]._replace(position=mean_pos)
+        else:
+            yield grp[0]
+
+
+def test_region(
+        insertions,  # type: List[Insertion]
+        reference_seq,  # type: pyfaidx.Fasta
+        region,  # type: Tuple[str, int, int]
+        pattern=None,  # type: Optional[str]
+        intervals=None,  # type: Optional[Iterable[Tuple[str, int, int]]]
+        total=None,  # type: Optional[int]
+        filters=None,  # type: Optional[List[Callable]]
+        insertion_trees=None  # type: GenomicIntervalTree
+):  # type: (...) -> float
     """Tests a given genomic region for enrichment in insertions."""
 
     if total is None:
-        total = count_total(reference, pattern=pattern, intervals=intervals)
+        total = count_total(
+            reference_seq, pattern=pattern, intervals=intervals)
 
     # Count pattern in region.
-    region_count = count_region(chrom, start, end, reference, pattern)
+    region_count = count_region(reference_seq, region=region, pattern=pattern)
 
     # Sub-select insertions for region.
-    region_ins = insertion_frame.query(
-        'seqname == {!r} and position > {} and position < {}'
-        .format(chrom, start, end))
+    if insertion_trees is None:
+        insertion_trees = GenomicIntervalTree.from_objects_position(
+            insertions, chrom_attr='seqname')
 
-    # Apply additional filters to insertions if given
+    region_ins = set(interval[2]
+                     for interval in insertion_trees.search(*region))
+
+    # Apply additional filter functions to insertions if given
     # (such as filtering on gene name/id for example).
     if filters is not None:
-        filter_str = ' and '.join('{} == {!r}'.format(field, value)
-                                  for field, value in filters.items())
-        region_ins = region_ins.query(filter_str)
+        for filter_func in filters:
+            region_ins = set(ins for ins in region_ins if filter_func(ins))
 
     # Calculate p-value.
-    x = len(region_ins)
-    mu = len(insertion_frame) * (region_count / total)
+    x = len(list(region_ins))
+    mu = len(insertions) * (region_count / total)
 
     # Note here we use loc=1, because we are interested in
     # calculating P(X >= x), not P(X > x) (the default
     # surivival function).
-    p_val = poisson.sf(x, mu=mu, loc=1)
+    p_val = poisson.sf(x, mu=mu, loc=1)  # type: float
 
     return p_val
 
 
-def count_region(chrom, start, end, reference, pattern=None):
+def count_region(
+        reference_seq,  # type: pyfaidx.Fasta
+        region,  # type: Tuple[str, int, int]
+        pattern=None  # type: Optional[str]
+):  # type: (...) -> int
     """Counts occurrences of pattern within given genomic region.
 
     Parameters
     ----------
-    chrom : str
-        Region chromosome name.
-    start : int
-        Region start position.
-    end : int
-        Region end position.
     reference : pyfaidx.Fasta
         Reference to count occurrences for.
+    region: Tuple[str, int, int]
+        Genomic region to search in.
     pattern : str
-        Regex pattern of string to search for. If None, the length
-        of the region is returned.
+        Nucleotide sequence to count occurences for. If None, the
+        length of the region is used.
 
     Returns
     -------
@@ -283,53 +305,49 @@ def count_region(chrom, start, end, reference, pattern=None):
 
     """
 
-    seq = reference[chrom][start:end]
+    chrom, start, end = region
+    seq = reference_seq[chrom][int(start):int(end)]
 
+    return _count_sequence(seq, regex=_build_regex(pattern))
+
+
+def _build_regex(pattern):
+    # type: (str) -> Pattern[str]
     if pattern is not None:
-        count = count_pattern(seq, pattern)
-    else:
-        count = len(seq)
-
-    return count
+        return re.compile(pattern + '|' + pattern[::-1])
+    return None
 
 
-def count_pattern(sequence, pattern):
+def _count_sequence(sequence, regex=None):
+    # type: (pyfaidx.Sequence, Pattern[str]) -> int
     """Counts occurrences of pattern in sequence.
 
     Parameters
     ----------
-    sequence : pyfaidx.Sequence or str
+    sequence : pyfaidx.Sequence
         Sequence to search.
-    pattern : str
+    regex : Pattern[str]
         Pattern to count.
-
-    Return:
-        int: Number of occurrences of pattern.
-
-    """
-    regex = re.compile(pattern)
-    return count_matches(sequence, regex)
-
-
-def count_matches(sequence, regex):
-    """Counts matches of regex in string.
-
-    Parameters:
-    sequence : pyfaidx.Sequence or str
-        Sequence to search.
-    regex : SRE_Pattern
-        Regex to apply.
 
     Returns
     -------
-    int
-        Number of occurrences of regex.
+        int: Number of occurrences of pattern.
 
     """
-    return sum((1 for _ in regex.finditer(str(sequence))))
+
+    if regex is None:
+        count = len(sequence)
+    else:
+        count = sum((1 for _ in regex.finditer(str(sequence))))
+
+    return count
 
 
-def count_total(reference, pattern=None, intervals=None):
+def count_total(
+        reference_seq,  # type: pyfaidx.Sequence
+        pattern=None,  # type: str
+        intervals=None  # type: Iterable[Tuple[str, int, int]]
+):  # type: (...) -> int
     """Counts total occurrences of pattern in reference.
 
     Parameters
@@ -337,7 +355,7 @@ def count_total(reference, pattern=None, intervals=None):
     reference : pyfaidx.Fasta
         Reference to count occurrences for.
     pattern : str
-        Regex pattern of string to search for. If None, the length of
+        Nucleotide sequence to search for. If None, the length of
         sequences is counted instead of pattern of occurrences.
     intervals : List[tuple(str, int, int)]
         List of genomic intervals to which search should be restricted.
@@ -352,30 +370,29 @@ def count_total(reference, pattern=None, intervals=None):
 
     """
 
-    if pattern is not None:
-        count_func = toolz.curry(count_matches, regex=re.compile(pattern))
-    else:
-        # If no pattern is specified, use sequence length.
-        count_func = len
+    regex = _build_regex(pattern)
 
     if intervals is None:
         # Simply count for the entire sequence.
-        count = sum(count_func(reference[seq])
-                    for seq in reference.keys())
+        count = sum(_count_sequence(reference_seq[seq], regex=regex)
+                    for seq in reference_seq.keys()) # yapf: disable
     else:
         # Flatten intervals, and then only count for sequences
         # within the flattened intervals.
         merged_intervals = list(merge_genomic_intervals(intervals))
 
-        seqs = [reference[chrom][start:end]
-                for chrom, start, end in merged_intervals]
+        seqs = [
+            reference_seq[chrom][start:end]
+            for chrom, start, end in merged_intervals
+        ]
 
-        count = sum(count_func(seq) for seq in seqs)
+        count = sum(_count_sequence(seq, regex=regex) for seq in seqs)
 
     return count
 
 
 def merge_genomic_intervals(intervals):
+    # type: (Iterable[Tuple[str, int, int]]) -> Iterable[Tuple[str, int, int]]
     """Merges overlapping genomic intervals.
 
     Parameters
@@ -401,7 +418,10 @@ def merge_genomic_intervals(intervals):
             yield chrom, low, high
 
 
-def merge_intervals(intervals, is_sorted=False):
+def merge_intervals(
+        intervals,  # type: Iterable[Tuple[int, int]]
+        is_sorted=False  # type: Optional[bool]
+):  # type: (...) -> Iterable[Tuple[int, int]]
     """Merges overlapping intervals.
 
     Parameters

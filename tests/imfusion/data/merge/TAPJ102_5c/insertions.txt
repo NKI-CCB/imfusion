@@ -1,0 +1,10 @@
+id	seqname	position	strand	support_junction	support_spanning	support	feature_name	feature_strand	feature_type	gene_name	gene_strand	novel_transcript	orientation	transposon_anchor
+INS_133	16	52141095	-1	380	118	498	En2SA	-1	SA	Cblb	1.0		antisense	1541
+INS_87	11	100808534	-1	169	0	169	SD	1	SD	Stat5b	-1.0		sense	1043
+INS_22	15	78957205	1	129	35	164	SA	1	SA	Triobp	1.0		sense	420
+INS_50	1	118581464	-1	64	14	78	En2SA	-1	SA	Clasp1	1.0		antisense	1541
+INS_53	1	127205428	-1	59	16	75	En2SA	-1	SA	Mgat5	1.0		antisense	1541
+INS_104	11	76024947	1	28	12	40	En2SA	-1	SA	Fam101b	-1.0		antisense	1541
+INS_16	11	95124803	1	20	6	26	SA	1	SA	Dlx3	1.0		sense	420
+INS_121	15	78958226	1	25	0	25	SD	1	SD	Triobp	1.0		sense	1043
+INS_149	19	15920997	-1	18	0	18	SD	1	SD	Psat1	-1.0		sense	1043
