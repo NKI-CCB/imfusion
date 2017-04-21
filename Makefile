@@ -45,11 +45,11 @@ clean-test: ## remove test and coverage artifacts
 	rm -f .coverage
 	rm -fr htmlcov/
 
-lint: ## check style with flake8
-	flake8 src tests
+lint: ## check style with pylint
+	pylint src/imfusion
 
 test: ## run tests quickly with the default Python
-	py.test
+	py.test tests
 
 tox: clean-pyc
 	cp tests/matplotlibrc ./
