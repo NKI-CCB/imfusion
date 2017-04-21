@@ -26,9 +26,9 @@ class StarIndexer(Indexer):
     length of the used reads.
     """
 
-    def __init__(self, logger=None, overhang=100):
+    def __init__(self, logger=None, skip_index=False, overhang=100):
         # type: (Any, int) -> None
-        super().__init__(logger=logger)
+        super().__init__(logger=logger, skip_index=skip_index)
         self.overhang = overhang
 
     @property

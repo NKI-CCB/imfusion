@@ -69,12 +69,17 @@ class Indexer(object):
     ----------
     logger : logging.Logger
         Logger to be used for logging messages.
+    skip_index : bool
+        Whether to skip building the index. Mostly used for debugging purposes,
+        as this typically results in an incomplete reference.
 
     """
 
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, skip_index=False):
         # type: (Any) -> None
+
         self._logger = logger or logging.getLogger()
+        self._skip_index = skip_index
 
     @property
     def _reference_class(self):  # type: (...) -> Type[Reference]
@@ -142,7 +147,11 @@ class Indexer(object):
         """
 
         # Create output directory.
-        output_dir.mkdir(parents=True, exist_ok=False)
+        try:
+            output_dir.mkdir(parents=True, exist_ok=False)
+        except FileExistsError as ex:
+            ex.strerror = 'Output directory already exists'
+            raise ex
 
         # Use dummy Reference instance for paths.
         reference = self._reference_class(output_dir)
@@ -163,7 +172,8 @@ class Indexer(object):
             blacklist_regions=blacklist_regions)
 
         # Build any required indices using files.
-        self._build_indices(reference)
+        if not self._skip_index:
+            self._build_indices(reference)
 
     def _build_reference(
             self,
@@ -202,6 +212,7 @@ class Indexer(object):
         self._logger.info('Copying reference files')
         shutil.copy(str(transposon_path), str(reference.transposon_path))
 
+        build_util.check_feature_file(transposon_features_path)
         shutil.copy(str(transposon_features_path),
                     str(reference.features_path)) # yapf: disable
 
@@ -277,11 +288,19 @@ class Indexer(object):
             help='Genes to blacklist. Should correspond with '
             'the gene ids used in the reference gtf file.')
 
+        debug_group = parser.add_argument_group('Debugging')
+        debug_group.add_argument(
+            '--skip_index',
+            default=False,
+            action='store_true',
+            help=('Whether to skip the building of the genome indices. '
+                  'Mainly used for debugging purposes.'))
+
     @classmethod
     def _parse_args(cls, args):
         # type: (argparse.Namespace) -> Dict[str, Any]
         """Parses argparse argument to a dict."""
-        return {}
+        return {'skip_index': args.skip_index}
 
     @classmethod
     def from_args(cls, args):

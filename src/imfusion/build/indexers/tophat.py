@@ -28,8 +28,8 @@ class TophatIndexer(Indexer):
     Tophat2.
     """
 
-    def __init__(self, logger=None):
-        super().__init__(logger=logger)
+    def __init__(self, logger=None, skip_index=False):
+        super().__init__(logger=logger, skip_index=False)
 
     @property
     def _reference_class(self):
