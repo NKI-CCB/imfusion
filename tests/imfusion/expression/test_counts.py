@@ -54,8 +54,10 @@ def count_kws(tmpdir):
 class TestGenerateExonCounts(object):
     """Tests for the generate_exon_counts function."""
 
-    def test_example(self, count_kws, fc_counts, mocker):
+    def test_example(self, mocker, count_kws, fc_counts):
         """Tests function using example output file from feature counts."""
+
+        # NOTE: fc_counts fixture copies counts into output directory.
 
         # Mock and copy result into place.
         mock = mocker.patch.object(counts, 'feature_counts')

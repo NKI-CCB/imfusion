@@ -51,6 +51,11 @@ lint: ## check style with flake8
 test: ## run tests quickly with the default Python
 	py.test
 
+tox: clean-pyc
+	cp tests/matplotlibrc ./
+	docker run -v `pwd`:/app -t -i themattrix/tox-base
+	rm matplotlibrc
+
 coverage: ## check code coverage quickly with the default Python
 	py.test --cov=geneviz --cov-report=html
 	$(BROWSER) htmlcov/index.html
@@ -76,7 +81,10 @@ dist: clean ## builds source and wheel package
 	ls -l dist
 
 conda-build: clean-pyc ## build a conda release
-	conda build ./conda -c r -c bioconda -c jrderuiter
+	conda build -c bioconda -c r -c jrderuiter conda/recipe
+
+conda-build-docker: clean-pyc
+	docker run -v `pwd`:/imfusion -t -i condaforge/linux-anvil /bin/sh -c 'cd /imfusion && ./conda/build_docker.sh'
 
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
