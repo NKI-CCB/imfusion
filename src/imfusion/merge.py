@@ -9,10 +9,7 @@ from builtins import *
 from typing import Iterable, Optional, Tuple
 import itertools
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 import pandas as pd
 import toolz

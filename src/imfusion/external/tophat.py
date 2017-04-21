@@ -1,9 +1,6 @@
 """Module containing functions for calling Tophat."""
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 import tempfile
 import shutil

@@ -12,10 +12,7 @@ import itertools
 import subprocess
 from typing import Callable, Iterable, Any
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 from future.utils import native_str
 import pandas as pd
@@ -118,8 +115,10 @@ def index_gtf(file_path, output_path, force=True):
 
     # Gzip and index file.
     pysam.tabix_compress(
-        str(sorted_path), filename_out=str(output_path), force=force)
-    pysam.tabix_index(str(output_path), preset='gff', force=force)
+        native_str(sorted_path),
+        filename_out=native_str(output_path),
+        force=force)
+    pysam.tabix_index(native_str(output_path), preset='gff', force=force)
 
     # Clean up temp file.
     sorted_path.unlink()

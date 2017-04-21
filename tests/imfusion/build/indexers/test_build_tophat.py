@@ -6,10 +6,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 import pyfaidx
 import pytest

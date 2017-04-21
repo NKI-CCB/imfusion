@@ -9,10 +9,7 @@ from builtins import *
 import tempfile
 import shutil
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 from imfusion.external.bowtie import bowtie_index
 from imfusion.external.tophat import tophat2_index_transcriptome

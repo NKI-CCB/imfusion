@@ -9,10 +9,7 @@ from builtins import *
 import argparse
 import logging
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 from imfusion.insertions.aligners import get_aligners
 from imfusion.model import Insertion

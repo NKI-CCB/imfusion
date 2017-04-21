@@ -9,10 +9,7 @@ from builtins import *
 import argparse
 import logging
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 from imfusion.expression.counts import generate_exon_counts
 

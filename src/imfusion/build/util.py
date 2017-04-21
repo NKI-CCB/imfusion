@@ -9,10 +9,7 @@ from builtins import *
 import re
 from typing import Iterable, Tuple
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 import pandas as pd
 import pyfaidx
@@ -220,7 +217,7 @@ def regions_from_genes(gene_ids, gtf_path):
 def check_feature_file(feature_path):
     """Checks if a transposon feature frame is valid."""
 
-    transposon_features = pd.read_csv(feature_path, sep='\t')
+    transposon_features = pd.read_csv(str(feature_path), sep='\t')
 
     # Check dataframe columns.
     req_cols = {'name', 'start', 'end', 'strand', 'type'}

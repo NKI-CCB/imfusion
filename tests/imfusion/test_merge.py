@@ -8,10 +8,7 @@ from builtins import *
 
 import pytest
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 from imfusion import merge
 

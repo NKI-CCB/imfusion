@@ -54,8 +54,8 @@ class NegativeBinomial(object):
     def _check_rpy():
         """Checks if Mass and Stats are available from rpy2."""
         if r_mass is None or r_stats is None:
-            raise ValueError('The rpy2 must be installed to fit '
-                             'NegativeBinomial distributions.')
+            raise ValueError('Rpy2 must be installed to use the '
+                             'NegativeBinomial distribution.')
 
     def pdf(self, x, log=False):
         """Returns the pdf of the distribution."""

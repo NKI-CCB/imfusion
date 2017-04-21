@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 """Unit tests for functions calling sambamba externally."""
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 import pytest
 

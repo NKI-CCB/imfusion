@@ -12,6 +12,12 @@ from typing import Any, Iterable, Optional
 
 import pyparsing as pp
 
+# Define FileNotFoundError for Python 2.7.
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = OSError
+
 
 def run_command(args, stdout=None, stderr=None, logger=None, **kwargs):
     # type(List[str], Any, Any, Any, **Any) -> None

@@ -13,10 +13,7 @@ import logging
 import shutil
 from typing import Any, Type, Tuple
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 import pyfaidx
 

@@ -8,10 +8,7 @@ from builtins import *
 
 import logging
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 from imfusion.external.util import check_dependencies
 

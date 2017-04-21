@@ -12,10 +12,7 @@ import logging
 import operator
 import re
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 import numpy as np
 import pandas as pd

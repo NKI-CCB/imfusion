@@ -10,6 +10,12 @@ import pytest
 
 from imfusion.external import util
 
+# Define FileNotFoundError for Python 2.7.
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = OSError
+
 
 class TestWhich(object):
     """Tests for the which function."""

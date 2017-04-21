@@ -11,10 +11,7 @@ import argparse
 import pyfaidx
 import pytest
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 from imfusion.build.indexers import star
 

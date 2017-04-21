@@ -12,10 +12,7 @@ import itertools
 import operator
 from typing import Any, Callable, Iterable, Tuple
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 from future.utils import native
 import numpy as np

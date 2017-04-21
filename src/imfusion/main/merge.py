@@ -8,10 +8,7 @@ from builtins import *
 
 import argparse
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 from imfusion.merge import merge_samples
 from imfusion.model import Insertion

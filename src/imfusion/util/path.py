@@ -6,10 +6,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 
 def symlink_relative(src_path, dest_path):
