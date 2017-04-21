@@ -34,7 +34,7 @@ class TestStarIndexer(object):
         """Tests build using example files."""
 
         # Mock STAR call.
-        mock = mocker.patch.object(star.shell, 'run_command')
+        mock = mocker.patch.object(star, 'star_index')
 
         # Build reference.
         indexer = star.StarIndexer()
@@ -47,7 +47,7 @@ class TestStarIndexer(object):
         assert ref.fasta_path.exists()
         assert ref.gtf_path.exists()
         assert ref.indexed_gtf_path.exists()
-        assert ref.index_path.exists()
+        # assert ref.index_path.exists()
         assert ref.transposon_name == 'T2onc'
         assert ref.transposon_path.exists()
         assert ref.features_path.exists()
@@ -58,12 +58,11 @@ class TestStarIndexer(object):
 
         # Check call to STAR for building the index.
         mock.assert_called_once_with(
-            [
-                'STAR', '--runMode', 'genomeGenerate', '--genomeDir',
-                str(ref.index_path), '--genomeFastaFiles', str(ref.fasta_path),
-                '--sjdbGTFfile', str(ref.gtf_path), '--sjdbOverhang', '100'
-            ],
-            stdout=pytest.helpers.mock_any(object))
+            fasta_path=ref.fasta_path,
+            gtf_path=ref.gtf_path,
+            output_dir=ref.index_path,
+            log_path=build_kws['output_dir'] / 'star.log',
+            overhang=100)
 
     def test_from_args(self, cmdline_args):
         """Tests creation from command line."""

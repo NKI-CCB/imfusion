@@ -10,8 +10,7 @@ from typing import Any
 
 import toolz
 
-from imfusion.util import shell
-
+from imfusion.external.star import star_index
 from .base import Indexer, Reference, register_indexer
 
 
@@ -45,21 +44,14 @@ class StarIndexer(Indexer):
     def _build_indices(self, reference):
         # type: (StarReference) -> None
 
-        # Create index directory.
-        index_dir = reference.index_path
-        index_dir.mkdir(exist_ok=False)
+        self._logger.info('Building STAR index')
 
-        # Run STAR.
-        cmdline_args = [
-            'STAR', '--runMode', 'genomeGenerate', '--genomeDir',
-            str(index_dir), '--genomeFastaFiles', str(reference.fasta_path),
-            '--sjdbGTFfile', str(reference.gtf_path), '--sjdbOverhang',
-            str(self.overhang)
-        ]
-
-        log_path = reference.base_path / 'star.log'
-        with log_path.open('w') as log_file:
-            shell.run_command(cmdline_args, stdout=log_file)
+        star_index(
+            fasta_path=reference.fasta_path,
+            gtf_path=reference.gtf_path,
+            output_dir=reference.index_path,
+            overhang=100,
+            log_path=reference.base_path / 'star.log')
 
     @classmethod
     def configure_args(cls, parser):

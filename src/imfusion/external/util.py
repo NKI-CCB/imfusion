@@ -15,10 +15,18 @@ import pyparsing as pp
 
 def run_command(args, stdout=None, stderr=None, logger=None, **kwargs):
     # type(List[str], Any, Any, Any, **Any) -> None
-    """Runs command using subprocess.check_call, with extra logging options."""
+    """Runs command using subprocess.check_call."""
+
     if logger is not None:
         logger.info('Running command: %s', ' '.join(args))
-    subprocess.check_call(args, stdout=stdout, stderr=stderr, **kwargs)
+
+    try:
+        subprocess.check_call(args, stdout=stdout, stderr=stderr, **kwargs)
+    except FileNotFoundError as ex:
+        extra_msg = ('. Make sure that the required dependencies '
+                     'have been installed.')
+        ex.strerror += extra_msg
+        raise ex
 
 
 def parse_arguments(arg_str):

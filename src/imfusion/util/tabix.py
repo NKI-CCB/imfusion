@@ -7,6 +7,7 @@ from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import contextlib
+import csv
 import itertools
 import subprocess
 from typing import Callable, Iterable, Any
@@ -17,6 +18,7 @@ except ImportError:
     import pathlib2 as pathlib
 
 from future.utils import native_str
+import pandas as pd
 import pysam
 
 
@@ -106,7 +108,7 @@ class GtfIterator(object):
                 yield record
 
 
-def index_gtf(file_path, output_path):
+def index_gtf(file_path, output_path, force=True):
     # type: (pathlib.Path, pathlib.Path) -> None
     """Compresses and indexes a gtf file using bgzip and tabix."""
 
@@ -115,8 +117,9 @@ def index_gtf(file_path, output_path):
     sort_gtf(file_path, output_path=sorted_path)
 
     # Gzip and index file.
-    bgzip(sorted_path, output_path=output_path)
-    tabix(output_path, preset='gff')
+    pysam.tabix_compress(
+        str(sorted_path), filename_out=str(output_path), force=force)
+    pysam.tabix_index(str(output_path), preset='gff', force=force)
 
     # Clean up temp file.
     sorted_path.unlink()
@@ -125,10 +128,36 @@ def index_gtf(file_path, output_path):
 def sort_gtf(file_path, output_path):
     # type: (pathlib.Path, pathlib.Path) -> None
     """Sorts a gtf file by position, required for indexing by tabix."""
+
+    try:
+        # Try sorting using shell command.
+        _sort_gtf_shell(file_path, output_path)
+    except subprocess.CalledProcessError:
+        # Fall back into in-memory sort if shell command fails.
+        # TODO: Log warning.
+        _sort_gtf_pandas(file_path, output_path)
+
+
+def _sort_gtf_shell(file_path, output_path):
+    """Sorts gtf file externally using grep/sort shell command."""
+
     with open(str(output_path), 'w') as out_file:
         cmd = '(grep ^"#" {0}; grep -v ^"#" {0} | sort -k1,1 -k4,4n)'
         subprocess.check_call(
             cmd.format(file_path), stdout=out_file, shell=True)
+
+
+def _sort_gtf_pandas(file_path, output_path):
+    """Sorts gtf file in-memory using pandas."""
+
+    gtf = read_gtf(file_path)
+    gtf = gtf.sort_values(['seqname', 'start'], ascending=True)
+    gtf.to_csv(
+        str(output_path),
+        sep='\t',
+        header=False,
+        index=False,
+        quoting=csv.QUOTE_NONE)
 
 
 def _append_suffix(path_obj, suffix):
@@ -139,20 +168,24 @@ def _append_suffix(path_obj, suffix):
         return path_obj.with_suffix(path_obj.suffixes[-1] + suffix)
 
 
-def bgzip(file_path, output_path=None):
-    # type: (pathlib.Path, pathlib.Path) -> None
-    """Uses bgzip to compress given file."""
+def read_gtf(file_path):
+    """Reads an uncompressed GTF file into a pandas DataFrame."""
 
-    output_path = str(output_path)
+    names = [
+        'seqname', 'source', 'feature', 'start', 'end', 'score', 'strand',
+        'frame', 'attribute'
+    ]
 
-    if output_path is None:
-        output_path = file_path + '.gz'
+    dtypes = {
+        'seqname': str,
+        'source': 'category',
+        'feature': 'category',
+        'start': int,
+        'end': int,
+        'strand': 'category',
+        'frame': 'category',
+        'attribute': 'str'
+    }
 
-    with open(output_path, 'w') as out_file:
-        subprocess.check_call(['bgzip', '-c', str(file_path)], stdout=out_file)
-
-
-def tabix(file_path, preset):
-    # type: (pathlib.Path, str) -> None
-    """Uses tabix to index given file."""
-    subprocess.check_call(['tabix', '-p', preset, str(file_path)])
+    return pd.read_csv(
+        str(file_path), sep='\t', names=names, dtype=dtypes, comment='#')
