@@ -58,17 +58,22 @@ class TestGenerateExonCounts(object):
         """Tests function using example output file from feature counts."""
 
         # Mock and copy result into place.
-        mock = mocker.patch.object(counts.subprocess, 'check_output')
+        mock = mocker.patch.object(counts, 'feature_counts')
 
         # Call function.
         exon_counts = counts.generate_exon_counts(**count_kws)
 
         # Check call + result.
-        mock.assert_called_once_with([
-            'featureCounts', '--minOverlap', '1', '-O', '-f', '-t',
-            'exonic_part', '-a', '/path/to/gtf', '-o', str(fc_counts), 'a.bam',
-            'b.bam'
-        ])
+        mock.assert_called_once_with(
+            bam_files=[Path('a.bam'), Path('b.bam')],
+            gtf_path=Path('/path/to/gtf'),
+            output_path=count_kws['tmp_dir'] / 'counts.txt',
+            extra_kws={
+                '--minOverlap': '1',
+                '-O': True,
+                '-f': True,
+                '-t': 'exonic_part'
+            })
 
         assert exon_counts.shape == (7, 2)
         assert list(exon_counts.columns) == ['a', 'b']

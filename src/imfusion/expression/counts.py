@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 import toolz
 
-from imfusion.util.shell import flatten_arguments
+from imfusion.external.feature_counts import feature_counts
 
 # Disable E1101 checks which stumble on pandas classes.
 # pylint: disable=E1101
@@ -96,8 +96,11 @@ def generate_exon_counts(
     # Run feature counts and read output.
     try:
         output_path = tmp_dir / 'counts.txt'
-        _feature_counts(bam_files, gtf_path, output_path=output_path,
-                        extra_kws=extra_kws)  # yapf: disable
+        feature_counts(
+            bam_files=bam_files,
+            gtf_path=gtf_path,
+            output_path=output_path,
+            extra_kws=extra_kws)
         counts = _read_feature_count_output(output_path, names=names)
     finally:
         if not keep_tmp:
@@ -121,49 +124,6 @@ def generate_exon_counts(
     counts.sort_index(inplace=True)
 
     return counts
-
-
-def _feature_counts(
-        bam_files,  # type: Iterable[pathlib.Path]
-        gtf_path,  # type: pathlib.Path
-        output_path,  # type: pathlib.Path
-        extra_kws=None  # type: Dict[str, Any]
-):  # type: (...) -> None
-    """Generates counts using featureCounts with given options.
-
-    Main function used to run featureCounts. Used by and
-    `generate_exon_counts` to generate expression counts.
-
-    Parameters
-    ----------
-    bam_files : list[pathlib.Path]
-        List of paths to the bam files for which counts should be generated.
-    gtf_path : pathlib.Path
-        Path to the GTF file containing gene features.
-    output_path : pathlib.Path
-        Path to output file.
-    extra_kws : dict[str, tuple]:
-        Dictionary of extra arguments that should be passed to feature counts.
-        Keys should correspond to argument names (including dashes),
-        values should be tuples containing the argument values.
-
-    Returns
-    -------
-    pandas.Dataframe
-        DataFrame containing feature counts for the given bam files. The rows
-        correspond to the counted features, the columns correspond to the
-        index values (chomosome, position etc.) and the bam files.
-
-    """
-
-    extra_kws = extra_kws or {}
-
-    # Run feature counts.
-    args = (['featureCounts'] + flatten_arguments(extra_kws) +
-            ['-a', str(gtf_path), '-o', str(output_path)] +
-            [str(bf) for bf in bam_files])
-
-    subprocess.check_output(args)
 
 
 def _read_feature_count_output(file_path, names=None):

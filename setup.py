@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
 
 # General requirements.
 requirements = [
-    'future', 'pandas', 'numexpr', 'pysam>=0.9.1', 'toolz', 'seaborn',
+    'future', 'pandas>=0.19.0', 'numexpr', 'pysam>=0.9.1', 'toolz', 'seaborn',
     'pyfaidx', 'scipy', 'intervaltree'
 ]
 

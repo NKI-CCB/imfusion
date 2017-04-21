@@ -30,7 +30,9 @@ class TestTophatIndexer(object):
         """Tests build using example files."""
 
         # Mock Tophat call.
-        mock = mocker.patch.object(tophat.shell, 'run_command')
+        mock_bowtie = mocker.patch.object(tophat, 'bowtie_index')
+        mock_tophat = mocker.patch.object(tophat,
+                                          'tophat2_index_transcriptome')
 
         # Build reference.
         indexer = tophat.TophatIndexer()
@@ -53,13 +55,14 @@ class TestTophatIndexer(object):
         assert sorted(refseq.keys()) == ['1', '2', 'T2onc']
 
         # Check call to Bowtie for building the index.
-        assert mock.call_args_list[0][1]['args'] == [
-            'bowtie-build', str(ref.fasta_path), str(ref.index_path)
-        ]
+        mock_bowtie.assert_called_once_with(
+            reference_path=ref.fasta_path,
+            output_base_path=ref.index_path,
+            log_path=build_kws['output_dir'] / 'bowtie.log')
 
         # Check call to Tophat for building the index.
-        assert mock.call_args_list[1][1]['args'] == [
-            'tophat2', '--GTF', str(ref.gtf_path), '--transcriptome-index=' +
-            str(ref.transcriptome_path), '--bowtie1', '--output-dir',
-            pytest.helpers.mock_any(str), str(ref.index_path)
-        ]
+        mock_tophat.assert_called_once_with(
+            bowtie_index_path=ref.index_path,
+            gtf_path=ref.gtf_path,
+            output_base_path=ref.transcriptome_path,
+            log_path=build_kws['output_dir'] / 'transcriptome.log')

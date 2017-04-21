@@ -13,7 +13,7 @@ try:
 except ImportError:
     import pathlib2 as pathlib
 
-from imfusion.util import shell
+from imfusion.external.util import check_dependencies
 
 _aligner_registry = {}
 
@@ -63,7 +63,7 @@ class Aligner(object):
 
         Raises a ValueError if any dependencies are missing.
         """
-        shell.check_dependencies(self.dependencies)
+        check_dependencies(self.dependencies)
 
     @classmethod
     def configure_args(cls, parser):

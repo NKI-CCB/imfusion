@@ -20,7 +20,8 @@ except ImportError:
 
 import pyfaidx
 
-from imfusion.util import shell, tabix
+from imfusion.external.util import check_dependencies
+from imfusion.util import tabix
 
 from .. import util as build_util
 
@@ -91,7 +92,7 @@ class Indexer(object):
         Raises a ValueError if any dependencies are missing.
         """
 
-        shell.check_dependencies(self.dependencies)
+        check_dependencies(self.dependencies)
 
     def build(
             self,
@@ -198,7 +199,7 @@ class Indexer(object):
         """Copies and indexes additional reference files (GTF, transposon)."""
 
         # Copy additional reference files.
-        self._logger.info('Copying files')
+        self._logger.info('Copying reference files')
         shutil.copy(str(transposon_path), str(reference.transposon_path))
 
         shutil.copy(str(transposon_features_path),
