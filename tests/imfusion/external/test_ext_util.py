@@ -83,3 +83,10 @@ class TestRunCommand(object):
         mock = mocker.patch.object(util.subprocess, 'check_call')
         util.run_command(args=['ls', '-l'], stdout=None, stderr=None)
         mock.assert_called_once_with(['ls', '-l'], stdout=None, stderr=None)
+
+    def test_missing_example(self):
+        """Tests call with missing external dependency."""
+
+        with pytest.raises(FileNotFoundError):
+            util.run_command(
+                args=['non_existant', '-l'], stdout=None, stderr=None)
