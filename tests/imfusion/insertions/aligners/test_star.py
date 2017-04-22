@@ -274,9 +274,7 @@ class TestStarAligner(object):
                 '--runThreadN': (1, ),
                 '--chimSegmentMin': (12, ),
                 '--outSAMstrandField': ('intronMotif', )
-            },
-            stdout=pytest.helpers.mock_any(object),
-            logger=pytest.helpers.mock_any(object))
+            })
 
         # Check result, including specific Cblb insertion.
         assert len(ins) == 5

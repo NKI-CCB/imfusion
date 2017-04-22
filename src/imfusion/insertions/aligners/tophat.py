@@ -12,6 +12,7 @@ import pandas as pd
 import toolz
 
 from imfusion.build.indexers.tophat import TophatReference
+from imfusion.external.stringtie import stringtie_assemble
 from imfusion.external.tophat import tophat2_align
 from imfusion.external.util import parse_arguments
 from imfusion.model import TransposonFusion
@@ -114,7 +115,7 @@ class TophatAligner(Aligner):
 
                 # Generate assembled GTF.
                 stringtie_out_path = assembled_path.with_suffix('')
-                util.stringtie_assemble(
+                stringtie_assemble(
                     alignment_path,
                     gtf_path=self._reference.gtf_path,
                     output_path=stringtie_out_path)

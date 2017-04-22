@@ -277,9 +277,7 @@ class StarAligner(Aligner):
             fastq2_path=fastq2_path,
             index_path=self._reference.index_path,
             output_dir=star_dir,
-            extra_args=toolz.merge(args, self._extra_args),
-            stdout=sys.stderr,
-            logger=self._logger)
+            extra_args=toolz.merge(args, self._extra_args))
 
         # If not yet sorted, sort bam file using samtools/sambamba.
         sorted_bam_path = star_dir / 'Aligned.sortedByCoord.out.bam'
