@@ -14,7 +14,7 @@ from typing import Any, Callable, Iterable, Tuple
 
 import pathlib2 as pathlib
 
-from future.utils import native
+from future.utils import native_str
 import numpy as np
 import pysam
 import toolz
@@ -220,7 +220,7 @@ class TranscriptReference(object):
         """Builds an Reference instance from the given GTF file."""
 
         # Open gtf file.
-        gtf = pysam.TabixFile(native(str(gtf_path)), parser=pysam.asGTF())
+        gtf = pysam.TabixFile(native_str(gtf_path), parser=pysam.asGTF())
 
         if chromosomes is None:
             chromosomes = gtf.contigs
