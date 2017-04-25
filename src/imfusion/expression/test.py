@@ -194,6 +194,7 @@ def test_de_exon(
 def split_counts(
         counts,  # type: pd.DataFrame,
         insertions,  # type: List[Insertion]
+        gene_id,  # type: str
         min_before=1,  # type: int
         min_after=1  # type: int
 ):  # type: (...) -> Tuple[pd.DataFrame, pd.DataFrame, Set[str]]
@@ -206,8 +207,10 @@ def split_counts(
         and samples along the columns. The index of the DataFrame should
         be a multi-level index containing the following levels: gene_id,
         chromosome, start, end and strand.
-    insertions : List[Insertion]
+    insertions : List[Insertion] or pandas.DataFrame
         List of identified insertions.
+    gene_id : str
+        Gene identifier.
     min_before : int
         Minimum number of exons to retain before the split. Samples with less
         exons before their insertion sites will be dropped.
@@ -228,8 +231,16 @@ def split_counts(
 
     # TODO: tests for min_before/min_after.
 
+    if isinstance(insertions, pd.DataFrame):
+        insertions = insertions.loc[insertions['gene_id'] == gene_id]
+        insertions = Insertion.from_frame(insertions)
+    else:
+        insertions = [
+            ins for ins in insertions if ins.metadata['gene_id'] == gene_id
+        ]
+
     # Extract exon information from counts.
-    exons = _get_exons(counts)
+    exons = _get_exons(counts.loc[gene_id])
     strand = exons.iloc[0].strand
 
     # Switch limits if gene on - strand.
@@ -258,9 +269,9 @@ def split_counts(
     if curr_min > curr_max:
         raise ValueError('No valid split found')
 
-    # Apply split.
-    before = counts.iloc[:curr_min]
-    after = counts.iloc[curr_max:]
+    # Apply split to full frame (includes gene_id).
+    before = counts.loc[[gene_id]].iloc[:curr_min]
+    after = counts.loc[[gene_id]].iloc[curr_max:]
 
     # Switch if gene on - strand.
     if strand == -1:
