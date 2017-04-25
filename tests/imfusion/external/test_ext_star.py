@@ -29,7 +29,8 @@ class TestStarIndex(object):
         mock_run.assert_called_once_with(args=[
             'STAR', '--runMode', 'genomeGenerate', '--genomeDir',
             str(output_dir), '--genomeFastaFiles', 'reference.fa',
-            '--sjdbGTFfile', 'reference.gtf', '--sjdbOverhang', '50'
+            '--sjdbGTFfile', 'reference.gtf', '--sjdbOverhang', '50',
+            '--runThreadN', '1'
         ])
 
 
@@ -118,5 +119,5 @@ class TestStarAlign(object):
             'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
             str(star_align_kws['output_dir']) + '/', '--readFilesIn',
             'sample.R1.fastq.gz', '--readFilesCommand', 'gunzip', '-c',
-            '--runThread', '5'
+            '--runThreadN', '5'
         ])

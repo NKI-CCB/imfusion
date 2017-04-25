@@ -3,7 +3,12 @@
 from .util import flatten_arguments, run_command
 
 
-def star_index(fasta_path, gtf_path, output_dir, overhang=100, log_path=None):
+def star_index(fasta_path,
+               gtf_path,
+               output_dir,
+               overhang=100,
+               threads=1,
+               log_path=None):
     """Builds a bowtie index for a reference genome.
 
     Parameters
@@ -16,6 +21,8 @@ def star_index(fasta_path, gtf_path, output_dir, overhang=100, log_path=None):
         Output directory for the built index.
     overhang : int
         Value to use for sjdbOverhang (see STAR manual for more details).
+    threads : int
+        Number of threads to use.
     log_path : pathlib.Path
         Where to write the log output.
 
@@ -26,7 +33,7 @@ def star_index(fasta_path, gtf_path, output_dir, overhang=100, log_path=None):
     args = [
         'STAR', '--runMode', 'genomeGenerate', '--genomeDir', str(output_dir),
         '--genomeFastaFiles', str(fasta_path), '--sjdbGTFfile', str(gtf_path),
-        '--sjdbOverhang', str(overhang)
+        '--sjdbOverhang', str(overhang), '--runThreadN', str(threads)
     ]
 
     if log_path is not None:
@@ -36,13 +43,14 @@ def star_index(fasta_path, gtf_path, output_dir, overhang=100, log_path=None):
         run_command(args=args)
 
 
-def star_align(fastq_path,
-               index_path,
-               output_dir,
-               fastq2_path=None,
-               extra_args=None,
-               log_path=None,
-               threads=1):
+def star_align(
+        fastq_path,
+        index_path,
+        output_dir,
+        fastq2_path=None,
+        extra_args=None,
+        threads=1,
+        log_path=None, ):
     """Runs STAR in alignment mode for the given fastqs."""
 
     extra_args = extra_args or {}
@@ -55,7 +63,7 @@ def star_align(fastq_path,
         extra_args['--readFilesCommand'] = ('gunzip', '-c')
 
     if threads > 1:
-        extra_args['--runThread'] = threads
+        extra_args['--runThreadN'] = threads
 
     # Assemble arguments.
     if fastq2_path is None:

@@ -59,7 +59,8 @@ class TestStarIndexer(object):
             gtf_path=ref.gtf_path,
             output_dir=ref.index_path,
             log_path=build_kws['output_dir'] / 'star.log',
-            overhang=100)
+            overhang=100,
+            threads=1)
 
     def test_from_args(self, cmdline_args):
         """Tests creation from command line."""
@@ -79,12 +80,13 @@ class TestStarIndexer(object):
         assert args.transposon_features == Path('/path/to/feat')
 
         # Check instance.
-        assert indexer.overhang == 100
+        assert indexer._overhang == 100
+        assert indexer._threads == 1
 
     def test_from_args_extra(self, cmdline_args):
         """Tests creation from command line using extra args."""
 
-        cmdline_args += ['--overhang', '200']
+        cmdline_args += ['--star_overhang', '50', '--star_threads', '10']
 
         # Setup parser.
         parser = argparse.ArgumentParser()
@@ -95,7 +97,8 @@ class TestStarIndexer(object):
         indexer = star.StarIndexer.from_args(args)
 
         # Check instance.
-        assert indexer.overhang == 200
+        assert indexer._overhang == 50
+        assert indexer._threads == 10
 
 
 class TestStarReference(object):
