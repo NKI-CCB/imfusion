@@ -64,8 +64,20 @@ class TestSplitCounts(object):
     def test_proper_example(self, insertions, exon_counts):
         """Tests example with two insertions, after exons 2 and 4."""
 
-        counts = exon_counts.ix['ENSMUSG00000051951']
-        before, after, dropped = test.split_counts(counts, insertions)
+        before, after, dropped = test.split_counts(
+            exon_counts, insertions, gene_id='ENSMUSG00000051951')
+
+        assert len(before) == 1
+        assert len(after) == 2
+        assert dropped == set()
+
+    def test_proper_example_df(self, insertions, exon_counts):
+        """Tests same example, using dataframe input for insertions."""
+
+        insertion_df = Insertion.to_frame(insertions)
+
+        before, after, dropped = test.split_counts(
+            exon_counts, insertion_df, gene_id='ENSMUSG00000051951')
 
         assert len(before) == 1
         assert len(after) == 2
@@ -76,8 +88,8 @@ class TestSplitCounts(object):
 
         insertions[1] = insertions[1]._replace(position=3215652)
 
-        counts = exon_counts.ix['ENSMUSG00000051951']
-        before, after, dropped = test.split_counts(counts, insertions)
+        before, after, dropped = test.split_counts(
+            exon_counts, insertions, gene_id='ENSMUSG00000051951')
 
         assert len(before) == 3
         assert len(after) == 2
@@ -88,8 +100,8 @@ class TestSplitCounts(object):
 
         insertions[0] = insertions[0]._replace(position=3205801)
 
-        counts = exon_counts.ix['ENSMUSG00000051951']
-        before, after, dropped = test.split_counts(counts, insertions)
+        before, after, dropped = test.split_counts(
+            exon_counts, insertions, gene_id='ENSMUSG00000051951')
 
         assert len(before) == 1
         assert len(after) == 4
@@ -100,8 +112,8 @@ class TestSplitCounts(object):
 
         insertions[0] = insertions[0]._replace(position=3207217)
 
-        counts = exon_counts.ix['ENSMUSG00000051951']
-        before, after, dropped = test.split_counts(counts, insertions)
+        before, after, dropped = test.split_counts(
+            exon_counts, insertions, gene_id='ENSMUSG00000051951')
 
         assert len(before) == 1
         assert len(after) == 1
@@ -134,6 +146,17 @@ class TestTestDeExon(object):
 
         result = test.test_de_exon(
             test_insertions, test_exon_counts, gene_id='ENSMUSG00000026510')
+
+        assert result.p_value < 0.01
+        assert result.direction == 1
+
+    def test_pos_example_trp53bp2_df(self, test_insertions, test_exon_counts):
+        """Tests positive example of DE in Trp53bp2 with dataframe input."""
+
+        test_insertion_df = Insertion.to_frame(test_insertions)
+
+        result = test.test_de_exon(
+            test_insertion_df, test_exon_counts, gene_id='ENSMUSG00000026510')
 
         assert result.p_value < 0.01
         assert result.direction == 1
