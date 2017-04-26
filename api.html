@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -44,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -84,7 +87,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
@@ -114,8 +120,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">IM-Fusion</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">IM-Fusion</a>
+        
       </nav>
 
 
@@ -124,23 +132,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>API</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>API</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -160,7 +185,7 @@ are present in <code class="docutils literal"><span class="pre">$PATH</span></co
 reference files to build the actual reference.</p>
 <dl class="class">
 <dt id="imfusion.build.indexers.Indexer">
-<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">Indexer</code><span class="sig-paren">(</span><em>logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/base.html#Indexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.Indexer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">Indexer</code><span class="sig-paren">(</span><em>logger=None</em>, <em>skip_index=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/base.html#Indexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.Indexer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base Indexer class.</p>
 <p>This base class defines the interface for Indexer classes and provides
 basic functionality for building augmented reference genomes. Functionality
@@ -185,7 +210,12 @@ for <code class="docutils literal"><span class="pre">from_args</span></code>, al
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>logger</strong> (<em>logging.Logger</em>) &#8211; Logger to be used for logging messages.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>logger</strong> (<em>logging.Logger</em>) &#8211; Logger to be used for logging messages.</li>
+<li><strong>skip_index</strong> (<em>bool</em>) &#8211; Whether to skip building the index. Mostly used for debugging purposes,
+as this typically results in an incomplete reference.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -280,7 +310,7 @@ should be overridden in any subclasses with extra parameters.</p>
 
 <dl class="class">
 <dt id="imfusion.build.indexers.StarIndexer">
-<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">StarIndexer</code><span class="sig-paren">(</span><em>logger=None</em>, <em>overhang=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/star.html#StarIndexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.StarIndexer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">StarIndexer</code><span class="sig-paren">(</span><em>logger=None</em>, <em>skip_index=False</em>, <em>overhang=100</em>, <em>threads=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/star.html#StarIndexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.StarIndexer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Indexer that builds references for the STAR aligner.</p>
 <p>Performs the same steps as the base <code class="docutils literal"><span class="pre">Indexer</span></code> class, but additionally
 generates an index for alignment with STAR using STAR&#8217;s <code class="docutils literal"><span class="pre">genomeGenerate</span></code>
@@ -316,7 +346,7 @@ this indexer (if registered as an Indexer using the
 
 <dl class="class">
 <dt id="imfusion.build.indexers.TophatIndexer">
-<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">TophatIndexer</code><span class="sig-paren">(</span><em>logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/tophat.html#TophatIndexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.TophatIndexer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">imfusion.build.indexers.</code><code class="descname">TophatIndexer</code><span class="sig-paren">(</span><em>logger=None</em>, <em>skip_index=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/build/indexers/tophat.html#TophatIndexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.build.indexers.TophatIndexer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Indexer that builds references for the Tophat-Fusion aligner.</p>
 <p>Performs the same steps as the base <code class="docutils literal"><span class="pre">Indexer</span></code> class, but additionally
 generates an index for alignment with Tophat-Fusion using Bowtie and
@@ -556,20 +586,18 @@ from chimeric read alignments.</p>
 an actual list of fusions, we identify fusions by summarizing these
 alignments ourselves. The strategy to do so is as follows:</p>
 <blockquote>
-<div><ol class="arabic">
-<li><p class="first">We filter for chimeric reads involving the transposon and genomic
-loci, to reduce the number of reads we need to consider.</p>
-</li>
-<li><p class="first">We select chimeric reads (or mates) that actually overlap the
+<div><ol class="arabic simple">
+<li>We filter for chimeric reads involving the transposon and genomic
+loci, to reduce the number of reads we need to consider.</li>
+<li>We select chimeric reads (or mates) that actually overlap the
 breakpoint of the fusion, as these alignments provide the exact
 position of the fusion. These reads are grouped by their positions
 to determine the number of reads that support each fusion. Fusions
 with close distance (on both the genomic and transposon loci) are
-merged to account for slight variations in the alignment.</p>
-</li>
+merged to account for slight variations in the alignment.</li>
 <li><dl class="first docutils">
 <dt>For paired-end data:</dt>
-<dd><ul class="first last simple">
+<dd><ul class="first last">
 <li>We select mates that span the fusion site
 (meaning that they do not overlap the breakpoint, therefore we
 only have an approximate position) and group mates of which both
@@ -585,10 +613,9 @@ mate locations.</li>
 </dd>
 </dl>
 </li>
-<li><p class="first">We return the combined list of fusions. For single-end data, this
+<li>We return the combined list of fusions. For single-end data, this
 only contains junction fusions, whilst for paired-end data this is
-the combined list of junction and unassigned spanning fusions.</p>
-</li>
+the combined list of junction and unassigned spanning fusions.</li>
 </ol>
 </div></blockquote>
 <p>To avoid memory issues with STAR during the sorting of bam files, sorting
@@ -738,15 +765,18 @@ transposon feature is in the wrong orientation.</li>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="usage.html" class="btn btn-neutral" title="Usage" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="usage.html" class="btn btn-neutral" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -787,7 +817,7 @@ transposon feature is in the wrong orientation.</li>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

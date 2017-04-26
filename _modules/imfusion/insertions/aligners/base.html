@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -43,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -83,7 +86,10 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../index.html">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
@@ -104,8 +110,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../../../../index.html">IM-Fusion</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">IM-Fusion</a>
+        
       </nav>
 
 
@@ -118,19 +126,36 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      
-    <li>imfusion.insertions.aligners.base</li>
+        
+      <li>imfusion.insertions.aligners.base</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -147,12 +172,9 @@
 
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">pathlib</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">pathlib2</span> <span class="k">as</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">pathlib2</span> <span class="k">as</span> <span class="nn">pathlib</span>
 
-<span class="kn">from</span> <span class="nn">imfusion.util</span> <span class="k">import</span> <span class="n">shell</span>
+<span class="kn">from</span> <span class="nn">imfusion.external.util</span> <span class="k">import</span> <span class="n">check_dependencies</span>
 
 <span class="n">_aligner_registry</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -202,10 +224,10 @@
 
 <span class="sd">        Raises a ValueError if any dependencies are missing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">shell</span><span class="o">.</span><span class="n">check_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span></div>
+        <span class="n">check_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span></div>
 
     <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="Aligner.configure_args"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.Aligner.configure_args">[docs]</a>    <span class="k">def</span> <span class="nf">configure_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+<div class="viewcode-block" id="Aligner.configure_args"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.Aligner.configure_args">[docs]</a>    <span class="k">def</span> <span class="nf">configure_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Configures an argument parser for the Indexer.</span>
 
 <span class="sd">        Used by ``imfusion-build`` to configure the sub-command for</span>
@@ -249,12 +271,12 @@
             <span class="n">help</span><span class="o">=</span><span class="s1">&#39;The samples output directory.&#39;</span><span class="p">)</span></div>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Parses arguments from argparse into a dict.&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{}</span>
 
     <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="Aligner.from_args"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.Aligner.from_args">[docs]</a>    <span class="k">def</span> <span class="nf">from_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+<div class="viewcode-block" id="Aligner.from_args"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.Aligner.from_args">[docs]</a>    <span class="k">def</span> <span class="nf">from_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Constructs an Indexer instance from given arguments.</span>
 
 <span class="sd">        Instantiates an Indexer instance from the given argparse arguments.</span>
@@ -267,7 +289,7 @@
 <span class="sd">        args : argparse.Namespace</span>
 <span class="sd">            Arguments to parse.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">cls</span><span class="o">.</span><span class="n">_parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="bp">cls</span><span class="o">.</span><span class="n">_parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Aligner.identify_insertions"><a class="viewcode-back" href="../../../../api.html#imfusion.insertions.aligners.Aligner.identify_insertions">[docs]</a>    <span class="k">def</span> <span class="nf">identify_insertions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fastq_path</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">fastq2_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Identifies insertions from given reads.</span>
@@ -296,6 +318,9 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
 </pre></div>
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
@@ -337,7 +362,7 @@
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

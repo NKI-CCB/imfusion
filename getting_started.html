@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -44,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -84,7 +87,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
@@ -109,8 +115,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">IM-Fusion</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">IM-Fusion</a>
+        
       </nav>
 
 
@@ -119,23 +127,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Getting started</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Getting started</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/getting_started.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -191,20 +216,23 @@ more sensitivity in the results.</p>
 <p>For building a reference, the following files are required:</p>
 <blockquote>
 <div><ul class="simple">
-<li>The reference genome sequence, in Fasta format.</li>
-<li>The reference gene features, adhering to Ensembl&#8217;s GTF format.</li>
-<li>The transposon sequence, in Fasta format.</li>
-<li>A tab-separated file describing the different features of the transposon.</li>
+<li>The reference genome sequence, (Fasta file).</li>
+<li>The reference gene features. (GTF file, adhering to Ensembl&#8217;s GTF format).</li>
+<li>The transposon sequence (Fasta file).</li>
+<li>The transposon features file (tab-separated file).</li>
 </ul>
 </div></blockquote>
 <p>The transposon feature file describes the locations of the splice-donor and
 splice-acceptor sites that are present in the transposon. The file should
-contain the following columns: name, start, end, strand and type; with each
-row describing a single feature. The first four of these columns describe the
-name, location and orientation of each feature. The last column specifies the
-type of the feature, which should be either ‘SD’ or ‘SA’ for splice-donor or
-splice-acceptor sites respectively. The field may also be left empty for other
-types of features, however these features will not be used by IM-Fusion.</p>
+contain the following columns: <code class="docutils literal"><span class="pre">name</span></code>, <code class="docutils literal"><span class="pre">start</span></code>, <code class="docutils literal"><span class="pre">end</span></code>, <code class="docutils literal"><span class="pre">strand</span></code> and
+<code class="docutils literal"><span class="pre">type</span></code>; with each row describing a single feature. The first four of these
+columns describe the name, location and orientation of each feature,
+respectively. The last column specifies the type of the feature, which should
+be either ‘SD’ or ‘SA’ for splice-donor or splice-acceptor sites respectively.
+The field may also be left empty for other types of features, however these
+features will not be used by IM-Fusion.</p>
+<p>Example sequence and feature files for the Sleeping Beauty
+<em>T2/Onc2</em> and Piggybac transposons are available in the GitHub <a class="reference external" href="https://github.com/jrderuiter/imfusion/tree/develop/data">respository</a>.</p>
 <p>Finally, for generating the exon-level expression counts, IM-Fusion needs a
 flattened exon representation of the reference gene features (in GTF format).
 This file is most easily generated from the reference gene features using the
@@ -218,15 +246,18 @@ the exon gtf file can be generated as follows:</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -267,7 +298,7 @@ the exon gtf file can be generated as follows:</p>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

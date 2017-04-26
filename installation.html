@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -44,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -84,7 +87,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">IM-Fusion</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#using-conda-recommended">Using conda (recommended)</a></li>
@@ -92,8 +98,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#python-dependencies">Python dependencies</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#external-dependencies">External dependencies</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#tophat2-bowtie1">Tophat2/Bowtie1</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#star">STAR</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stringtie">StringTie</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tophat2-bowtie1">Tophat2/Bowtie1</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#featurecounts">featureCounts</a></li>
 </ul>
 </li>
@@ -119,8 +126,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">IM-Fusion</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">IM-Fusion</a>
+        
       </nav>
 
 
@@ -129,23 +138,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Installation</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Installation</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -194,17 +220,6 @@ installed or install the required rpy2 dependencies using:</p>
 <p>IM-Fusion is compatible with both Python 2.7 and Python 3.4+. However,
 identifying insertions using Tophat-Fusion only works in Python 2.7, as
 Tophat2 is not compatible with Python 3.</p>
-<p>IM-Fusion was tested using the following versions for its dependencies:</p>
-<ul class="simple">
-<li>future &#8211; 0.15.2</li>
-<li>toolz &#8211; 0.7.4</li>
-<li>pandas &#8211; 0.18</li>
-<li>numexpr &#8211; 2.5</li>
-<li>scipy &#8211; 0.17</li>
-<li>seaborn &#8211; 0.7</li>
-<li>pysam &#8211; 0.9.1</li>
-<li>intervaltree &#8211; 2.1.0</li>
-</ul>
 </div>
 <div class="section" id="external-dependencies">
 <h3>External dependencies<a class="headerlink" href="#external-dependencies" title="Permalink to this headline">¶</a></h3>
@@ -219,6 +234,40 @@ Tophat2 is not compatible with Python 3.</p>
 detection to work properly. Note that either STAR or Tophat2 needs to be
 installed, depending on your preference for the aligner. For help with
 their installation, see below.</p>
+<div class="section" id="star">
+<h4>STAR<a class="headerlink" href="#star" title="Permalink to this headline">¶</a></h4>
+<p>STAR is an RNA-seq aligner that can also perform chimeric read alignment,
+enabling the detection of gene-transposon fusions. STAR can be downloaded
+from the <a class="reference external" href="https://github.com/alexdobin/STAR">STAR GitHub repository</a>. After unpacking, make sure that the
+STAR binary is available in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
+<p>STAR can also be installed using bioconda:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">star</span>
+</pre></div>
+</div>
+<p>Or using homebrew/linuxbrew:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">homebrew</span><span class="o">/</span><span class="n">science</span>
+<span class="n">brew</span> <span class="n">update</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">star</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stringtie">
+<h4>StringTie<a class="headerlink" href="#stringtie" title="Permalink to this headline">¶</a></h4>
+<p>StringTie is a fast and highly efficient assembler of RNA-Seq alignments into
+potential transcripts. A binary version of StringTie can be downloaded from the
+StringTie <a class="reference external" href="https://ccb.jhu.edu/software/stringtie">website</a>. After unpacking,
+make sure that the stringtie binary is available in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
+<p>STAR can also be installed using bioconda:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">stringtie</span>
+</pre></div>
+</div>
+<p>Or using homebrew/linuxbrew:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">homebrew</span><span class="o">/</span><span class="n">science</span>
+<span class="n">brew</span> <span class="n">update</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">stringtie</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="tophat2-bowtie1">
 <h4>Tophat2/Bowtie1<a class="headerlink" href="#tophat2-bowtie1" title="Permalink to this headline">¶</a></h4>
 <p>Tophat2 is an RNA-seq read aligner that also includes Tophat-Fusion,
@@ -233,7 +282,8 @@ After unpacking, make sure that the Tophat2 binary is available in <code class="
 <p>Tophat2 can also be installed using <a class="reference external" href="http://brew.sh">homebrew</a> or
 <a class="reference external" href="http://linuxbrew.sh">linuxbrew</a>. For this option, first install
 homebrew or linuxbrew and then install Tophat2 using:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">update</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">homebrew</span><span class="o">/</span><span class="n">science</span>
+<span class="n">brew</span> <span class="n">update</span>
 <span class="n">brew</span> <span class="n">install</span> <span class="n">tophat</span>
 </pre></div>
 </div>
@@ -245,24 +295,9 @@ is available in <code class="docutils literal"><span class="pre">$PATH</span></c
 </pre></div>
 </div>
 <p>Or using homebrew/linuxbrew:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">update</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">homebrew</span><span class="o">/</span><span class="n">science</span>
+<span class="n">brew</span> <span class="n">update</span>
 <span class="n">brew</span> <span class="n">install</span> <span class="n">bowtie</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="star">
-<h4>STAR<a class="headerlink" href="#star" title="Permalink to this headline">¶</a></h4>
-<p>STAR is an RNA-seq aligner that can also perform chimeric read alignment,
-enabling the detection of gene-transposon fusions. STAR can be downloaded
-from the <a class="reference external" href="https://github.com/alexdobin/STAR">STAR GitHub repository</a>. After unpacking, make sure that the
-STAR binary is available in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
-<p>STAR can also be installed using bioconda:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">star</span>
-</pre></div>
-</div>
-<p>Or using homebrew/linuxbrew:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">update</span>
-<span class="n">brew</span> <span class="n">install</span> <span class="n">star</span>
 </pre></div>
 </div>
 </div>
@@ -291,15 +326,18 @@ with a custom tap:</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting started" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="IM-Fusion" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="IM-Fusion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -340,7 +378,7 @@ with a custom tap:</p>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

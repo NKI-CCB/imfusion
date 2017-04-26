@@ -56,17 +56,6 @@ IM-Fusion is compatible with both Python 2.7 and Python 3.4+. However,
 identifying insertions using Tophat-Fusion only works in Python 2.7, as
 Tophat2 is not compatible with Python 3.
 
-IM-Fusion was tested using the following versions for its dependencies:
-
-- future -- 0.15.2
-- toolz -- 0.7.4
-- pandas -- 0.18
-- numexpr -- 2.5
-- scipy -- 0.17
-- seaborn -- 0.7
-- pysam -- 0.9.1
-- intervaltree -- 2.1.0
-
 External dependencies
 ---------------------
 
@@ -81,6 +70,57 @@ These tools must be available in the current PATH for the insertion
 detection to work properly. Note that either STAR or Tophat2 needs to be
 installed, depending on your preference for the aligner. For help with
 their installation, see below.
+
+STAR
+****
+
+STAR is an RNA-seq aligner that can also perform chimeric read alignment,
+enabling the detection of gene-transposon fusions. STAR can be downloaded
+from the `STAR GitHub repository`_. After unpacking, make sure that the
+STAR binary is available in ``$PATH``.
+
+STAR can also be installed using bioconda:
+
+.. code:: bash
+
+    conda install -c bioconda star
+
+Or using homebrew/linuxbrew:
+
+.. code:: bash
+
+    brew tap homebrew/science
+    brew update
+    brew install star
+
+.. _`STAR GitHub repository`: https://github.com/alexdobin/STAR
+
+
+StringTie
+*********
+
+StringTie is a fast and highly efficient assembler of RNA-Seq alignments into
+potential transcripts. A binary version of StringTie can be downloaded from the
+StringTie `website <https://ccb.jhu.edu/software/stringtie>`_. After unpacking,
+make sure that the stringtie binary is available in ``$PATH``.
+
+STAR can also be installed using bioconda:
+
+.. code:: bash
+
+    conda install -c bioconda stringtie
+
+Or using homebrew/linuxbrew:
+
+.. code:: bash
+
+    brew tap homebrew/science
+    brew update
+    brew install stringtie
+
+.. _`STAR GitHub repository`: https://github.com/alexdobin/STAR
+
+
 
 Tophat2/Bowtie1
 ***************
@@ -103,6 +143,7 @@ homebrew or linuxbrew and then install Tophat2 using:
 
 .. code:: bash
 
+    brew tap homebrew/science
     brew update
     brew install tophat
 
@@ -121,31 +162,9 @@ Or using homebrew/linuxbrew:
 
 .. code:: bash
 
+    brew tap homebrew/science
     brew update
     brew install bowtie
-
-STAR
-****
-
-STAR is an RNA-seq aligner that can also perform chimeric read alignment,
-enabling the detection of gene-transposon fusions. STAR can be downloaded
-from the `STAR GitHub repository`_. After unpacking, make sure that the
-STAR binary is available in ``$PATH``.
-
-STAR can also be installed using bioconda:
-
-.. code:: bash
-
-    conda install -c bioconda star
-
-Or using homebrew/linuxbrew:
-
-.. code:: bash
-
-    brew update
-    brew install star
-
-.. _`STAR GitHub repository`: https://github.com/alexdobin/STAR
 
 featureCounts
 *************

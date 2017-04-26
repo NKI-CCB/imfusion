@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -43,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -83,7 +86,10 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../index.html">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
@@ -104,8 +110,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../../../../index.html">IM-Fusion</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">IM-Fusion</a>
+        
       </nav>
 
 
@@ -118,19 +126,36 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      
-    <li>imfusion.build.indexers.base</li>
+        
+      <li>imfusion.build.indexers.base</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -152,14 +177,12 @@
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">pathlib</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">pathlib2</span> <span class="k">as</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">pathlib2</span> <span class="k">as</span> <span class="nn">pathlib</span>
 
 <span class="kn">import</span> <span class="nn">pyfaidx</span>
 
-<span class="kn">from</span> <span class="nn">imfusion.util</span> <span class="k">import</span> <span class="n">shell</span><span class="p">,</span> <span class="n">tabix</span>
+<span class="kn">from</span> <span class="nn">imfusion.external.util</span> <span class="k">import</span> <span class="n">check_dependencies</span>
+<span class="kn">from</span> <span class="nn">imfusion.util</span> <span class="k">import</span> <span class="n">tabix</span>
 
 <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">util</span> <span class="k">as</span> <span class="n">build_util</span>
 
@@ -207,12 +230,17 @@
 <span class="sd">    ----------</span>
 <span class="sd">    logger : logging.Logger</span>
 <span class="sd">        Logger to be used for logging messages.</span>
+<span class="sd">    skip_index : bool</span>
+<span class="sd">        Whether to skip building the index. Mostly used for debugging purposes,</span>
+<span class="sd">        as this typically results in an incomplete reference.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">skip_index</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="c1"># type: (Any) -&gt; None</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logger</span> <span class="ow">or</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_skip_index</span> <span class="o">=</span> <span class="n">skip_index</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_reference_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># type: (...) -&gt; Type[Reference]</span>
@@ -230,7 +258,7 @@
 <span class="sd">        Raises a ValueError if any dependencies are missing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">shell</span><span class="o">.</span><span class="n">check_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span></div>
+        <span class="n">check_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Indexer.build"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Indexer.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -280,7 +308,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Create output directory.</span>
-        <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileExistsError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">ex</span><span class="o">.</span><span class="n">strerror</span> <span class="o">=</span> <span class="s1">&#39;Output directory already exists&#39;</span>
+            <span class="k">raise</span> <span class="n">ex</span>
 
         <span class="c1"># Use dummy Reference instance for paths.</span>
         <span class="n">reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_class</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
@@ -301,7 +333,8 @@
             <span class="n">blacklist_regions</span><span class="o">=</span><span class="n">blacklist_regions</span><span class="p">)</span>
 
         <span class="c1"># Build any required indices using files.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_build_indices</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_index</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_indices</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_build_reference</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -337,9 +370,10 @@
         <span class="sd">&quot;&quot;&quot;Copies and indexes additional reference files (GTF, transposon).&quot;&quot;&quot;</span>
 
         <span class="c1"># Copy additional reference files.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Copying files&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Copying reference files&#39;</span><span class="p">)</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">transposon_path</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">transposon_path</span><span class="p">))</span>
 
+        <span class="n">build_util</span><span class="o">.</span><span class="n">check_feature_file</span><span class="p">(</span><span class="n">transposon_features_path</span><span class="p">)</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">transposon_features_path</span><span class="p">),</span>
                     <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">features_path</span><span class="p">))</span> <span class="c1"># yapf: disable</span>
 
@@ -353,7 +387,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
     <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="Indexer.configure_args"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Indexer.configure_args">[docs]</a>    <span class="k">def</span> <span class="nf">configure_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+<div class="viewcode-block" id="Indexer.configure_args"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Indexer.configure_args">[docs]</a>    <span class="k">def</span> <span class="nf">configure_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
         <span class="c1"># type: (argparse.ArgumentParser) -&gt; None</span>
         <span class="sd">&quot;&quot;&quot;Configures an argument parser for the Indexer.</span>
 
@@ -413,16 +447,24 @@
             <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>
             <span class="n">default</span><span class="o">=</span><span class="p">(),</span>
             <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Genes to blacklist. Should correspond with &#39;</span>
-            <span class="s1">&#39;the gene ids used in the reference gtf file.&#39;</span><span class="p">)</span></div>
+            <span class="s1">&#39;the gene ids used in the reference gtf file.&#39;</span><span class="p">)</span>
+
+        <span class="n">debug_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Debugging&#39;</span><span class="p">)</span>
+        <span class="n">debug_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s1">&#39;--skip_index&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Whether to skip the building of the genome indices. &#39;</span>
+                  <span class="s1">&#39;Mainly used for debugging purposes.&#39;</span><span class="p">))</span></div>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
         <span class="c1"># type: (argparse.Namespace) -&gt; Dict[str, Any]</span>
         <span class="sd">&quot;&quot;&quot;Parses argparse argument to a dict.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;skip_index&#39;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">skip_index</span><span class="p">}</span>
 
     <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="Indexer.from_args"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Indexer.from_args">[docs]</a>    <span class="k">def</span> <span class="nf">from_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+<div class="viewcode-block" id="Indexer.from_args"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Indexer.from_args">[docs]</a>    <span class="k">def</span> <span class="nf">from_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
         <span class="c1"># type: (argparse.Namespace) -&gt; Indexer</span>
         <span class="sd">&quot;&quot;&quot;Constructs an Indexer instance from given arguments.</span>
 
@@ -436,7 +478,7 @@
 <span class="sd">        args : argparse.Namespace</span>
 <span class="sd">            Arguments to parse.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">cls</span><span class="o">.</span><span class="n">_parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">))</span></div></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="bp">cls</span><span class="o">.</span><span class="n">_parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">))</span></div></div>
 
 
 <div class="viewcode-block" id="Reference"><a class="viewcode-back" href="../../../../api.html#imfusion.build.indexers.Reference">[docs]</a><span class="k">class</span> <span class="nc">Reference</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -512,6 +554,9 @@
 </pre></div>
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -552,7 +597,7 @@
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -43,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -83,7 +86,10 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../index.html">IM-Fusion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
@@ -104,8 +110,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../../../../index.html">IM-Fusion</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">IM-Fusion</a>
+        
       </nav>
 
 
@@ -118,19 +126,36 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      
-    <li>imfusion.insertions.aligners.tophat</li>
+        
+      <li>imfusion.insertions.aligners.tophat</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -145,17 +170,17 @@
 <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="o">*</span>
 <span class="c1"># pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">pathlib2</span> <span class="k">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">pathlib2</span> <span class="k">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">toolz</span>
 
 <span class="kn">from</span> <span class="nn">imfusion.build.indexers.tophat</span> <span class="k">import</span> <span class="n">TophatReference</span>
+<span class="kn">from</span> <span class="nn">imfusion.external.stringtie</span> <span class="k">import</span> <span class="n">stringtie_assemble</span>
+<span class="kn">from</span> <span class="nn">imfusion.external.tophat</span> <span class="k">import</span> <span class="n">tophat2_align</span>
+<span class="kn">from</span> <span class="nn">imfusion.external.util</span> <span class="k">import</span> <span class="n">parse_arguments</span>
 <span class="kn">from</span> <span class="nn">imfusion.model</span> <span class="k">import</span> <span class="n">TransposonFusion</span>
-<span class="kn">from</span> <span class="nn">imfusion.util</span> <span class="k">import</span> <span class="n">shell</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">tabix</span>
+<span class="kn">from</span> <span class="nn">imfusion.util</span> <span class="k">import</span> <span class="n">path</span><span class="p">,</span> <span class="n">tabix</span>
 <span class="kn">from</span> <span class="nn">imfusion.util.frozendict</span> <span class="k">import</span> <span class="n">frozendict</span>
 
 <span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">Aligner</span><span class="p">,</span> <span class="n">register_aligner</span>
@@ -214,7 +239,7 @@
                  <span class="n">filter_orientation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">filter_blacklist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_assemble</span> <span class="o">=</span> <span class="n">assemble</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_args</span> <span class="o">=</span> <span class="n">assemble_args</span> <span class="ow">or</span> <span class="p">{}</span>
@@ -241,20 +266,20 @@
         <span class="c1"># Perform alignment using STAR.</span>
         <span class="n">alignment_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s1">&#39;alignment.bam&#39;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">alignment_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Performing alignment&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Performing alignment using Tophat2&#39;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">fastq_path</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">fastq2_path</span><span class="o">=</span><span class="n">fastq2_path</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Using existing alignment&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Using existing Tophat2 alignment&#39;</span><span class="p">)</span>
 
         <span class="c1"># Assemble transcripts if requested.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assemble</span><span class="p">:</span>
             <span class="n">assembled_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s1">&#39;assembled.gtf.gz&#39;</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">assembled_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Assembling transcripts&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Assembling transcripts using Stringie&#39;</span><span class="p">)</span>
 
                 <span class="c1"># Generate assembled GTF.</span>
                 <span class="n">stringtie_out_path</span> <span class="o">=</span> <span class="n">assembled_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-                <span class="n">util</span><span class="o">.</span><span class="n">stringtie_assemble</span><span class="p">(</span>
+                <span class="n">stringtie_assemble</span><span class="p">(</span>
                     <span class="n">alignment_path</span><span class="p">,</span>
                     <span class="n">gtf_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="o">.</span><span class="n">gtf_path</span><span class="p">,</span>
                     <span class="n">output_path</span><span class="o">=</span><span class="n">stringtie_out_path</span><span class="p">)</span>
@@ -263,17 +288,17 @@
                 <span class="n">tabix</span><span class="o">.</span><span class="n">index_gtf</span><span class="p">(</span><span class="n">stringtie_out_path</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="n">assembled_path</span><span class="p">)</span>
                 <span class="n">stringtie_out_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Using existing assembly&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Using existing Stringtie assembly&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">assembled_path</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># Extract identified fusions.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Extracting fusions&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Extracting gene-transposon fusions&#39;</span><span class="p">)</span>
         <span class="n">fusion_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="s1">&#39;fusions.out&#39;</span>
         <span class="n">fusions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_fusions</span><span class="p">(</span><span class="n">fusion_path</span><span class="p">)</span>
 
         <span class="c1"># Extract insertions.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Extracting insertions&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Summarizing insertions&#39;</span><span class="p">)</span>
         <span class="n">insertions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
             <span class="n">util</span><span class="o">.</span><span class="n">extract_insertions</span><span class="p">(</span>
                 <span class="n">fusions</span><span class="p">,</span>
@@ -283,7 +308,6 @@
                 <span class="n">ffpm_fastq_path</span><span class="o">=</span><span class="n">fastq_path</span><span class="p">,</span>
                 <span class="n">chromosomes</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Filtering insertions&#39;</span><span class="p">)</span>
         <span class="n">insertions</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">filter_insertions</span><span class="p">(</span>
             <span class="n">insertions</span><span class="p">,</span>
             <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_filter_features</span><span class="p">,</span>
@@ -315,8 +339,7 @@
             <span class="n">fastq2_path</span><span class="o">=</span><span class="n">fastq2_path</span><span class="p">,</span>
             <span class="n">index_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="o">.</span><span class="n">index_path</span><span class="p">,</span>
             <span class="n">output_dir</span><span class="o">=</span><span class="n">tophat_dir</span><span class="p">,</span>
-            <span class="n">extra_args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
-            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">)</span>
+            <span class="n">extra_args</span><span class="o">=</span><span class="n">args</span><span class="p">)</span>
 
         <span class="c1"># Symlink alignment into expected location for gene counts.</span>
         <span class="n">path</span><span class="o">.</span><span class="n">symlink_relative</span><span class="p">(</span>
@@ -337,14 +360,13 @@
             <span class="k">yield</span> <span class="n">fusion</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">configure_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">configure_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">configure_args</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
 
         <span class="n">group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Tophat2 arguments&#39;</span><span class="p">)</span>
         <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--tophat_threads&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--tophat_min_flank&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
-        <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s1">&#39;--tophat_args&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">shell</span><span class="o">.</span><span class="n">parse_arguments</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--tophat_args&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">parse_arguments</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 
         <span class="n">assemble_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s1">&#39;Assembly&#39;</span><span class="p">)</span>
         <span class="n">assemble_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -364,8 +386,8 @@
         <span class="n">filt_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--blacklisted_genes&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_parse_args</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">kws</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
             <span class="n">reference</span><span class="o">=</span><span class="n">TophatReference</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">reference</span><span class="p">),</span>
             <span class="n">min_flank</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">tophat_min_flank</span><span class="p">,</span>
             <span class="n">threads</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">tophat_threads</span><span class="p">,</span>
@@ -373,70 +395,11 @@
             <span class="n">assemble</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">assemble</span><span class="p">,</span>
             <span class="n">filter_features</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">filter_features</span><span class="p">,</span>
             <span class="n">filter_orientation</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">filter_orientation</span><span class="p">,</span>
-            <span class="n">filter_blacklist</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">blacklisted_genes</span><span class="p">)</span></div>
+            <span class="n">filter_blacklist</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">blacklisted_genes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">toolz</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="n">kws</span><span class="p">)</span></div>
 
 
 <span class="n">register_aligner</span><span class="p">(</span><span class="s1">&#39;tophat&#39;</span><span class="p">,</span> <span class="n">TophatAligner</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">tophat2_align</span><span class="p">(</span><span class="n">fastq_path</span><span class="p">,</span>
-                  <span class="n">index_path</span><span class="p">,</span>
-                  <span class="n">output_dir</span><span class="p">,</span>
-                  <span class="n">fastq2_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">extra_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">stdout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Aligns fastq files to a reference genome using Tophat2.</span>
-
-<span class="sd">    This function is used to call TopHat2 from Python to perform an</span>
-<span class="sd">    RNA-seq alignment. As Tophat2 is written in Python 2.7, this function</span>
-<span class="sd">    cannot be used in Python 3.0+.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    fastq_path : pathlib.Path</span>
-<span class="sd">        Paths to the fastq file that should be used for the Tophat2</span>
-<span class="sd">        alignment.</span>
-<span class="sd">    index_path : pathlib.Path</span>
-<span class="sd">        Path to the bowtie index of the (augmented)</span>
-<span class="sd">        genome that should be used in the alignment. This index is</span>
-<span class="sd">        typically generated by the *build_reference* function.</span>
-<span class="sd">    output_dir : pathlib.Path</span>
-<span class="sd">        Path to the output directory.</span>
-<span class="sd">    fastq2_path : pathlib.Path</span>
-<span class="sd">        Path to the fastq file of the second pair (for paired-end sequencing).</span>
-<span class="sd">    kwargs : dict</span>
-<span class="sd">        Dict of extra command line arguments for Tophat2.</span>
-<span class="sd">    path : pathlib.Path</span>
-<span class="sd">        Path to the Tophat2 executable.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">extra_args</span> <span class="o">=</span> <span class="n">extra_args</span> <span class="ow">or</span> <span class="p">{}</span>
-
-    <span class="c1"># Create output_dir if needed.</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="c1"># Inject own arguments.</span>
-    <span class="n">extra_args</span><span class="p">[</span><span class="s1">&#39;--output-dir&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">output_dir</span><span class="p">),</span> <span class="p">)</span>
-
-    <span class="c1"># Build command-line arguments.</span>
-    <span class="k">if</span> <span class="n">fastq2_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">fastqs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">fastq_path</span><span class="p">)]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">fastqs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">fastq_path</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">fastq2_path</span><span class="p">)]</span>
-
-    <span class="n">optional_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">shell</span><span class="o">.</span><span class="n">flatten_arguments</span><span class="p">(</span><span class="n">extra_args</span><span class="p">))</span>
-    <span class="n">positional_args</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">index_path</span><span class="p">)]</span> <span class="o">+</span> <span class="n">fastqs</span>
-
-    <span class="n">cmdline_args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tophat2&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">optional_args</span> <span class="o">+</span> <span class="n">positional_args</span>
-    <span class="n">cmdline_args</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">cmdline_args</span><span class="p">]</span>
-
-    <span class="c1"># Run Tophat2!</span>
-    <span class="n">shell</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span>
-        <span class="n">args</span><span class="o">=</span><span class="n">cmdline_args</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">stderr</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">read_fusion_out</span><span class="p">(</span><span class="n">fusion_path</span><span class="p">):</span>
@@ -567,6 +530,9 @@
 </pre></div>
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -607,7 +573,7 @@
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
