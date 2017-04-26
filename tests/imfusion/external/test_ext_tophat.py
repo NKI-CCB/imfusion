@@ -26,11 +26,13 @@ class TestTophat2IndexTranscriptome(object):
             output_base_path='transcriptome',
             tmp_dir=tmp_dir)
 
-        mock_run.assert_called_once_with(args=[
-            'tophat2', '--GTF', 'reference.gtf',
-            '--transcriptome-index=transcriptome', '--bowtie1', '--output-dir',
-            str(tmp_dir), 'index'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'tophat2', '--GTF', 'reference.gtf',
+                '--transcriptome-index=transcriptome', '--bowtie1',
+                '--output-dir', str(tmp_dir), 'index'
+            ],
+            log_path=None)
 
 
 @pytest.fixture
@@ -56,10 +58,13 @@ class TestTophat2Align(object):
 
         tophat.tophat2_align(**tophat2_align_kws)
 
-        mock_run.assert_called_once_with(args=[
-            'tophat2', '--output-dir', str(tophat2_align_kws['output_dir']),
-            'index', 'sample.R1.fastq.gz'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'tophat2', '--output-dir',
+                str(tophat2_align_kws['output_dir']), 'index',
+                'sample.R1.fastq.gz'
+            ],
+            log_path=None)
 
     def test_paired_end(self, mocker, tophat2_align_kws):
         """Tests example call with paired-end data."""
@@ -69,10 +74,13 @@ class TestTophat2Align(object):
         tophat2_align_kws['fastq2_path'] = 'sample.R2.fastq.gz'
         tophat.tophat2_align(**tophat2_align_kws)
 
-        mock_run.assert_called_once_with(args=[
-            'tophat2', '--output-dir', str(tophat2_align_kws['output_dir']),
-            'index', 'sample.R1.fastq.gz', 'sample.R2.fastq.gz'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'tophat2', '--output-dir',
+                str(tophat2_align_kws['output_dir']), 'index',
+                'sample.R1.fastq.gz', 'sample.R2.fastq.gz'
+            ],
+            log_path=None)
 
     def test_extra_arguments(self, mocker, tophat2_align_kws):
         """Tests example call with extra arguments."""
@@ -82,7 +90,10 @@ class TestTophat2Align(object):
         tophat2_align_kws['extra_args'] = {'--GTF': 'reference.gtf'}
         tophat.tophat2_align(**tophat2_align_kws)
 
-        mock_run.assert_called_once_with(args=[
-            'tophat2', '--GTF', 'reference.gtf', '--output-dir',
-            str(tophat2_align_kws['output_dir']), 'index', 'sample.R1.fastq.gz'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'tophat2', '--GTF', 'reference.gtf', '--output-dir',
+                str(tophat2_align_kws['output_dir']), 'index',
+                'sample.R1.fastq.gz'
+            ],
+            log_path=None)

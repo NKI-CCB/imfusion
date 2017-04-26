@@ -1,13 +1,16 @@
 """Module containing functions for calling stringtie."""
 
+from pathlib2 import Path
+
 from .util import run_command, flatten_arguments
 
 
 def stringtie_assemble(
-        bam_path,  # type: pathlib.Path
-        gtf_path,  # type: pathlib.Path
-        output_path,  # type: pathlib.Path
-        extra_args=None  # type: Dict[str, Iterable[Any]]
+        bam_path,  # type: pathlib2.Path
+        gtf_path,  # type: pathlib2.Path
+        output_path,  # type: pathlib2.Path
+        extra_args=None,  # type: Dict[str, Iterable[Any]]
+        log_path=None  # type: pathlib2.Path
 ):  # type: (...) -> None
     """Runs stringtie to assemble transripts."""
 
@@ -23,4 +26,4 @@ def stringtie_assemble(
 
     # Assemble full argument list.
     args = ['stringtie', str(bam_path)] + extra_cmdline_args
-    run_command(args)
+    run_command(args, log_path=log_path)

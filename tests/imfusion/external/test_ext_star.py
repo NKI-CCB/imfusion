@@ -26,12 +26,14 @@ class TestStarIndex(object):
             output_dir=output_dir,
             overhang=50)
 
-        mock_run.assert_called_once_with(args=[
-            'STAR', '--runMode', 'genomeGenerate', '--genomeDir',
-            str(output_dir), '--genomeFastaFiles', 'reference.fa',
-            '--sjdbGTFfile', 'reference.gtf', '--sjdbOverhang', '50',
-            '--runThreadN', '1'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'STAR', '--runMode', 'genomeGenerate', '--genomeDir',
+                str(output_dir), '--genomeFastaFiles', 'reference.fa',
+                '--sjdbGTFfile', 'reference.gtf', '--sjdbOverhang', '50',
+                '--runThreadN', '1'
+            ],
+            log_path=None)
 
 
 @pytest.fixture
@@ -57,11 +59,13 @@ class TestStarAlign(object):
 
         star.star_align(**star_align_kws)
 
-        mock_run.assert_called_once_with(args=[
-            'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
-            str(star_align_kws['output_dir']) + '/', '--readFilesIn',
-            'sample.R1.fastq.gz', '--readFilesCommand', 'gunzip', '-c'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
+                str(star_align_kws['output_dir']) + '/', '--readFilesIn',
+                'sample.R1.fastq.gz', '--readFilesCommand', 'gunzip', '-c'
+            ],
+            log_path=None)
 
     def test_basic_without_gzip(self, mocker, star_align_kws):
         """Tests example without gzipped input."""
@@ -71,11 +75,13 @@ class TestStarAlign(object):
         star_align_kws['fastq_path'] = Path('sample.R1.fastq')
         star.star_align(**star_align_kws)
 
-        mock_run.assert_called_once_with(args=[
-            'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
-            str(star_align_kws['output_dir']) + '/', '--readFilesIn',
-            'sample.R1.fastq'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
+                str(star_align_kws['output_dir']) + '/', '--readFilesIn',
+                'sample.R1.fastq'
+            ],
+            log_path=None)
 
     def test_paired_end(self, mocker, star_align_kws):
         """Tests example call with paired-end data."""
@@ -85,12 +91,14 @@ class TestStarAlign(object):
         star_align_kws['fastq2_path'] = 'sample.R2.fastq.gz'
         star.star_align(**star_align_kws)
 
-        mock_run.assert_called_once_with(args=[
-            'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
-            str(star_align_kws['output_dir']) + '/', '--readFilesIn',
-            'sample.R1.fastq.gz', 'sample.R2.fastq.gz', '--readFilesCommand',
-            'gunzip', '-c'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
+                str(star_align_kws['output_dir']) + '/', '--readFilesIn',
+                'sample.R1.fastq.gz', 'sample.R2.fastq.gz',
+                '--readFilesCommand', 'gunzip', '-c'
+            ],
+            log_path=None)
 
     def test_extra_arguments(self, mocker, star_align_kws):
         """Tests example call with extra arguments."""
@@ -100,12 +108,14 @@ class TestStarAlign(object):
         star_align_kws['extra_args'] = {'--outSAMtype': 'Unsorted'}
         star.star_align(**star_align_kws)
 
-        mock_run.assert_called_once_with(args=[
-            'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
-            str(star_align_kws['output_dir']) + '/', '--readFilesIn',
-            'sample.R1.fastq.gz', '--outSAMtype', 'Unsorted',
-            '--readFilesCommand', 'gunzip', '-c'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
+                str(star_align_kws['output_dir']) + '/', '--readFilesIn',
+                'sample.R1.fastq.gz', '--outSAMtype', 'Unsorted',
+                '--readFilesCommand', 'gunzip', '-c'
+            ],
+            log_path=None)
 
     def test_multiple_threads(self, mocker, star_align_kws):
         """Tests example call with extra arguments."""
@@ -115,9 +125,11 @@ class TestStarAlign(object):
         star_align_kws['threads'] = 5
         star.star_align(**star_align_kws)
 
-        mock_run.assert_called_once_with(args=[
-            'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
-            str(star_align_kws['output_dir']) + '/', '--readFilesIn',
-            'sample.R1.fastq.gz', '--readFilesCommand', 'gunzip', '-c',
-            '--runThreadN', '5'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'STAR', '--genomeDir', 'index', '--outFileNamePrefix',
+                str(star_align_kws['output_dir']) + '/', '--readFilesIn',
+                'sample.R1.fastq.gz', '--readFilesCommand', 'gunzip', '-c',
+                '--runThreadN', '5'
+            ],
+            log_path=None)

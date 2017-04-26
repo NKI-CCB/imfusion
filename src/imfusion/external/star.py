@@ -36,11 +36,7 @@ def star_index(fasta_path,
         '--sjdbOverhang', str(overhang), '--runThreadN', str(threads)
     ]
 
-    if log_path is not None:
-        with log_path.open('w') as log_file:
-            run_command(args=args, stdout=log_file)
-    else:
-        run_command(args=args)
+    run_command(args=args, log_path=log_path)
 
 
 def star_align(
@@ -78,8 +74,4 @@ def star_align(
 
     args += [str(arg) for arg in flatten_arguments(extra_args or {})]
 
-    if log_path is not None:
-        with log_path.open('w') as log_file:
-            run_command(args=args, stdout=log_file)
-    else:
-        run_command(args=args)
+    run_command(args=args, log_path=log_path)

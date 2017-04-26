@@ -3,7 +3,11 @@
 from .util import run_command
 
 
-def sambamba_sort(input_bam, output_bam, threads=1, tmp_dir=None):
+def sambamba_sort(input_bam,
+                  output_bam,
+                  threads=1,
+                  tmp_dir=None,
+                  log_path=None):
     """Sorts bam file using sambamba.
 
     Parameters
@@ -16,6 +20,8 @@ def sambamba_sort(input_bam, output_bam, threads=1, tmp_dir=None):
         Number of threads to use.
     tmp_dir : Path
         Temporary directory to use.
+    log_path : Path
+        Path to log file.
 
     """
 
@@ -27,4 +33,4 @@ def sambamba_sort(input_bam, output_bam, threads=1, tmp_dir=None):
         '-t', str(threads), str(input_bam)
     ]
 
-    run_command(args=args)
+    run_command(args=args, log_path=log_path)

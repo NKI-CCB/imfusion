@@ -6,6 +6,8 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
+import subprocess
+
 import pytest
 
 from imfusion.external import util
@@ -61,6 +63,18 @@ class TestParseArguments(object):
         assert args['--multiple'] == ('test1', 'test2')
         assert args['-s'] == ('a', )
 
+    def test_empty_example(self):
+        """Tests call with improper example."""
+
+        assert util.parse_arguments('') == {}
+
+    def test_improper_example(self):
+        """Tests call with improper example."""
+
+        with pytest.raises(ValueError):
+            arg_str = 'whatever --test'
+            util.parse_arguments(arg_str)
+
 
 class TestFlattenArguments(object):
     """Tests for the flatten_arguments function."""
@@ -86,13 +100,13 @@ class TestRunCommand(object):
     def test_example(self, mocker):
         """Tests a simple call to ls."""
 
-        mock = mocker.patch.object(util.subprocess, 'check_call')
-        util.run_command(args=['ls', '-l'], stdout=None, stderr=None)
-        mock.assert_called_once_with(['ls', '-l'], stdout=None, stderr=None)
+        mock = mocker.spy(util.subprocess, 'Popen')
+        util.run_command(args=['ls', '-l'])
+        mock.assert_called_once_with(
+            ['ls', '-l'], stdout=util.DEVNULL, stderr=subprocess.PIPE)
 
     def test_missing_example(self):
         """Tests call with missing external dependency."""
 
         with pytest.raises(FileNotFoundError):
-            util.run_command(
-                args=['non_existant', '-l'], stdout=None, stderr=None)
+            util.run_command(args=['non_existant', '-l'])

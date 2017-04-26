@@ -37,17 +37,13 @@ def tophat2_index_transcriptome(bowtie_index_path,
         tmp_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        cmdline_args = [
+        args = [
             'tophat2', '--GTF', str(gtf_path),
             '--transcriptome-index={}'.format(output_base_path), '--bowtie1',
             '--output-dir', str(tmp_dir), str(bowtie_index_path)
         ]
 
-        if log_path is not None:
-            with log_path.open('w') as log_file:
-                run_command(args=cmdline_args, stdout=log_file)
-        else:
-            run_command(args=cmdline_args)
+        run_command(args=args, log_path=log_path)
     finally:
         shutil.rmtree(str(tmp_dir))
 
@@ -104,8 +100,4 @@ def tophat2_align(fastq_path,
     args = [str(s) for s in args]
 
     # Run Tophat2!
-    if log_path is not None:
-        with log_path.open('w') as log_file:
-            run_command(args=args, stdout=log_file)
-    else:
-        run_command(args=args)
+    run_command(args=args, log_path=log_path)

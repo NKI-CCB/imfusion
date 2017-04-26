@@ -17,7 +17,9 @@ class TestSambambaSort(object):
         mock_run = mocker.patch.object(sambamba, 'run_command')
         sambamba.sambamba_sort(Path('test.bam'), Path('sorted.bam'))
 
-        mock_run.assert_called_once_with(args=[
-            'sambamba', 'sort', '-o', 'sorted.bam', '--tmpdir=_tmp', '-t', '1',
-            'test.bam'
-        ])
+        mock_run.assert_called_once_with(
+            args=[
+                'sambamba', 'sort', '-o', 'sorted.bam', '--tmpdir=_tmp', '-t',
+                '1', 'test.bam'
+            ],
+            log_path=None)

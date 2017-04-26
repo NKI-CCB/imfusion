@@ -7,7 +7,8 @@ def feature_counts(
         bam_files,  # type: Iterable[pathlib.Path]
         gtf_path,  # type: pathlib.Path
         output_path,  # type: pathlib.Path
-        extra_kws=None  # type: Dict[str, Any]
+        extra_kws=None,  # type: Dict[str, Any]
+        log_path=None  # type: pathlib.Path
 ):  # type: (...) -> None
     """Generates counts using featureCounts.
 
@@ -40,4 +41,4 @@ def feature_counts(
             ['-a', str(gtf_path), '-o', str(output_path)] +
             [str(bf) for bf in bam_files])
 
-    run_command(args=args)
+    run_command(args=args, log_path=log_path)

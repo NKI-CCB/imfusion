@@ -19,9 +19,4 @@ def bowtie_index(reference_path, output_base_path, log_path=None):
     """
 
     args = ['bowtie-build', str(reference_path), str(output_base_path)]
-
-    if log_path is not None:
-        with log_path.open('w') as log_file:
-            run_command(args=args, stdout=log_file)
-    else:
-        run_command(args=args)
+    run_command(args=args, log_path=log_path)

@@ -8,6 +8,7 @@ from builtins import *
 
 import os
 import subprocess
+import textwrap
 from typing import Any, Iterable, Optional
 
 import pyparsing as pp
@@ -18,16 +19,30 @@ try:
 except NameError:
     FileNotFoundError = OSError
 
+try:
+    DEVNULL = subprocess.DEVNULL  # py3k
+except ImportError:
+    DEVNULL = open(os.devnull, 'wb')
 
-def run_command(args, stdout=None, stderr=None, logger=None, **kwargs):
-    # type(List[str], Any, Any, Any, **Any) -> None
+
+def run_command(args, log_path=None, **kwargs):
     """Runs command using subprocess.check_call."""
 
-    if logger is not None:
-        logger.info('Running command: %s', ' '.join(args))
-
     try:
-        subprocess.check_call(args, stdout=stdout, stderr=stderr, **kwargs)
+        process = subprocess.Popen(
+            args, stdout=DEVNULL, stderr=subprocess.PIPE, **kwargs)
+        _, stderr = process.communicate()
+
+        if log_path is not None:
+            with log_path.open('w') as log_file:
+                print(log_file, file=log_file)
+
+        if process.returncode != 0:
+            raise CalledProcessError(
+                returncode=process.returncode,
+                cmd=args,
+                stderr=stderr.decode())
+
     except FileNotFoundError as ex:
         extra_msg = ('. Make sure that the required dependencies '
                      'have been installed.')
@@ -35,14 +50,73 @@ def run_command(args, stdout=None, stderr=None, logger=None, **kwargs):
         raise ex
 
 
+class CalledProcessError(subprocess.CalledProcessError):
+    """Custom CalledProcessError that includes stderr in message.
+
+    Parameters
+    ----------
+    *args : Any
+        Any args are passed to the CalledProcessError super class.
+    stderr : str
+        Stderror output to include in message.
+    indent : str
+        Indentation prefix to use for stderr message.
+    **kwargs : Any
+        Any kwargs are passed to the CalledProcessError super class.
+
+    """
+
+    def __init__(self, *args, stderr=None, indent='    ', **kwargs):
+        super().__init__(*args, **kwargs)
+        self._stderr = stderr
+        self._indent = indent
+
+    def __str__(self):
+        message = super().__str__()
+
+        if self._stderr is not None:
+            stderr = textwrap.indent(_tail(self._stderr), prefix=self._indent)
+            message += ('\n\nCaptured the following output '
+                        'from stderr:\n\n' + stderr)
+
+        return message
+
+
+def _tail(message, n=25):
+    """Returns tail of message."""
+
+    lines = message.split(os.linesep)
+    first = max(0, len(lines) - n)
+
+    return os.linesep.join(lines[first:])
+
+
 def parse_arguments(arg_str):
     # type: (List[str]) -> Dict[str, Iterable[str]]
-    """Parses command line arguments from a string."""
+    """Parses command line arguments from a string.
 
+    Recognises arguments of the following form:
+        - -f
+        - --flag
+        - -f <value>
+        - --flag <value> ...
+
+    """
+
+    # Parse string.
     parser = _setup_parser()
     parsed = parser.parseString(arg_str)
 
-    return dict(parsed.asList())
+    result = dict(parsed.asList())
+
+    # Check if we were able to parse something.
+    if len(arg_str.strip()) > 1 and len(result) == 0:
+        raise ValueError('Unable to parse string {!r} into arguments. '
+                         'Ensure string only contains properly formatted '
+                         'optional arguments, e.g. \'-f\', \'-f <value>\' or '
+                         '\'--flag <value>\'.'.format(arg_str))
+
+    return result
 
 
 def _setup_parser():

@@ -18,4 +18,4 @@ class TestBowtieIndex(object):
         bowtie.bowtie_index(Path('reference.fa'), Path('genome'))
 
         mock_run.assert_called_once_with(
-            args=['bowtie-build', 'reference.fa', 'genome'])
+            args=['bowtie-build', 'reference.fa', 'genome'], log_path=None)
