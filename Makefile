@@ -92,7 +92,7 @@ install: clean ## install the package to the active Python's site-packages
 
 gh-pages:
 	git checkout gh-pages
-	rm -rf ./*
+	find ./* -not -path '*/\.*' -prune -exec rm -r "{}" \;
 	git checkout develop docs Makefile src AUTHORS.rst CONTRIBUTING.rst HISTORY.rst README.rst
 	git reset HEAD
 	(cd docs && make html)
