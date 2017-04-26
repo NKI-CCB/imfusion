@@ -105,7 +105,7 @@ class TophatAligner(Aligner):
             self._logger.info('Performing alignment using Tophat2')
             self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
         else:
-            self._logger.info('Using existing alignment')
+            self._logger.info('Using existing Tophat2 alignment')
 
         # Assemble transcripts if requested.
         if self._assemble:
@@ -124,7 +124,7 @@ class TophatAligner(Aligner):
                 tabix.index_gtf(stringtie_out_path, output_path=assembled_path)
                 stringtie_out_path.unlink()
             else:
-                self._logger.info('Using existing assembly')
+                self._logger.info('Using existing Stringtie assembly')
         else:
             assembled_path = None
 

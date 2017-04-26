@@ -232,16 +232,11 @@ class TestStarAligner(object):
 
         # Using external sort.
         aligner2 = star.StarAligner(star_reference, external_sort=True)
-        assert aligner2.dependencies == ['STAR', 'samtools']
+        assert aligner2.dependencies == ['STAR']
 
         # Using assembly.
         aligner3 = star.StarAligner(star_reference, assemble=True)
         assert aligner3.dependencies == ['STAR', 'stringtie']
-
-        # Using external sort with sambamba installed.
-        mocker.patch.object(star, 'which', return_value='sambamba')
-        aligner4 = star.StarAligner(star_reference, external_sort=True)
-        assert aligner4.dependencies == ['STAR', 'sambamba']
 
     def test_identify_insertions(self, read_paths, star_reference,
                                  star_output_dir, mocker):

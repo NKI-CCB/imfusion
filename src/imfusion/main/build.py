@@ -22,6 +22,8 @@ def main():
     args = parse_args()
 
     indexer = args.indexer.from_args(args)
+    indexer.check_dependencies()
+
     indexer.build(
         refseq_path=args.reference_seq,
         gtf_path=args.reference_gtf,

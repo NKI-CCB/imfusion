@@ -162,13 +162,6 @@ class StarAligner(Aligner):
 
         programs = ['STAR']
 
-        if self._external_sort:
-            if which('sambamba') is None:
-                # Fall back to samtools if sambamba is not available.
-                programs += ['samtools']
-            else:
-                programs += ['sambamba']
-
         if self._assemble:
             programs += ['stringtie']
 
@@ -206,7 +199,7 @@ class StarAligner(Aligner):
             self._logger.info('Performing alignment using STAR')
             self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
         else:
-            self._logger.info('Using existing alignment')
+            self._logger.info('Using existing STAR alignment')
 
         # Assemble transcripts if requested.
         if self._assemble:
@@ -225,7 +218,7 @@ class StarAligner(Aligner):
                 tabix.index_gtf(stringtie_out_path, output_path=assembled_path)
                 stringtie_out_path.unlink()
             else:
-                self._logger.info('Using existing assembly')
+                self._logger.info('Using existing Stringtie assembly')
         else:
             assembled_path = None
 

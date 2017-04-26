@@ -26,6 +26,8 @@ def main():
 
     # Construct aligner and identify insertions.
     aligner = args.aligner.from_args(args)
+    aligner.check_dependencies()
+
     insertions = aligner.identify_insertions(
         fastq_path=args.fastq,
         output_dir=args.output_dir,
