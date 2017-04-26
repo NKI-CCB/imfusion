@@ -123,6 +123,12 @@ class MetadataFrameMixin(FrameMixin):
 
         return cls(metadata=frozendict(metadata), **record_dict)
 
+    def __getattr__(self, name):
+        if name in self.metadata:
+            return self.metadata[name]
+        else:
+            raise AttributeError
+
 
 _Fusion = collections.namedtuple('Fusion', [
     'seqname_a', 'location_a', 'strand_a', 'seqname_b', 'location_b',
