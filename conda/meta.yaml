@@ -23,10 +23,8 @@ requirements:
     - seaborn
     - pyfaidx >=0.4.8.1
     - intervaltree
-    - pathlib2 # [py27]
-    - typing # [py27]
-    - r
-    - rpy2 >=2.7.4
+    - pathlib2
+    - typing # [py27 or py34]
     - htslib <1.4
 
   run:
@@ -42,10 +40,8 @@ requirements:
     - seaborn
     - pyfaidx >=0.4.8.1
     - intervaltree
-    - pathlib2 # [py27]
-    - typing # [py27]
-    - r
-    - rpy2 >=2.7.4
+    - pathlib2
+    - typing # [py27 or py34]
     - htslib <1.4
 
     # External dependencies.
