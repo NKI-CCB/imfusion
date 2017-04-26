@@ -102,7 +102,7 @@ class TophatAligner(Aligner):
         # Perform alignment using STAR.
         alignment_path = output_dir / 'alignment.bam'
         if not alignment_path.exists():
-            self._logger.info('Performing alignment')
+            self._logger.info('Performing alignment using Tophat2')
             self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
         else:
             self._logger.info('Using existing alignment')
@@ -111,7 +111,7 @@ class TophatAligner(Aligner):
         if self._assemble:
             assembled_path = output_dir / 'assembled.gtf.gz'
             if not assembled_path.exists():
-                self._logger.info('Assembling transcripts')
+                self._logger.info('Assembling transcripts using Stringie')
 
                 # Generate assembled GTF.
                 stringtie_out_path = assembled_path.with_suffix('')
@@ -129,12 +129,12 @@ class TophatAligner(Aligner):
             assembled_path = None
 
         # Extract identified fusions.
-        self._logger.info('Extracting fusions')
+        self._logger.info('Extracting gene-transposon fusions')
         fusion_path = output_dir / 'fusions.out'
         fusions = self._extract_fusions(fusion_path)
 
         # Extract insertions.
-        self._logger.info('Extracting insertions')
+        self._logger.info('Summarizing insertions')
         insertions = list(
             util.extract_insertions(
                 fusions,
@@ -144,7 +144,6 @@ class TophatAligner(Aligner):
                 ffpm_fastq_path=fastq_path,
                 chromosomes=None))
 
-        self._logger.info('Filtering insertions')
         insertions = util.filter_insertions(
             insertions,
             features=self._filter_features,
@@ -224,7 +223,7 @@ class TophatAligner(Aligner):
 
     @classmethod
     def _parse_args(cls, args):
-        return dict(
+        kws = dict(
             reference=TophatReference(args.reference),
             min_flank=args.tophat_min_flank,
             threads=args.tophat_threads,
@@ -233,6 +232,7 @@ class TophatAligner(Aligner):
             filter_features=args.filter_features,
             filter_orientation=args.filter_orientation,
             filter_blacklist=args.blacklisted_genes)
+        return toolz.merge(super()._parse_args(args), kws)
 
 
 register_aligner('tophat', TophatAligner)

@@ -11,6 +11,7 @@ import logging
 
 from pathlib2 import Path
 
+import imfusion
 from imfusion.insertions.aligners import get_aligners
 from imfusion.model import Insertion
 
@@ -23,7 +24,7 @@ def main():
 
     args = parse_args()
 
-    # Construct aligner.
+    # Construct aligner and identify insertions.
     aligner = args.aligner.from_args(args)
     insertions = aligner.identify_insertions(
         fastq_path=args.fastq,
@@ -44,6 +45,11 @@ def parse_args():
 
     # Setup main parser.
     parser = argparse.ArgumentParser(prog='imfusion-insertions')
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='IM-Fusion ' + imfusion.__version__)
+
     subparsers = parser.add_subparsers(dest='aligner')
     subparsers.required = True
 

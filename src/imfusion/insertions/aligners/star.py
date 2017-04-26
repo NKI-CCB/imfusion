@@ -203,7 +203,7 @@ class StarAligner(Aligner):
         # Perform alignment using STAR.
         alignment_path = output_dir / 'alignment.bam'
         if not alignment_path.exists():
-            self._logger.info('Performing alignment')
+            self._logger.info('Performing alignment using STAR')
             self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
         else:
             self._logger.info('Using existing alignment')
@@ -212,7 +212,7 @@ class StarAligner(Aligner):
         if self._assemble:
             assembled_path = output_dir / 'assembled.gtf.gz'
             if not assembled_path.exists():
-                self._logger.info('Assembling transcripts')
+                self._logger.info('Assembling transcripts using Stringtie')
 
                 # Generate assembled GTF.
                 stringtie_out_path = assembled_path.with_suffix('')
@@ -230,12 +230,12 @@ class StarAligner(Aligner):
             assembled_path = None
 
         # Extract identified fusions.
-        self._logger.info('Extracting fusions')
+        self._logger.info('Extracting gene-transposon fusions')
         fusion_path = output_dir / 'fusions.out'
         fusions = list(self._extract_fusions(fusion_path))
 
         # Extract insertions.
-        self._logger.info('Extracting insertions')
+        self._logger.info('Summarizing insertions')
         insertions = list(
             util.extract_insertions(
                 fusions,
@@ -245,7 +245,7 @@ class StarAligner(Aligner):
                 ffpm_fastq_path=fastq_path,
                 chromosomes=None))
 
-        self._logger.info('Filtering insertions')
+        # self._logger.info('Filtering insertions')
         insertions = util.filter_insertions(
             insertions,
             features=self._filter_features,
@@ -333,8 +333,7 @@ class StarAligner(Aligner):
         star_group.add_argument('--star_min_flank', type=int, default=12)
         star_group.add_argument(
             '--star_external_sort', default=False, action='store_true')
-        star_group.add_argument(
-            '--star_args', type=parse_arguments, default='')
+        star_group.add_argument('--star_args', default='')
 
         star_group.add_argument('--merge_junction_dist', default=10, type=int)
         star_group.add_argument('--max_spanning_dist', default=300, type=int)
@@ -363,7 +362,7 @@ class StarAligner(Aligner):
             reference=StarReference(args.reference),
             min_flank=args.star_min_flank,
             threads=args.star_threads,
-            extra_args=args.star_args,
+            extra_args=parse_arguments(args.star_args),
             external_sort=args.star_external_sort,
             assemble=args.assemble,
             merge_junction_dist=args.merge_junction_dist,
@@ -373,7 +372,7 @@ class StarAligner(Aligner):
             filter_orientation=args.filter_orientation,
             filter_blacklist=args.blacklisted_genes)
 
-        return kws
+        return toolz.merge(super()._parse_args(args), kws)
 
 
 register_aligner('star', StarAligner)
@@ -595,8 +594,6 @@ def _flank_sizes(row):
 
 def _flank_size(row, donor=True):
     """Calculates flank size of a spanning read on one side of the fusion."""
-
-    # TODO: account for deletions/insertions etc.
 
     if donor:
         mate_index = -1 if row.strand_a == 1 else 0

@@ -11,6 +11,7 @@ import logging
 
 from pathlib2 import Path
 
+import imfusion
 from imfusion.expression.counts import generate_exon_counts
 
 FORMAT = "[%(asctime)-15s] %(message)s"
@@ -46,6 +47,11 @@ def parse_args():
     """Parses arguments for imfusion-expression."""
 
     parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='IM-Fusion ' + imfusion.__version__)
 
     parser.add_argument(
         '--sample_dir',

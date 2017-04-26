@@ -9,6 +9,7 @@ from builtins import *
 import argparse
 import logging
 
+import imfusion
 from imfusion.build.indexers import get_indexers
 
 FORMAT = "[%(asctime)-15s] %(message)s"
@@ -20,7 +21,6 @@ def main():
 
     args = parse_args()
 
-    # Construct aligner.
     indexer = args.indexer.from_args(args)
     indexer.build(
         refseq_path=args.reference_seq,
@@ -37,6 +37,12 @@ def parse_args():
 
     # Setup main parser.
     parser = argparse.ArgumentParser(prog='imfusion-build')
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='IM-Fusion ' + imfusion.__version__)
+
     subparsers = parser.add_subparsers(dest='indexer')
     subparsers.required = True
 

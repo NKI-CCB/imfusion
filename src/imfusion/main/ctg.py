@@ -13,6 +13,7 @@ from pathlib2 import Path
 
 import pandas as pd
 
+import imfusion
 from imfusion.build import Reference
 from imfusion.ctg import test_ctgs
 from imfusion.expression.counts import read_exon_counts
@@ -87,6 +88,11 @@ def parse_args():
     """Parses arguments for imfusion-expression."""
 
     parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='IM-Fusion ' + imfusion.__version__)
 
     base_group = parser.add_argument_group('Basic arguments')
 

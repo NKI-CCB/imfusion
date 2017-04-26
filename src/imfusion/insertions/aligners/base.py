@@ -109,7 +109,7 @@ class Aligner(object):
     @classmethod
     def _parse_args(cls, args):
         """Parses arguments from argparse into a dict."""
-        raise NotImplementedError()
+        return {}
 
     @classmethod
     def from_args(cls, args):

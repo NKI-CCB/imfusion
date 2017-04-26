@@ -10,6 +10,8 @@ import argparse
 import subprocess
 import sys
 
+import imfusion
+
 VALID_SUBCOMMANDS = {'build', 'insertions', 'expression', 'merge', 'ctg'}
 
 
@@ -19,6 +21,10 @@ def main():
     # Parse subcommand + extra arguments (which are 'unknown' args).
     parser = argparse.ArgumentParser()
     parser.add_argument('subcommand', choices=VALID_SUBCOMMANDS)
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='IM-Fusion ' + imfusion.__version__)
 
     args, extra_args = parser.parse_known_args()
 
