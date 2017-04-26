@@ -7,4 +7,4 @@ conda config --add channels bioconda
 
 conda config --set anaconda_upload yes
 
-conda build ./conda
+conda build --python 3.5 ./conda
