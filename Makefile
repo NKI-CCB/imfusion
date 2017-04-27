@@ -48,7 +48,7 @@ clean-test: ## remove test and coverage artifacts
 lint: ## check style with pylint
 	pylint src/imfusion
 
-test: ## run tests quickly with the default Python
+test: clean-pyc ## run tests quickly with the default Python
 	py.test tests
 
 tox: clean-pyc
