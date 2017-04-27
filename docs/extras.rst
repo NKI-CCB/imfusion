@@ -37,7 +37,7 @@ false positives.
 Installation
 ~~~~~~~~~~~~
 
-STAR-Fusion can be downloaded from their GitHub
+STAR-Fusion can be downloaded from its GitHub
 `repository <https://github.com/STAR-Fusion/STAR-Fusion/releases>`_. After
 unpacking, make sure that the ``STAR-Fusion`` binary is available in ``$PATH``.
 Note that STAR-Fusion also requires STAR to be installed if run from scratch.
