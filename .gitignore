@@ -63,3 +63,5 @@ target/
 .vscode
 _pybiomart_cache.sqlite
 .ipynb_checkpoints
+
+matplotlibrc

@@ -8,7 +8,6 @@ from builtins import *
 
 import os
 import subprocess
-import textwrap
 from typing import Any, Iterable, Optional
 
 import pyparsing as pp
@@ -19,10 +18,11 @@ try:
 except NameError:
     FileNotFoundError = OSError
 
+# Define DEVNULL.
 try:
-    DEVNULL = subprocess.DEVNULL  # py3k
-except ImportError:
-    DEVNULL = open(os.devnull, 'wb')
+    DEVNULL = subprocess.DEVNULL  # Python 3
+except AttributeError:
+    DEVNULL = open(os.devnull, 'wb')  # Python 2
 
 
 def run_command(args, log_path=None, **kwargs):
@@ -62,12 +62,16 @@ class CalledProcessError(subprocess.CalledProcessError):
     indent : str
         Indentation prefix to use for stderr message.
     **kwargs : Any
-        Any kwargs are passed to the CalledProcessError super class.
+        Any other kwargs are passed to the CalledProcessError super class.
 
     """
 
-    def __init__(self, *args, stderr=None, indent='    ', **kwargs):
+    def __init__(self, *args, **kwargs):
+        stderr = kwargs.pop('stderr', None)
+        indent = kwargs.pop('indent', '    ')
+
         super().__init__(*args, **kwargs)
+
         self._stderr = stderr
         self._indent = indent
 
@@ -75,11 +79,21 @@ class CalledProcessError(subprocess.CalledProcessError):
         message = super().__str__()
 
         if self._stderr is not None:
-            stderr = textwrap.indent(_tail(self._stderr), prefix=self._indent)
+            stderr = _indent(_tail(self._stderr), prefix=self._indent)
             message += ('\n\nCaptured the following output '
                         'from stderr:\n\n' + stderr)
 
         return message
+
+
+def _indent(message, prefix):
+    """Indents message by given prefix.
+
+    Used instead of textwrap.indent for Python 2.7.
+    """
+
+    lines = message.split(os.linesep)
+    return os.linesep.join(prefix + l for l in lines)
 
 
 def _tail(message, n=25):
