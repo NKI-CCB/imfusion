@@ -20,7 +20,7 @@ EXTRAS_REQUIRE = {
     'de_single': ['rpy2'],
     'dev': [
         'sphinx', 'sphinx-autobuild', 'sphinx-rtd-theme', 'bumpversion',
-        'pytest', 'pytest-mock', 'pytest-helpers-namespace', 'pytest-cov',
+        'pytest>=2.7', 'pytest-mock', 'pytest-helpers-namespace', 'pytest-cov',
         'python-coveralls'
     ]
 }
