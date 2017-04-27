@@ -6,6 +6,10 @@ python:
   - '3.5'
 
 install:
+  # Update pip and setup tools.
+  - pip install --upgrade pip
+  - pip install --upgrade setuptools
+
   # Install IM-Fusion with development dependencies.
   - pip install .[dev]
 
@@ -15,7 +19,8 @@ before_script:
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start
 
-script: py.test --cov imfusion --cov-report term-missing
+script:
+    py.test --cov imfusion --cov-report term-missing
 
 after_success:
     - coveralls

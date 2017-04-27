@@ -5,6 +5,9 @@ Extras
 Using STAR-fusion to identify endogenous fusions
 ------------------------------------------------
 
+Motivation
+~~~~~~~~~~
+
 An important advantage of using RNA-sequencing to identify insertions, rather
 than targeted DNA-sequencing, is that RNA-seq data provides more information
 about other events that may be contributing to tumorigenesis. For example,
@@ -12,9 +15,9 @@ besides the gene-transposon insertions, we may expect somatic gene-fusions
 (between endogenous genes) to occur in these tumors, which may also contribute
 to tumorigenesis.
 
-In our manuscript, we show a proof of concept of this idea for both the SB
-and the B-ALL datasets by identifying endogenous fusions from STAR RNA-seq
-alignments using `STAR-Fusion <http://star-fusion.github.io>`_.
+In the IM-Fusion manuscript, we show a proof of concept of this idea for both
+the SB and the B-ALL datasets by identifying endogenous fusions from STAR
+RNA-seq alignments using `STAR-Fusion <http://star-fusion.github.io>`_.
 Using this approach, we identified the engineered *Etv6-Runx1* fusion in the
 B-ALL tumors and identified several known oncogenic fusions in the SB tumors.
 
@@ -34,8 +37,8 @@ the settings used by STAR-Fusion are likely more conservative and running
 STAR-Fusion from scratch may therefore be less likely to identify
 false positives.
 
-Installation
-~~~~~~~~~~~~
+Installing STAR-Fusion
+~~~~~~~~~~~~~~~~~~~~~~
 
 STAR-Fusion can be downloaded from its GitHub
 `repository <https://github.com/STAR-Fusion/STAR-Fusion/releases>`_. After
@@ -52,8 +55,8 @@ This should also install any dependencies of STAR-Fusion (such as STAR). Note
 that the bioconda installation only works on linux at the moment, as bioconda
 currently does not provide any STAR-Fusion builds for macOS.
 
-Preparing a reference
-~~~~~~~~~~~~~~~~~~~~~
+Preparing the reference
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Unfortunately, building a STAR-Fusion reference is quite involved as it
 requires a number of additional tools and resources to be installed. We
