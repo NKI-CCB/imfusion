@@ -45,7 +45,8 @@ setuptools.setup(
             'imfusion-insertions = imfusion.main.insertions:main',
             'imfusion-ctg = imfusion.main.ctg:main',
             'imfusion-expression = imfusion.main.expression:main',
-            'imfusion-merge = imfusion.main.merge:main'
+            'imfusion-merge = imfusion.main.merge:main',
+            'imfusion-starfusion = imfusion.main.star_fusion:main'
         ]
     },
     install_requires=INSTALL_REQUIRES,
