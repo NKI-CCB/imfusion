@@ -118,10 +118,6 @@ Or using homebrew/linuxbrew:
     brew update
     brew install stringtie
 
-.. _`STAR GitHub repository`: https://github.com/alexdobin/STAR
-
-
-
 Tophat2/Bowtie1
 ***************
 
