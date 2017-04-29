@@ -283,7 +283,7 @@ class StarAligner(Aligner):
 
             path.symlink_relative(
                 src_path=star_fusion_dir /
-                'star-fusion.fusion_candidates.final',
+                'star-fusion.fusion_candidates.final.abridged',
                 dest_path=output_dir / 'gene_fusions.txt')
 
         for insertion in insertions:
