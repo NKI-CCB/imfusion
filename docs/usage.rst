@@ -14,7 +14,7 @@ format) into a new Fasta file and builds the indices needed for alignment.
 Separate sub-commands are provided for each supported aligner (currently STAR
 and Tophat-Fusion).
 
-The basic command for building a (STAR-based) reference is as follows:
+The basic command for building a STAR-based reference is as follows:
 
 .. code:: bash
 
@@ -39,7 +39,7 @@ latter can be used to blacklist specific regions (specified as chr:start-end).
 Sequences of blacklisted regions are replaced by 'N' nucleotides in the
 generated reference.
 
-The command for building a Tophat-Fusion-based reference is nearly identical:
+The command for building a reference for Tophat-Fusion is nearly identical:
 
 .. code:: bash
 
@@ -83,7 +83,7 @@ reference, whilst the ``--output_dir`` argument specifies where the
 sample output should be written.
 
 An optional ``--assemble`` argument indicates whether IM-Fusion should perform
-a reference-guided transcript assembly. If given, IM-Fusion runs Stringtie
+a reference-guided transcript assembly. If given, IM-Fusion runs StringTie
 after the RNA-seq alignment to detect novel gene transcripts based on the
 RNA-seq alignment. The results of this assembly are subsequently used in the
 insertion detection step to annotate insertions that involve novel transcripts.
@@ -97,10 +97,11 @@ The command for using Tophat-Fusion is nearly identical:
         --reference references/GRCm38.76.t2onc.tophat \
         --output_dir output/sample_s1
 
-However, both aligners do have some aligner-specific arguments concerning the
-alignment. See the help of the respective sub-commands for more details. For
-STAR, special attention should be paid to memory usage, as STAR requires
-approximately 30GB of memory (per process) for loading the reference genome.
+However, as was the case when building the reference genomes, both aligners do
+have some aligner-specific arguments concerning the alignment. See the help of
+the respective sub-commands for more details. Again, for STAR special
+attention should be paid to memory usage, as STAR requires approximately
+30GB of memory for loading the reference genome.
 
 Quantifying expression (per sample)
 -----------------------------------

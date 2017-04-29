@@ -29,6 +29,15 @@ IM-Fusion has the following key features:
   single insertion in a specific sample, or determine the general
   effect of insertions on a given gene within the tumor cohort.
 
+Additionally, by integrating STAR-Fusion into its STAR-based insertion
+identification pipeline, IM-Fusion enables simultaneous identification of
+transposon insertions and endogenous gene fusions. As shown in our manuscript,
+this approach can identify endogenous gene-fusions driving tumorigenesis, which
+are impossible to identify using targeted DNA-based transposon-sequencing
+approaches.
+
+.. _STAR-Fusion: https://github.com/STAR-Fusion/STAR-Fusion/wiki
+
 For more details on the approach and a comparison with existing DNA-sequencing
 approaches, please see our paper **"Identifying transposon insertions and
 their effects from RNA-sequencing data"** (*Currently under revision*).
@@ -41,8 +50,8 @@ their effects from RNA-sequencing data"** (*Currently under revision*).
    installation
    getting_started
    usage
-   api
    extras
+   api
    contributing
    authors
    history

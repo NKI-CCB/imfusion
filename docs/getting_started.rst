@@ -1,7 +1,6 @@
 Getting started
 ===============
 
-
 Overview
 --------
 
@@ -39,6 +38,10 @@ supporting code is provided for interactive analyses (such as plotting
 differential expression) and manually running certain steps of the pipeline.
 For more details, see :doc:`api`.
 
+For the STAR aligner, we also support identifying endogenous gene fusions
+using STAR-Fusion. See :doc:`extras` for more details about this type of
+analysis.
+
 Required files
 --------------
 
@@ -69,7 +72,7 @@ Example sequence and feature files for the Sleeping Beauty
 *T2/Onc2* and Piggybac transposons are available in the GitHub `respository
 <https://github.com/jrderuiter/imfusion/tree/develop/data>`_.
 
-Finally, for generating the exon-level expression counts, IM-Fusion needs a
+For generating the exon-level expression counts, IM-Fusion needs a
 flattened exon representation of the reference gene features (in GTF format).
 This file is most easily generated from the reference gene features using the
 ``dexseq_prepare_annotation.py`` script from DEXSeq_. Using this script,
@@ -80,3 +83,8 @@ the exon gtf file can be generated as follows:
     python dexseq_prepare_annotation.py --aggr no reference.gtf exons.gtf
 
 .. _dexseq: http://bioconductor.org/packages/release/bioc/html/DEXSeq.html
+
+Finally, for identifying endogenous gene fusions using STAR-Fusion, IM-Fusion
+requires a STAR-Fusion reference that is built using the same reference genome
+as the IM-Fusion reference. For details on how to build this reference,
+see :doc:`extras`.

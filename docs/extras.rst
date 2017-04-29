@@ -36,8 +36,8 @@ Installing STAR-Fusion
 
 STAR-Fusion can be downloaded from the `STAR-Fusion GitHub
 repository`_. After unpacking, make sure that the ``STAR-Fusion`` binary
-is available in ``$PATH``. Note that STAR-Fusion also requires STAR to be
-installed if run from scratch.
+is available in ``$PATH``. Note that STAR-Fusion requires STAR and a few
+non-standard `perl modules`_ to be installed.
 
 Alternatively, STAR-Fusion can also be installed using bioconda:
 
@@ -50,6 +50,7 @@ that the bioconda installation only works on linux at the moment, as bioconda
 currently does not provide any STAR-Fusion builds for macOS.
 
 .. _STAR-Fusion GitHub repository: https://github.com/STAR-Fusion/STAR-Fusion/releases
+.. _perl modules: https://github.com/STAR-Fusion/STAR-Fusion/wiki#tools-required
 
 Preparing the reference
 ~~~~~~~~~~~~~~~~~~~~~~~
