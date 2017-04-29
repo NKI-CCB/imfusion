@@ -42,6 +42,7 @@ their effects from RNA-sequencing data"** (*Currently under revision*).
    getting_started
    usage
    api
+   extras
    contributing
    authors
    history
