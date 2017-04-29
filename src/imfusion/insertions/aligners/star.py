@@ -13,7 +13,7 @@ import sys
 from typing import Any
 import re
 
-from future.util import native_str
+from future.utils import native_str
 from intervaltree import IntervalTree
 import numpy as np
 import pandas as pd
