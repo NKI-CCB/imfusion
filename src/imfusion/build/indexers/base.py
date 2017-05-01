@@ -153,16 +153,16 @@ class Indexer(object):
         # Use dummy Reference instance for paths.
         reference = self._reference_class(output_dir)
 
-        # Copy reference files.
-        self._logger.info('Copying reference files')
+        # Copy transposon files.
+        self._logger.info('Copying transposon files')
         shutil.copy(str(transposon_path), str(reference.transposon_path))
 
         build_util.check_feature_file(transposon_features_path)
         shutil.copy(str(transposon_features_path),
                     str(reference.features_path)) # yapf: disable
 
-        # Build indexed and flattened gtf.
-        self._logger.info('Indexing reference gtf')
+        # Build indexed reference gtf.
+        self._logger.info('Building indexed reference gtf')
         gtf_frame = tabix.read_gtf_frame(gtf_path)
         gtf_frame = tabix.sort_gtf_frame(gtf_frame)
 
@@ -175,7 +175,8 @@ class Indexer(object):
         # Build flattened exon gtf.
         self._logger.info('Building flattened exon gtf')
         gtf_frame_flat = tabix.flatten_gtf_frame(gtf_frame)
-        tabix.write_gtf_frame(gtf_frame_flat, reference.exon_gtf_path)
+        tabix.write_gtf_frame(
+            gtf_frame_flat, file_path=reference.exon_gtf_path)
 
         # Build augmented reference.
         self._logger.info('Building augmented reference')
@@ -194,7 +195,10 @@ class Indexer(object):
             blacklisted_regions=blacklist)
 
         # Build any required indices using files.
-        if not self._skip_index:
+        if self._skip_index:
+            self._logger.warning('Skipping the building of the index. '
+                                 'Reference will not be usable for alignment.')
+        else:
             self._build_indices(reference)
 
     def _build_indices(self, reference):
@@ -345,7 +349,7 @@ class Reference(object):
     def exon_gtf_path(self):
         # type: (...) -> pathlib.Path
         """Path to exon gtf."""
-        return self._reference / 'reference_exons.gtf'
+        return self._reference / 'exons.gtf'
 
     @property
     def index_path(self):

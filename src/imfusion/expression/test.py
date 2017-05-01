@@ -12,16 +12,42 @@ import logging
 from typing import Iterable, Tuple, Union
 
 from future.utils import native
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import mannwhitneyu
-import seaborn as sns
 import toolz
+
+try:
+    from matplotlib import pyplot as plt
+except ImportError:
+    plt = None
+
+try:
+    import seaborn as sns
+except ImportError:
+    sns = None
 
 from imfusion.model import Insertion
 from .counts import estimate_size_factors, normalize_counts
 from .stats import NegativeBinomial
+
+
+
+
+def _check_plot_dependencies(check_seaborn=True):
+    """Checks if plotting dependecies have been installed."""
+
+    if plt is None:
+        raise ImportError('Matplotlib is not installed (or not installed '
+                          'properly), but is required for using these plotting '
+                          'functions. Please install matplotlib and make sure '
+                          'you can import matplotlib without any errors.')
+
+    if check_seaborn and sns is None:
+        raise ImportError('Seaborn is not installed, but is required required '
+                          'for using these plotting functions. Please install '
+                          'seaborn and make sure you can import seaborn '
+                          'without any errors.')
 
 
 def test_de(
@@ -340,6 +366,8 @@ class DeResult(object):
         """Plots boxplot of 'after' expression for samples with/without
         insertions in the gene."""
 
+        _check_plot_dependencies(check_seaborn=True)
+
         ax = ax or plt.subplots()[1]
 
         # Calculate sums.
@@ -414,6 +442,8 @@ def _plot_sums(before,
                width=0.5,
                line_kws=None):
     """Helper function for plotting expression sums in line graph."""
+
+    _check_plot_dependencies(check_seaborn=False)
 
     if ax is None:
         _, ax = plt.subplots()
@@ -703,6 +733,8 @@ class DeGeneResult(object):
 
     def plot_boxplot(self, ax=None, log=False, box_kws=None):
         """Plots boxplot comparing expression between the two groups."""
+
+        _check_plot_dependencies(check_seaborn=True)
 
         if ax is None:
             _, ax = plt.subplots()
