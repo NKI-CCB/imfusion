@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
 
 INSTALL_REQUIRES = [
     'future', 'pandas>=0.19.0', 'numexpr', 'pysam>=0.9.1', 'toolz', 'seaborn',
-    'pyfaidx', 'scipy', 'intervaltree', 'pathlib2',
+    'pyfaidx', 'scipy', 'intervaltree', 'pathlib2', 'htseq>=0.7.2',
     'typing; python_version < "3.5"'
 ]
 

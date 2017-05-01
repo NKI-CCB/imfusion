@@ -26,6 +26,7 @@ requirements:
     - pathlib2
     - typing # [py27 or py34]
     - htslib <1.4
+    - htseq >=0.7.2
 
   run:
     # Python dependencies.
@@ -43,6 +44,7 @@ requirements:
     - pathlib2
     - typing # [py27 or py34]
     - htslib <1.4
+    - htseq >=0.7.2
 
     # External dependencies.
     - star
