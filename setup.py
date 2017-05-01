@@ -18,10 +18,11 @@ INSTALL_REQUIRES = [
 
 EXTRAS_REQUIRE = {
     'de_single': ['rpy2'],
+    'plotting': ['seaborn'],
     'dev': [
         'sphinx', 'sphinx-autobuild', 'sphinx-rtd-theme', 'bumpversion',
         'pytest>=2.7', 'pytest-mock', 'pytest-helpers-namespace', 'pytest-cov',
-        'python-coveralls'
+        'python-coveralls', 'seaborn'
     ]
 }
 
