@@ -175,7 +175,8 @@ class Indexer(object):
         # Build flattened exon gtf.
         self._logger.info('Building flattened exon gtf')
         gtf_frame_flat = tabix.flatten_gtf_frame(gtf_frame)
-        tabix.write_gtf_frame(gtf_frame_flat, reference.exon_gtf_path)
+        tabix.write_gtf_frame(
+            gtf_frame_flat, file_path=reference.exon_gtf_path)
 
         # Build augmented reference.
         self._logger.info('Building augmented reference')

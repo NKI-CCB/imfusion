@@ -8,15 +8,15 @@ from builtins import *
 
 import contextlib
 import csv
-from itertools import chain, groupby, tee
+import itertools
 import subprocess
 from typing import Callable, Iterable, Any
 
 from future.utils import native_str
+import HTSeq as htseq
 import pandas as pd
 import pathlib2 as pathlib
 import pysam
-from sortedcontainers import SortedList
 
 GTF_COLUMNS = [
     'seqname', 'source', 'feature', 'start', 'end', 'score', 'strand', 'frame',
@@ -76,7 +76,7 @@ class GtfIterator(object):
             # the contig records into one iterable.
             if reference is None:
                 contigs = gtf_file.contigs
-                records = chain.from_iterable((gtf_file.fetch(
+                records = itertools.chain.from_iterable((gtf_file.fetch(
                     reference=ref, start=start, end=end) for ref in contigs))
             else:
                 records = gtf_file.fetch(
@@ -185,16 +185,24 @@ def _append_suffix(path_obj, suffix):
 def read_gtf_frame(file_path):
     """Reads an uncompressed GTF file into a pandas DataFrame."""
 
-    return pd.read_csv(
+    gtf_frame = pd.read_csv(
         str(file_path),
         sep='\t',
         names=GTF_COLUMNS,
         dtype=GTF_DTYPES,
         comment='#')
 
+    # Correct start to be zero-based.
+    gtf_frame['start'] -= 1
+
+    return gtf_frame
+
 
 def write_gtf_frame(gtf_frame, file_path):
     """Writes gtf frame to a GTF file."""
+
+    # Correct start to be one-based.
+    gtf_frame = gtf_frame.assign(start=lambda df: df['start'] + 1)
 
     gtf_frame.to_csv(
         str(file_path),
@@ -205,121 +213,76 @@ def write_gtf_frame(gtf_frame, file_path):
 
 
 def sort_gtf_frame(gtf_frame):
-    """Sorts gtf data by position."""
+    """Sorts gtf frame by position."""
     return gtf_frame.sort_values(['seqname', 'start'], ascending=True)
 
 
 def flatten_gtf_frame(gtf_frame):
-    """Flattens exons in given GTF in the same style as DEXSeq."""
+    """Flattens gtf frame to non-overlapping exonic parts."""
 
-    # Extract exons and add gene_id attribute to group by.
-    gtf_frame = gtf_frame.loc[gtf_frame['feature'] == 'exon'].copy()
-    gtf_frame['gene_id'] = gtf_frame['attribute'].str.extract(
-        r'gene_id "(\w+)"', expand=False)
+    # Extract gene_id and transcript_id.
+    gtf_exons = gtf_frame.loc[gtf_frame['feature'] == 'exon'].copy()
 
-    # Flatten per gene and merge into single frame.
-    flattened = pd.concat(
-        (_flatten_gene_group(grp) for _, grp in gtf_frame.groupby('gene_id')),
-        axis=0,
-        ignore_index=True)
+    gtf_exons['gene_id'] = gtf_exons['attribute'].str.extract(
+        r'gene_id "(\w+)"', expand=True)
+    gtf_exons['transcript_id'] = gtf_exons['attribute'].str.extract(
+        r'transcript_id "(\w+)"', expand=True)
 
-    return flattened
+    # Build exon array.
+    exons = htseq.GenomicArrayOfSets('auto', stranded=True)
+    for tup in gtf_exons.itertuples():
+        interval = htseq.GenomicInterval(
+            tup.seqname, tup.start, tup.end, strand=tup.strand)
+        exons[interval] += (tup.gene_id, tup.transcript_id)
 
+    # Extract exonic sections from exon array.
+    gtf_frame = _gtf_frame_from_exon_array(exons)
+    gtf_frame = sort_gtf_frame(gtf_frame)
 
-def _flatten_gene_group(grp):
-    """Flattens exons for a given gene."""
-
-    first = grp.iloc[0]
-
-    # Flatten intervals.
-    grp = grp.sort_values('start', ascending=True)
-    intervals = list(zip(grp.start, grp.end))
-    flattened = list(_flatten_intervals(intervals))
-
-    # Reverse if on negative strand.
-    if first.strand == '-':
-        flattened = flattened[::-1]
-
-    # Extract starts and ends.
-    flat_starts, flat_ends = zip(*flattened)
-
-    # Build attribute strings.
-    attr_fmt = 'gene_id "' + first.gene_id + '"; exonic_part_number "{:03d}"'
-    attributes = [attr_fmt.format(i) for i in range(1, len(flattened) + 1)]
-
-    # Build frame.
-    return pd.DataFrame(
-        {
-            'seqname': first.seqname,
-            'source': 'flatten_gtf',
-            'feature': 'exonic_part',
-            'start': flat_starts,
-            'end': flat_ends,
-            'score': '.',
-            'strand': first.strand,
-            'frame': '.',
-            'attribute': attributes
-        },
-        columns=GTF_COLUMNS)
+    return gtf_frame
 
 
-def _flatten_intervals(intervals):
-    """Flattens a list of (start, end) intervals."""
+def _gtf_frame_from_exon_array(exons):
+    """Returns exon intervals from given GenomicArrayOfSets object."""
 
-    # Remove duplicate intervals and sort.
-    intervals = sorted(set(intervals))
+    def _row_gen(exons):
+        """Extracts rows from exon array."""
 
-    if len(intervals) > 0:
-        # Start first run.
-        start, end = intervals[0]
-        positions = SortedList((start - 1, end))
+        for interval, attrs in exons.steps():
+            # Skip empty intervals (no gene).
+            if len(attrs) > 0:
 
-        for start, end in intervals[1:]:
-            if positions[-1] < start:
-                # We have left the current run, yield everything in positions.
-                for interval in _intervals_from_positions(positions):
-                    yield interval
+                # Only use steps that overlap with exactly one gene.
+                gene_ids = set(gene_id for gene_id, _ in attrs)
+                if len(gene_ids) == 1:
 
-                # Start new run.
-                positions = SortedList((start - 1, end))
-            else:
-                # Record current end as part of the current run.
-                positions.update((start - 1, end))
+                    # Return tuple containing position + gene_id.
+                    yield (interval.chrom, interval.start, interval.end,
+                           interval.strand, next(iter(gene_ids)))
 
-        # Yield any remaining intervals.
-        for interval in _intervals_from_positions(positions):
-            yield interval
+    def _attribute_strs(gene_ids):
+        """Returns attribute strs for a group of gene exons."""
 
+        gene_id = gene_ids.iloc[0]
+        fmt_str = ('gene_id "{}"'.format(gene_id) +
+                   '; exonic_part_number "{:03d}"')
 
-def _intervals_from_positions(positions):
-    """Returns intervals from positions."""
+        return [fmt_str.format(i) for i in range(1, len(gene_ids) + 1)]
 
-    # Remove duplicates and correct first position.
-    pos = list(_uniq(positions))
+    # Extract exonic sections from exon array.
+    flat_exons = pd.DataFrame.from_records(
+        _row_gen(exons),
+        columns=['seqname', 'start', 'end', 'strand', 'gene_id'])
 
-    # Yield intervals.
-    for start, end in _pairwise(_uniq(pos)):
-        yield start + 1, end
+    # Add missing columns to create a gtf frame.
+    flat_exons = flat_exons.sort_values(by=['gene_id', 'start', 'end'])
+    attrs = flat_exons.groupby('gene_id')['gene_id'].transform(_attribute_strs)
 
+    gtf_frame = flat_exons.assign(source='imfusion_flatten',
+                                  feature='exonic_part',
+                                  score='.',
+                                  frame='.',
+                                  attribute=attrs)
+    gtf_frame = gtf_frame.reindex(columns=GTF_COLUMNS)
 
-def _uniq(iterable):
-    """Returns uniq elements for a sorted iterable.
-
-    Example: [1, 1, 2, 2, 2, 3, 3, 1] -> [1, 2, 3, 1
-
-    """
-
-    for k, _ in groupby(iterable):
-        yield k
-
-
-def _pairwise(iterable):
-    """Returns pairs of current, next values from list.
-
-    Example: s -> (s0,s1), (s1,s2), (s2, s3), ...
-
-    """
-
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
+    return gtf_frame
