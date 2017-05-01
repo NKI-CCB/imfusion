@@ -3,59 +3,69 @@ import pytest
 from imfusion.util import tabix
 
 
-class TestFlattenIntervals(object):
-    """Unit tests for flatten_intervals function."""
-
-    # def test_example(self):
-    #     """Tests example case."""
-
-    #     ranges = [(10, 12), (12, 15), (15, 20), (20, 30), (30, 32), (45, 55)]
-    #     flattened = list(genomic.flatten_intervals(ranges))
-
-    #     assert flattened == [(10, 12), (12, 15), (15, 20), (20, 30), (30, 32), (45, 55)]
-
-    def test_smn1(self, test_intervals, flattened_test_intervals):
-        """Test Smn1 example."""
-        flattened = list(tabix._flatten_intervals(test_intervals))
-        assert flattened == flattened_test_intervals
-
-    def test_empty(self):
-        """Test empty example."""
-        flattened = list(tabix._flatten_intervals([]))
-        assert flattened == []
-
-
 @pytest.fixture
-def test_intervals():
-    """Example intervals for Smn1."""
-
-    return [
-        (100124852, 100124965), (100124858, 100124965), (100124858, 100124965),
-        (100124894, 100124965), (100124924, 100124965), (100125819, 100125931),
-        (100126125, 100126658), (100126587, 100126658), (100126587, 100126658),
-        (100126587, 100126658), (100126870, 100126989), (100126870, 100126989),
-        (100126870, 100126935), (100126870, 100127142), (100127805, 100127812),
-        (100127805, 100128005), (100127805, 100128005), (100127875, 100128005),
-        (100128215, 100128361), (100128215, 100128361), (100128215, 100128630),
-        (100131003, 100131175), (100131080, 100131174), (100131080, 100131175),
-        (100132356, 100132466), (100132356, 100132466), (100135393, 100135739),
-        (100135689, 100135739), (100135689, 100135739), (100135689, 100135739),
-        (100137381, 100137480), (100137381, 100137690), (100137381, 100137450),
-        (100137387, 100137690)
-    ]
+def gtf_path():
+    """Returns path to example gtf file containing Smn1."""
+    return pytest.helpers.data_path(
+        'Mus_musculus.GRCm38.76.Smn1.gtf', relative_to=__file__)
 
 
-@pytest.fixture
-def flattened_test_intervals():
-    """Flattened test intervals for Smn1."""
-    return [
-        (100124852, 100124857), (100124858, 100124893), (100124894, 100124923),
-        (100124924, 100124965), (100125819, 100125931), (100126125, 100126586),
-        (100126587, 100126658), (100126870, 100126935), (100126936, 100126989),
-        (100126990, 100127142), (100127805, 100127812), (100127813, 100127874),
-        (100127875, 100128005), (100128215, 100128361), (100128362, 100128630),
-        (100131003, 100131079), (100131080, 100131174), (100131175, 100131175),
-        (100132356, 100132466), (100135393, 100135688), (100135689, 100135739),
-        (100137381, 100137386), (100137387, 100137450), (100137451, 100137480),
-        (100137481, 100137690)
-    ]
+class TestReadGtfFrame(object):
+    """Unit tests for the read_gtf_frame function."""
+
+    def test_example(self, gtf_path):
+        """Test example gtf containing Smn1."""
+
+        gtf = tabix.read_gtf_frame(gtf_path)
+
+        # Check shape.
+        assert gtf.shape == (76, 9)
+        assert list(gtf.columns) == tabix.GTF_COLUMNS
+
+        # Check if start position = -1.
+        assert gtf.iloc[0]['start'] == 100124851
+
+
+class TestFlattenGtfFrame(object):
+    """Unit tests for the flatten_gtf_frame function."""
+
+    def test_example(self, gtf_path):
+        """Test example gtf containing Smn1."""
+
+        gtf = tabix.read_gtf_frame(gtf_path)
+        gtf_flat = tabix.flatten_gtf_frame(gtf)
+
+        # Check shape.
+        assert gtf_flat.shape == (25, 9)
+        assert list(gtf_flat.columns) == tabix.GTF_COLUMNS
+
+        # Check positions.
+        head = gtf_flat.head()
+        assert list(head['start']) == [
+            100124851, 100124857, 100124893, 100124923, 100125818]
+        assert list(head['end']) == [
+            100124857, 100124893, 100124923, 100124965, 100125931]
+
+        # Check other values.
+        first = gtf_flat.iloc[0]
+        assert first.seqname == '13'
+        assert first.source == 'imfusion_flatten'
+        assert first.feature == 'exonic_part'
+        assert first.score == '.'
+        assert first.frame == '.'
+        assert first.attribute == ('gene_id "ENSMUSG00000021645"; '
+                                   'exonic_part_number "001"')
+
+# class TestFlattenGtfFrame(object):
+#     """Unit tests for flatten_intervals function."""
+
+#     def test_smn1(self, test_intervals, flattened_test_intervals):
+#         """Test Smn1 example."""
+#         flattened = list(tabix.flatten_gtf_frame(test_intervals))
+#         assert flattened == flattened_test_intervals
+
+    # def test_empty(self):
+    #     """Test empty example."""
+    #     flattened = list(tabix._flatten_intervals([]))
+    #     assert flattened == []
+
