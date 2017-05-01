@@ -12,7 +12,6 @@ import operator
 from typing import Iterable
 
 from intervaltree import IntervalTree
-from sortedcontainers import SortedList
 
 
 class GenomicIntervalTree(object):
@@ -71,52 +70,3 @@ class GenomicIntervalTree(object):
         # type: (str, int, int) -> Iterable[object]
         """Searches the tree for objects within given range."""
         return self._trees[chromosome].search(begin, end)
-
-
-def flatten_intervals(intervals):
-    """Flattens a list of (start, end) intervals."""
-
-    intervals = sorted(intervals)
-
-    if len(intervals) > 0:
-        # Start first run.
-        positions = SortedList(intervals[0])
-
-        for interval in intervals:
-            if positions[-1] < interval[0]:
-                # We have left the current run, yield everything in positions.
-                for new_int in _pairwise(_uniq(positions)):
-                    yield new_int
-
-                #Start new run.
-                positions = SortedList(interval)
-            else:
-                # Record current end as part of the current run.
-                positions.update(interval)
-
-        # Yield any remaining intervals.
-        for new_int in _pairwise(_uniq(positions)):
-            yield new_int
-
-
-def _uniq(iterable):
-    """Returns uniq elements for a sorted iterable.
-
-    Example: [1, 1, 2, 2, 2, 3, 3, 1] -> [1, 2, 3, 1
-
-    """
-
-    for k, _ in itertools.groupby(iterable):
-        yield k
-
-
-def _pairwise(iterable):
-    """Returns pairs of current, next values from list.
-
-    Example: s -> (s0,s1), (s1,s2), (s2, s3), ...
-
-    """
-
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)
