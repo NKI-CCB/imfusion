@@ -52,10 +52,10 @@ test: clean-pyc ## run tests quickly with the default Python
 	py.test tests
 
 tox: clean-pyc
-	cp tests/matplotlibrc ./
-	docker run -v `pwd`:/app -t -i themattrix/tox-base
-	rm matplotlibrc
 	rm -rf .tox
+	cp tests/matplotlibrc ./
+	docker run -v `pwd`:/app -t -i jrderuiter/tox-base
+	rm -rf matplotlibrc .tox
 
 coverage: ## check code coverage quickly with the default Python
 	py.test --cov=geneviz --cov-report=html
