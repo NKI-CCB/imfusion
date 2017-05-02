@@ -4,6 +4,9 @@ Installation
 Using bioconda (recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+**IM-Fusion is currently not yet available in bioconda, but will be made
+available soon. In the meantime, please use pip to install.**
+
 The recommended way to install IM-Fusion is using bioconda, as this installs
 IM-Fusion together with its external dependencies into an isolated environment
 using a single command:
@@ -23,21 +26,31 @@ Alternatively, IM-Fusion can be installed in an existing environment using:
 
   conda install -c jrderuiter imfusion
 
-Note that the bioconda package does not install rpy2, as R/rpy2 can be
-difficult to install. If you wish to use the single-sample differential
-expression test (which requires rpy2), you can install R and rpy2 can be
-installed using:
+Note that the bioconda package does not install rpy2 (which is only required
+for the single-sample differential expression test and can be difficult to
+install) and matplotlib/seaborn (which is only required for the differential
+expression plots and can give issues on headless servers).
+
+If you wish to use the single-sample differential expression test (which
+requires rpy2), you can install R and rpy2 can be installed using:
 
 .. code:: bash
 
+    # Using conda
     conda install rpy2
 
-Rpy2 can also be installed using pip if you want to use an existing R
-installation:
+    # Using pip (allows use of existing R installation)
+    pip install rpy2
+
+Similarly, matplotlib/seaborn can be installed as follows:
 
 .. code:: bash
 
-    pip install rpy2
+    # Using conda
+    conda install matplotlib seaborn
+
+    # Using pip
+    pip install matplotlib seaborn
 
 Using pip
 ~~~~~~~~~
@@ -50,8 +63,9 @@ IM-Fusion can also be installed using pip:
 
 Note that this does not install any of the required external dependencies,
 which must therefore be installed manually (see below for more details).
-This does also not install rpy2, which must also be installed using pip
-if you plan to use single-sample differential expression test.
+This does also not install rpy2 or matplotlib/seaborn, which must also be
+installed using pip if you plan to use single-sample differential expression
+test or the differential expression plotting functions.
 
 If you don't have numpy installed, you may run into the following error:
 
