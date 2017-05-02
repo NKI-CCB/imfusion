@@ -24,11 +24,11 @@ GTF_COLUMNS = [
 ]
 
 GTF_DTYPES = {
-    'seqname': str,
+    'seqname': 'str',
     'source': 'category',
     'feature': 'category',
-    'start': int,
-    'end': int,
+    'start': 'int',
+    'end': 'int',
     'strand': 'category',
     'frame': 'category',
     'attribute': 'str'
@@ -264,8 +264,8 @@ def _gtf_frame_from_exon_array(exons):
         """Returns attribute strs for a group of gene exons."""
 
         gene_id = gene_ids.iloc[0]
-        fmt_str = ('gene_id "{}"'.format(gene_id) +
-                   '; exonic_part_number "{:03d}"')
+        fmt_str = (
+            'gene_id "{}"'.format(gene_id) + '; exonic_part_number "{:03d}"')
 
         return [fmt_str.format(i) for i in range(1, len(gene_ids) + 1)]
 
@@ -278,11 +278,12 @@ def _gtf_frame_from_exon_array(exons):
     flat_exons = flat_exons.sort_values(by=['gene_id', 'start', 'end'])
     attrs = flat_exons.groupby('gene_id')['gene_id'].transform(_attribute_strs)
 
-    gtf_frame = flat_exons.assign(source='imfusion_flatten',
-                                  feature='exonic_part',
-                                  score='.',
-                                  frame='.',
-                                  attribute=attrs)
+    gtf_frame = flat_exons.assign(
+        source='imfusion_flatten',
+        feature='exonic_part',
+        score='.',
+        frame='.',
+        attribute=attrs)
     gtf_frame = gtf_frame.reindex(columns=GTF_COLUMNS)
 
     return gtf_frame

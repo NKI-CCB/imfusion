@@ -426,8 +426,8 @@ def read_chimeric_junctions(chimeric_path):
         sep='\t',
         header=None,
         names=names,
-        dtype={'seqname_a': str,
-               'seqname_b': str})
+        dtype={'seqname_a': 'str',
+               'seqname_b': 'str'})
 
     for strand_col in ['strand_a', 'strand_b']:
         junctions[strand_col] = junctions[strand_col].map({'+': 1, '-': -1})

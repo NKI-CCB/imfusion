@@ -139,7 +139,7 @@ def _read_feature_count_output(file_path, names=None):
 
     # Read counts.
     counts = pd.read_csv(
-        str(file_path), sep='\t', comment='#', dtype={'Chr': str})
+        str(file_path), sep='\t', comment='#', dtype={'Chr': 'str'})
 
     # If names are given, rename columns.
     if names is not None:
@@ -183,7 +183,7 @@ def _read_counts(file_path, prefix=None, **kwargs):
     """Reads counts from file, optionally filtering for given prefix."""
 
     # Read counts, optionally filtering for given prefix.
-    default_kws = dict(sep='\t', dtype={'chr': str}, comment='#')
+    default_kws = dict(sep='\t', dtype={'chr': 'str'}, comment='#')
     read_csv_kws = toolz.merge(default_kws, kwargs)
 
     if prefix is None:
