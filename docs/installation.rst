@@ -53,6 +53,33 @@ which must therefore be installed manually (see below for more details).
 This does also not install rpy2, which must also be installed using pip
 if you plan to use single-sample differential expression test.
 
+If you don't have numpy installed, you may run into the following error:
+
+.. code:: bash
+
+    Downloading HTSeq-0.7.2.tar.gz (548kB)
+        Complete output from command python setup.py egg_info:
+        Setup script for HTSeq: Failed to import 'numpy'.
+        Please install numpy and then try again to install HTSeq.
+
+This can be fixed by first installing numpy before trying to install IM-Fusion,
+as numpy is an install-time dependency of one of IM-Fusions dependencies
+(HTSeq). Similarly, HTSeq requires liblzma to be installed to build properly,
+otherwise you will encounter the following error:
+
+.. code:: bash
+
+    /usr/bin/ld: cannot find -llzma
+    collect2: error: ld returned 1 exit status
+
+This can be fixed by installing liblzma-dev. On linux (assuming an apt-get
+based distribution) this can be done as follows:
+
+.. code:: bash
+
+    sudo apt-get update
+    sudo apt-get -y install liblzma-dev
+
 Hardware dependencies
 ~~~~~~~~~~~~~~~~~~~~~
 
