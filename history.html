@@ -99,7 +99,7 @@
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#unreleased">0.2.1 (unreleased)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#in-development">0.3.0 (in development)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id1">0.2.0 (2017-03-09)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id2">0.1.0 (2016-03-26)</a></li>
 </ul>
@@ -169,13 +169,20 @@
             
   <div class="section" id="history">
 <h1>History<a class="headerlink" href="#history" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="unreleased">
-<h2>0.2.1 (unreleased)<a class="headerlink" href="#unreleased" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="in-development">
+<h2>0.3.0 (in development)<a class="headerlink" href="#in-development" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Refactored external tools into the <code class="docutils literal"><span class="pre">imfusion.external</span></code> module.</li>
+<li>Use docker/tox for testing against multiple Python versions locally.</li>
 <li>Added additional checks for inputs and improved error messages.</li>
 <li>Added support for DataFrame insertion inputs to DE testing functions.</li>
-<li>Use tox for testing against multiple Python versions locally.</li>
+<li>Added building of exon gtf as part of imfusion-build.</li>
+<li>Added identification of endogenous fusions using STAR-Fusion as part
+of imfusion-insertions (using STAR). Also adds script for building
+(murine) STAR-Fusion references.</li>
+<li>Made matplotlib/seaborn conditional dependencies that are only required
+when using the plotting functions. This makes IM-Fusion easier to install
+on headless servers/HPCs.</li>
 </ul>
 </div>
 <div class="section" id="id1">
