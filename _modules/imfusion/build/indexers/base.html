@@ -95,6 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../authors.html">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../history.html">History</a></li>
@@ -317,34 +318,32 @@
         <span class="c1"># Use dummy Reference instance for paths.</span>
         <span class="n">reference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_class</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
 
-        <span class="c1"># Copy and index additional files (GTF etc.).</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_copy_and_index_files</span><span class="p">(</span>
-            <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
-            <span class="n">gtf_path</span><span class="o">=</span><span class="n">gtf_path</span><span class="p">,</span>
-            <span class="n">transposon_path</span><span class="o">=</span><span class="n">transposon_path</span><span class="p">,</span>
-            <span class="n">transposon_features_path</span><span class="o">=</span><span class="n">transposon_features_path</span><span class="p">)</span>
+        <span class="c1"># Copy transposon files.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Copying transposon files&#39;</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">transposon_path</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">transposon_path</span><span class="p">))</span>
+
+        <span class="n">build_util</span><span class="o">.</span><span class="n">check_feature_file</span><span class="p">(</span><span class="n">transposon_features_path</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">transposon_features_path</span><span class="p">),</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">features_path</span><span class="p">))</span> <span class="c1"># yapf: disable</span>
+
+        <span class="c1"># Build indexed reference gtf.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Building indexed reference gtf&#39;</span><span class="p">)</span>
+        <span class="n">gtf_frame</span> <span class="o">=</span> <span class="n">tabix</span><span class="o">.</span><span class="n">read_gtf_frame</span><span class="p">(</span><span class="n">gtf_path</span><span class="p">)</span>
+        <span class="n">gtf_frame</span> <span class="o">=</span> <span class="n">tabix</span><span class="o">.</span><span class="n">sort_gtf_frame</span><span class="p">(</span><span class="n">gtf_frame</span><span class="p">)</span>
+
+        <span class="n">tabix</span><span class="o">.</span><span class="n">write_gtf_frame</span><span class="p">(</span><span class="n">gtf_frame</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf_path</span><span class="p">)</span>
+        <span class="n">tabix</span><span class="o">.</span><span class="n">index_gtf</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">.</span><span class="n">gtf_path</span><span class="p">,</span>
+            <span class="n">output_path</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">indexed_gtf_path</span><span class="p">,</span>
+            <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Build flattened exon gtf.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Building flattened exon gtf&#39;</span><span class="p">)</span>
+        <span class="n">gtf_frame_flat</span> <span class="o">=</span> <span class="n">tabix</span><span class="o">.</span><span class="n">flatten_gtf_frame</span><span class="p">(</span><span class="n">gtf_frame</span><span class="p">)</span>
+        <span class="n">tabix</span><span class="o">.</span><span class="n">write_gtf_frame</span><span class="p">(</span>
+            <span class="n">gtf_frame_flat</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">exon_gtf_path</span><span class="p">)</span>
 
         <span class="c1"># Build augmented reference.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_build_reference</span><span class="p">(</span>
-            <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
-            <span class="n">refseq_path</span><span class="o">=</span><span class="n">refseq_path</span><span class="p">,</span>
-            <span class="n">transposon_path</span><span class="o">=</span><span class="n">transposon_path</span><span class="p">,</span>
-            <span class="n">blacklist_genes</span><span class="o">=</span><span class="n">blacklist_genes</span><span class="p">,</span>
-            <span class="n">blacklist_regions</span><span class="o">=</span><span class="n">blacklist_regions</span><span class="p">)</span>
-
-        <span class="c1"># Build any required indices using files.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_index</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_build_indices</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span></div>
-
-    <span class="k">def</span> <span class="nf">_build_reference</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">reference</span><span class="p">,</span>  <span class="c1"># type: Reference</span>
-            <span class="n">refseq_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
-            <span class="n">transposon_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
-            <span class="n">blacklist_regions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: List[Tuple[str, int, int]]</span>
-            <span class="n">blacklist_genes</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># type: List[str]</span>
-    <span class="p">):</span>  <span class="c1"># type (...) -&gt; None</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Building augmented reference&#39;</span><span class="p">)</span>
 
         <span class="n">blacklist_regions</span> <span class="o">=</span> <span class="n">blacklist_regions</span> <span class="ow">or</span> <span class="p">[]</span>
@@ -360,28 +359,12 @@
             <span class="n">output_path</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">fasta_path</span><span class="p">,</span>
             <span class="n">blacklisted_regions</span><span class="o">=</span><span class="n">blacklist</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_copy_and_index_files</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">reference</span><span class="p">,</span>  <span class="c1"># type: Reference</span>
-            <span class="n">gtf_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
-            <span class="n">transposon_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
-            <span class="n">transposon_features_path</span>  <span class="c1"># type: pathlib.Path</span>
-    <span class="p">):</span>  <span class="c1"># type: (...) -&gt; None</span>
-        <span class="sd">&quot;&quot;&quot;Copies and indexes additional reference files (GTF, transposon).&quot;&quot;&quot;</span>
-
-        <span class="c1"># Copy additional reference files.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Copying reference files&#39;</span><span class="p">)</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">transposon_path</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">transposon_path</span><span class="p">))</span>
-
-        <span class="n">build_util</span><span class="o">.</span><span class="n">check_feature_file</span><span class="p">(</span><span class="n">transposon_features_path</span><span class="p">)</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">transposon_features_path</span><span class="p">),</span>
-                    <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">features_path</span><span class="p">))</span> <span class="c1"># yapf: disable</span>
-
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">gtf_path</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf_path</span><span class="p">))</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Indexing reference gtf&#39;</span><span class="p">)</span>
-        <span class="n">tabix</span><span class="o">.</span><span class="n">index_gtf</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">gtf_path</span><span class="p">,</span>
-                        <span class="n">output_path</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">indexed_gtf_path</span><span class="p">)</span> <span class="c1"># yapf: disable</span>
+        <span class="c1"># Build any required indices using files.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_index</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Skipping the building of the index. &#39;</span>
+                                 <span class="s1">&#39;Reference will not be usable for alignment.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_indices</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_build_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
@@ -526,6 +509,12 @@
         <span class="c1"># type: (...) -&gt; pathlib.Path</span>
         <span class="sd">&quot;&quot;&quot;Path to reference gtf.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">/</span> <span class="s1">&#39;reference.gtf.gz&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exon_gtf_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># type: (...) -&gt; pathlib.Path</span>
+        <span class="sd">&quot;&quot;&quot;Path to exon gtf.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">/</span> <span class="s1">&#39;exons.gtf&#39;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">index_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

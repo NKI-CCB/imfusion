@@ -1,0 +1,379 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Extras &mdash; IM-Fusion 0.2.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="IM-Fusion 0.2.0 documentation" href="index.html"/>
+        <link rel="next" title="Contributing" href="contributing.html"/>
+        <link rel="prev" title="API" href="api.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">IM-Fusion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Extras</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#using-star-fusion-to-identify-endogenous-fusions">Using STAR-fusion to identify endogenous fusions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#motivation">Motivation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-star-fusion">Installing STAR-Fusion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#preparing-the-reference">Preparing the reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#identifying-fusions">Identifying fusions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#using-im-fusion">Using IM-Fusion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#from-scratch">From scratch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">IM-Fusion</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Extras</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/extras.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="extras">
+<h1>Extras<a class="headerlink" href="#extras" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="using-star-fusion-to-identify-endogenous-fusions">
+<h2>Using STAR-fusion to identify endogenous fusions<a class="headerlink" href="#using-star-fusion-to-identify-endogenous-fusions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="motivation">
+<h3>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h3>
+<p>An important advantage of using RNA-sequencing to identify insertions, rather
+than targeted DNA-sequencing, is that RNA-seq data provides more information
+about other events that may be contributing to tumorigenesis. For example,
+besides the gene-transposon insertions, we may expect somatic gene-fusions
+(between endogenous genes) to occur in these tumors, which may also contribute
+to tumorigenesis.</p>
+<p>In the IM-Fusion manuscript, we demonstrate this idea for both the SB and the
+B-ALL datasets by identifying endogenous fusions from STAR RNA-seq alignments
+using <a class="reference external" href="http://star-fusion.github.io">STAR-Fusion</a>. Using this approach, we identified the engineered
+<em>Etv6-Runx1</em> fusion in the B-ALL tumors and identified several
+known oncogenic fusions in the SB tumors.</p>
+<p>Here we provide a brief description of how to apply STAR-Fusion to identify
+endogenous gene fusions. In the first approach, we describe how to run
+STAR-Fusion as part of IM-Fusion (when STAR is being used to identify
+insertions). In the second, we describe how to run STAR-Fusion from
+scratch, which requires extra computation time and disk space but has the
+advantage of allowing you to use other parameter settings (specifically geared
+towards identifying endogenous fusions) for STAR during the alignment.</p>
+</div>
+<div class="section" id="installing-star-fusion">
+<h3>Installing STAR-Fusion<a class="headerlink" href="#installing-star-fusion" title="Permalink to this headline">¶</a></h3>
+<p>STAR-Fusion can be downloaded from the <a class="reference external" href="https://github.com/STAR-Fusion/STAR-Fusion/releases">STAR-Fusion GitHub
+repository</a>. After unpacking, make sure that the <code class="docutils literal"><span class="pre">STAR-Fusion</span></code> binary
+is available in <code class="docutils literal"><span class="pre">$PATH</span></code>. Note that STAR-Fusion requires STAR and a few
+non-standard <a class="reference external" href="https://github.com/STAR-Fusion/STAR-Fusion/wiki#tools-required">perl modules</a> to be installed.</p>
+<p>Alternatively, STAR-Fusion can also be installed using bioconda:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">star</span><span class="o">-</span><span class="n">fusion</span>
+</pre></div>
+</div>
+<p>This should also install any dependencies of STAR-Fusion (such as STAR). Note
+that the bioconda installation only works on linux at the moment, as bioconda
+currently does not provide any STAR-Fusion builds for macOS.</p>
+</div>
+<div class="section" id="preparing-the-reference">
+<h3>Preparing the reference<a class="headerlink" href="#preparing-the-reference" title="Permalink to this headline">¶</a></h3>
+<p>Building a STAR-Fusion reference is quite involved as it
+requires a number of additional tools and resources to be installed. We
+therefore recommend using a pre-built reference if possible. Pre-built
+references are available for <a class="reference external" href="https://data.broadinstitute.org/Trinity/CTAT_RESOURCE_LIB">human</a> reference genomes and for the mouse <a class="reference external" href="ftp://ftp.broadinstitute.org/pub/users/bhaas/tmp/MouseGencodeM9.tar.gz">mm10</a>
+reference genome (using M9/Gencode).</p>
+<p>Custom references for other organisms or other reference genome versions can be
+built using FusionFilter. For more details on how to do so, see the
+<a class="reference external" href="https://github.com/FusionFilter/FusionFilter/wiki/Building-a-Custom-FusionFilter-Dataset">FusionFilter wiki</a>. For convenience, we also provide a <a class="reference external" href="https://github.com/jrderuiter/imfusion/blob/develop/scripts/starfusion_build_reference.py">Python script</a>
+that executes the required commands for building a STAR-Fusion reference. Note
+that this script does expect the required dependencies to be installed
+(FusionFilter, Repeatmasker and Blast).</p>
+</div>
+<div class="section" id="identifying-fusions">
+<h3>Identifying fusions<a class="headerlink" href="#identifying-fusions" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="using-im-fusion">
+<h4>Using IM-Fusion<a class="headerlink" href="#using-im-fusion" title="Permalink to this headline">¶</a></h4>
+<p>Endogenous gene fusions can be identified using IM-Fusion by supplying a
+STAR-Fusion reference when identifying insertions using STAR:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">insertions</span> <span class="n">star</span>
+    <span class="o">--</span><span class="n">fastq</span> <span class="n">sample_s1</span><span class="o">.</span><span class="n">R1</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
+    <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
+    <span class="o">--</span><span class="n">star_fusion_reference</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">star_fusion</span><span class="o">/</span><span class="n">reference</span> \
+    <span class="o">--</span><span class="n">output_dir</span> <span class="n">output</span><span class="o">/</span><span class="n">sample_s1</span>
+</pre></div>
+</div>
+<p>This will produce a file called <code class="docutils literal"><span class="pre">gene_fusions.txt</span></code> in the output
+directory, which describes the identified endogenous fusions. See the
+<a class="reference external" href="https://github.com/STAR-Fusion/STAR-Fusion/wiki#output-from-star-fusion">STAR-Fusion documentation</a> for a detailed description of the structure of
+this file. Note that the STAR-Fusion reference must use the same reference
+genome as the  IM-Fusion reference (also using the same chromosome naming
+convention), otherwise no fusions will be found.</p>
+</div>
+<div class="section" id="from-scratch">
+<h4>From scratch<a class="headerlink" href="#from-scratch" title="Permalink to this headline">¶</a></h4>
+<p>STAR-Fusion can also be run from scratch (starting with fastq files), which
+has the advantage of performing the STAR alignment with settings
+specifically tuned for the identification of endogenous gene fusions.
+Depending on the dataset, this may provide better results than the settings
+used by IM-Fusion, which are geared towards identifying novel fusion events
+(with the transposon), rather than focussing on detecting fusions between
+known reference genes. As a result, analyses based on the IM-Fusion alignments
+may be more prone to false positives than analyses performed using the STAR
+settings used by STAR-Fusion.</p>
+<p>This type of analysis can be performed using STAR-Fusion with the
+following command:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">STAR</span><span class="o">-</span><span class="n">Fusion</span> <span class="o">--</span><span class="n">genome_lib_dir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">reference</span> \
+            <span class="o">--</span><span class="n">left_fq</span> <span class="n">sample_s1</span><span class="o">.</span><span class="n">R1</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
+            <span class="o">--</span><span class="n">right_fq</span> <span class="n">sample_s1</span><span class="o">.</span><span class="n">R2</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
+            <span class="o">--</span><span class="n">output_dir</span> <span class="o">./</span><span class="n">out</span><span class="o">/</span><span class="n">sample_s1</span>
+</pre></div>
+</div>
+<p>Note that the <code class="docutils literal"><span class="pre">--right_fq</span></code> argument is optional and can be omitted for
+single-end sequencing data.</p>
+<p>Alternatively, STAR can first be called separately to perform the alignment,
+so that you have more control over the supplied options or the location
+of the generated alignments (which can be useful for further analyses). In this
+case, the authors of STAR-Fusion recommend using the following parameters for
+the alignment:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span>STAR --genomeDir ${star_index_dir} \
+     --readFilesIn ${left_fq_filename} ${right_fq_filename} \
+     --twopassMode Basic \
+     --outReadsUnmapped None \
+     --chimSegmentMin 12 \
+     --chimJunctionOverhangMin 12 \
+     --alignSJDBoverhangMin 10 \
+     --alignMatesGapMax 200000 \
+     --alignIntronMax 200000 \
+     --chimSegmentReadGapMax parameter 3 \
+     --alignSJstitchMismatchNmax 5 -1 5 5 \
+     --runThreadN ${THREAD_COUNT} \
+     --limitBAMsortRAM 31532137230 \
+     --outSAMtype BAM SortedByCoordinate
+</pre></div>
+</div>
+<p>After the alignment, the produced <code class="docutils literal"><span class="pre">Chimeric.out.junction</span></code> file(s) can be
+analyzed to identify fusions with the following command:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">STAR</span><span class="o">-</span><span class="n">Fusion</span> <span class="o">--</span><span class="n">genome_lib_dir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">your</span><span class="o">/</span><span class="n">CTAT_resource_lib</span> \
+            <span class="o">-</span><span class="n">J</span> <span class="n">Chimeric</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">junction</span> \
+            <span class="o">--</span><span class="n">output_dir</span> <span class="n">star_fusion_outdir</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="api.html" class="btn btn-neutral" title="API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

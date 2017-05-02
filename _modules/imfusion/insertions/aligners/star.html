@@ -95,6 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../authors.html">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../history.html">History</a></li>
@@ -590,8 +591,8 @@
         <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span>
         <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
-        <span class="n">dtype</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;seqname_a&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-               <span class="s1">&#39;seqname_b&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">})</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;seqname_a&#39;</span><span class="p">:</span> <span class="s1">&#39;str&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;seqname_b&#39;</span><span class="p">:</span> <span class="s1">&#39;str&#39;</span><span class="p">})</span>
 
     <span class="k">for</span> <span class="n">strand_col</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;strand_a&#39;</span><span class="p">,</span> <span class="s1">&#39;strand_b&#39;</span><span class="p">]:</span>
         <span class="n">junctions</span><span class="p">[</span><span class="n">strand_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">junctions</span><span class="p">[</span><span class="n">strand_col</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">({</span><span class="s1">&#39;+&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">})</span>

@@ -93,24 +93,16 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">IM-Fusion</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#using-conda-recommended">Using conda (recommended)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-bioconda-recommended">Using bioconda (recommended)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#using-pip">Using pip</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#python-dependencies">Python dependencies</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#external-dependencies">External dependencies</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#star">STAR</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#stringtie">StringTie</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#tophat2-bowtie1">Tophat2/Bowtie1</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#featurecounts">featureCounts</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#hardware-dependencies">Hardware dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#software-dependencies">Software dependencies</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extras.html">Extras</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
@@ -179,19 +171,41 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="using-conda-recommended">
-<h2>Using conda (recommended)<a class="headerlink" href="#using-conda-recommended" title="Permalink to this headline">¶</a></h2>
-<p>The recommended way to install IM-Fusion is using conda, as this allows us to
-install IM-Fusion together with its external dependencies (Tophat2/Bowtie,
-STAR and Subread) into an isolated environment using a single command:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">imfusion</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="o">-</span><span class="n">c</span> <span class="n">r</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="n">imfusion</span>
+<div class="section" id="using-bioconda-recommended">
+<h2>Using bioconda (recommended)<a class="headerlink" href="#using-bioconda-recommended" title="Permalink to this headline">¶</a></h2>
+<p><strong>IM-Fusion is currently not yet available in bioconda, but will be made
+available soon. In the meantime, please use pip to install.</strong></p>
+<p>The recommended way to install IM-Fusion is using bioconda, as this installs
+IM-Fusion together with its external dependencies into an isolated environment
+using a single command:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">imfusion</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="n">imfusion</span>
 </pre></div>
 </div>
-<p>Note that this uses the bioconda channel to install the external
-dependencies (Tophat2/STAR, Bowtie and Subread) and the r channel to install R
-and rpy2.</p>
+<p>Note that this assumes that condas channels have been configured as
+<a class="reference external" href="https://bioconda.github.io/#set-up-channels">recommended</a> by bioconda.</p>
 <p>Alternatively, IM-Fusion can be installed in an existing environment using:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="o">-</span><span class="n">c</span> <span class="n">r</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="n">imfusion</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="n">imfusion</span>
+</pre></div>
+</div>
+<p>Note that the bioconda package does not install rpy2 (which is only required
+for the single-sample differential expression test and can be difficult to
+install) and matplotlib/seaborn (which is only required for the differential
+expression plots and can give issues on headless servers).</p>
+<p>If you wish to use the single-sample differential expression test (which
+requires rpy2), you can install R and rpy2 can be installed using:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Using conda</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">rpy2</span>
+
+<span class="c1"># Using pip (allows use of existing R installation)</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">rpy2</span>
+</pre></div>
+</div>
+<p>Similarly, matplotlib/seaborn can be installed as follows:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Using conda</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">matplotlib</span> <span class="n">seaborn</span>
+
+<span class="c1"># Using pip</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">matplotlib</span> <span class="n">seaborn</span>
 </pre></div>
 </div>
 </div>
@@ -201,126 +215,83 @@ and rpy2.</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">jrderuiter</span><span class="o">/</span><span class="n">imfusion</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
-<p>Note that in this case, rpy2 is not installed by default as it can be
-difficult to install and is only required for the single-sample differential
-expression test. To use the test, ensure a working version of rpy2 is
-installed or install the required rpy2 dependencies using:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">jrderuiter</span><span class="o">/</span><span class="n">imfusion</span><span class="o">.</span><span class="n">git</span><span class="p">[</span><span class="n">de_single</span><span class="p">]</span>
+<p>Note that this does not install any of the required external dependencies,
+which must therefore be installed manually (see below for more details).
+This does also not install rpy2 or matplotlib/seaborn, which must also be
+installed using pip if you plan to use single-sample differential expression
+test or the differential expression plotting functions.</p>
+<p>If you don&#8217;t have numpy installed, you may run into the following error:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">Downloading</span> <span class="n">HTSeq</span><span class="o">-</span><span class="mf">0.7</span><span class="o">.</span><span class="mf">2.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span> <span class="p">(</span><span class="mi">548</span><span class="n">kB</span><span class="p">)</span>
+    <span class="n">Complete</span> <span class="n">output</span> <span class="kn">from</span> <span class="nn">command</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">egg_info</span><span class="p">:</span>
+    <span class="n">Setup</span> <span class="n">script</span> <span class="k">for</span> <span class="n">HTSeq</span><span class="p">:</span> <span class="n">Failed</span> <span class="n">to</span> <span class="kn">import</span> <span class="s1">&#39;numpy&#39;</span><span class="o">.</span>
+    <span class="n">Please</span> <span class="n">install</span> <span class="n">numpy</span> <span class="ow">and</span> <span class="n">then</span> <span class="k">try</span> <span class="n">again</span> <span class="n">to</span> <span class="n">install</span> <span class="n">HTSeq</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>To also install the development dependencies of IM-Fusion use:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">jrderuiter</span><span class="o">/</span><span class="n">imfusion</span><span class="o">.</span><span class="n">git</span><span class="p">[</span><span class="n">dev</span><span class="p">]</span>
+<p>This can be fixed by first installing numpy before trying to install IM-Fusion,
+as numpy is an install-time dependency of one of IM-Fusions dependencies
+(HTSeq). Similarly, HTSeq requires liblzma to be installed to build properly,
+otherwise you will encounter the following error:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ld</span><span class="p">:</span> <span class="n">cannot</span> <span class="n">find</span> <span class="o">-</span><span class="n">llzma</span>
+<span class="n">collect2</span><span class="p">:</span> <span class="n">error</span><span class="p">:</span> <span class="n">ld</span> <span class="n">returned</span> <span class="mi">1</span> <span class="n">exit</span> <span class="n">status</span>
+</pre></div>
+</div>
+<p>This can be fixed by installing liblzma-dev. On linux (assuming an apt-get
+based distribution) this can be done as follows:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">update</span>
+<span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="o">-</span><span class="n">y</span> <span class="n">install</span> <span class="n">liblzma</span><span class="o">-</span><span class="n">dev</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="python-dependencies">
-<h3>Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h3>
-<p>IM-Fusion is compatible with both Python 2.7 and Python 3.4+. However,
-identifying insertions using Tophat-Fusion only works in Python 2.7, as
-Tophat2 is not compatible with Python 3.</p>
+<div class="section" id="hardware-dependencies">
+<h2>Hardware dependencies<a class="headerlink" href="#hardware-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>To build references and align reads using the STAR aligner, you will need to
+have ~30GB RAM. For analyses with Tophat2, you will typically need ~5-15GB of
+RAM, depending on the number of reads in your sample.</p>
 </div>
-<div class="section" id="external-dependencies">
-<h3>External dependencies<a class="headerlink" href="#external-dependencies" title="Permalink to this headline">¶</a></h3>
-<p>IM-Fusion has three external dependencies:</p>
+<div class="section" id="software-dependencies">
+<h2>Software dependencies<a class="headerlink" href="#software-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>IM-Fusion has been tested on macOS and linux, and is compatible with both
+Python 2.7 and Python 3.4+. However, identifying insertions using Tophat-Fusion
+only works in Python 2.7, as Tophat2 is unfortunately not compatible with
+Python 3.</p>
+<p>IM-Fusion has the following external dependencies that must be installed
+for full functionality:</p>
 <ul class="simple">
-<li>STAR - for the alignment and detection of gene fusions.</li>
-<li>Tophat2/Bowtie1 &#8211; for the alignment and detection of gene fusions.</li>
-<li>Stringtie - For performing reference-guided transcript assembly.</li>
-<li>featureCounts &#8211; for generating expression counts.</li>
+<li><a class="reference external" href="https://github.com/alexdobin/STAR">STAR</a> - for insertion detection using STAR.</li>
+<li><a class="reference external" href="https://ccb.jhu.edu/software/tophat/index.shtml">Tophat2</a>/<a class="reference external" href="http://bowtie-bio.sourceforge.net/index.shtml">Bowtie</a> (Python 2.7 only) &#8211; for insertion detection using
+Tophat-Fusion.</li>
+<li><a class="reference external" href="http://subread.sourceforge.net">featureCounts</a> &#8211; for generating expression counts.</li>
+<li><a class="reference external" href="https://ccb.jhu.edu/software/stringtie">StringTie</a> (optional) - for performing reference-guided transcript assembly.</li>
+<li><a class="reference external" href="https://github.com/STAR-Fusion/STAR-Fusion">STAR-Fusion</a> (optional) &#8211; for identifying endogenous gene fusions using STAR.</li>
+<li><a class="reference external" href="http://lomereiter.github.io/sambamba">Sambamba</a> (optional) &#8211; for faster sorting of BAM files.</li>
 </ul>
-<p>These tools must be available in the current PATH for the insertion
-detection to work properly. Note that either STAR or Tophat2 needs to be
-installed, depending on your preference for the aligner. For help with
-their installation, see below.</p>
-<div class="section" id="star">
-<h4>STAR<a class="headerlink" href="#star" title="Permalink to this headline">¶</a></h4>
-<p>STAR is an RNA-seq aligner that can also perform chimeric read alignment,
-enabling the detection of gene-transposon fusions. STAR can be downloaded
-from the <a class="reference external" href="https://github.com/alexdobin/STAR">STAR GitHub repository</a>. After unpacking, make sure that the
-STAR binary is available in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
-<p>STAR can also be installed using bioconda:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">star</span>
+<p>Note that either STAR or Tophat2 needs to be installed, depending on your
+preference for the RNA-seq aligner. If you are unsure, we recommend using STAR.
+StringTie is only required if you plan to perform reference-guided assembly
+(used to detect novel transcripts resulting from insertions). Similarly,
+STAR-Fusion is only needed if you plan to do endogenous fusion detection.
+Sambamba is used for faster sorting of BAM files in the STAR pipeline, but is
+also not a strict requirement.</p>
+<p>Each of these packages can be installed manually by downloading binaries from
+the respective websites and making sure the unpacked binaries are available in
+the current <code class="docutils literal"><span class="pre">$PATH</span></code>. Alternatively, the dependencies can easily be installed
+using (bio)conda:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">star</span> <span class="n">bowtie</span> <span class="n">tophat</span> <span class="n">stringtie</span> \
+    <span class="n">subread</span> <span class="n">star</span><span class="o">-</span><span class="n">fusion</span> <span class="n">sambamba</span>
 </pre></div>
 </div>
-<p>Or using homebrew/linuxbrew:</p>
+<p>Note that Tophat will not function properly in Python 3. Bioconda also does not
+provide any macOS builds of STAR-Fusion, meaning that STAR-Fusion will have to
+be installed manually on macOS.</p>
+<p>If you don&#8217;t use conda, a number of these tools can also be installed using
+<a class="reference external" href="http://brew.sh">homebrew</a> or <a class="reference external" href="http://linuxbrew.sh">linuxbrew</a>:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">homebrew</span><span class="o">/</span><span class="n">science</span>
 <span class="n">brew</span> <span class="n">update</span>
-<span class="n">brew</span> <span class="n">install</span> <span class="n">star</span>
+<span class="n">brew</span> <span class="n">install</span> <span class="n">bowtie</span> <span class="n">star</span> <span class="n">stringtie</span> <span class="n">tophat</span> <span class="n">sambamba</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="stringtie">
-<h4>StringTie<a class="headerlink" href="#stringtie" title="Permalink to this headline">¶</a></h4>
-<p>StringTie is a fast and highly efficient assembler of RNA-Seq alignments into
-potential transcripts. A binary version of StringTie can be downloaded from the
-StringTie <a class="reference external" href="https://ccb.jhu.edu/software/stringtie">website</a>. After unpacking,
-make sure that the stringtie binary is available in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
-<p>STAR can also be installed using bioconda:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">stringtie</span>
-</pre></div>
-</div>
-<p>Or using homebrew/linuxbrew:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">homebrew</span><span class="o">/</span><span class="n">science</span>
-<span class="n">brew</span> <span class="n">update</span>
-<span class="n">brew</span> <span class="n">install</span> <span class="n">stringtie</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="tophat2-bowtie1">
-<h4>Tophat2/Bowtie1<a class="headerlink" href="#tophat2-bowtie1" title="Permalink to this headline">¶</a></h4>
-<p>Tophat2 is an RNA-seq read aligner that also includes Tophat-Fusion,
-an aligner that can identify gene fusions from single- and paired-end
-RNA-sequencing data. A binary version of Tophat2 can be downloaded from the
-Tophat <a class="reference external" href="https://ccb.jhu.edu/software/tophat/index.shtml">website</a>.
-After unpacking, make sure that the Tophat2 binary is available in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
-<p>Alternatively, Tophat2 can also be installed using bioconda:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">tophat</span>
-</pre></div>
-</div>
-<p>Tophat2 can also be installed using <a class="reference external" href="http://brew.sh">homebrew</a> or
-<a class="reference external" href="http://linuxbrew.sh">linuxbrew</a>. For this option, first install
-homebrew or linuxbrew and then install Tophat2 using:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">homebrew</span><span class="o">/</span><span class="n">science</span>
-<span class="n">brew</span> <span class="n">update</span>
-<span class="n">brew</span> <span class="n">install</span> <span class="n">tophat</span>
-</pre></div>
-</div>
-<p>Bowtie can be installed in the same fashion as Tophat, by downloading a binary
-version from the <a class="reference external" href="http://bowtie-bio.sourceforge.net/index.shtml">bowtie website</a> and ensuring that bowtie
-is available in <code class="docutils literal"><span class="pre">$PATH</span></code>.</p>
-<p>Bowtie can also be installed using bioconda:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">bowtie</span>
-</pre></div>
-</div>
-<p>Or using homebrew/linuxbrew:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">homebrew</span><span class="o">/</span><span class="n">science</span>
-<span class="n">brew</span> <span class="n">update</span>
-<span class="n">brew</span> <span class="n">install</span> <span class="n">bowtie</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="featurecounts">
-<h4>featureCounts<a class="headerlink" href="#featurecounts" title="Permalink to this headline">¶</a></h4>
-<p>featureCounts is an efficient tool for generating expression counts from
-RNA-seq alignments. It is part of the subread package, which can be downloaded
-from <a class="reference external" href="http://subread.sourceforge.net">sourceforge</a>. After downloading and
-unpacking the correct binary version for your machine, make sure the binary
-featureCounts is available in PATH.</p>
-<p>Subread can also be installed using bioconda:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">subread</span>
-</pre></div>
-</div>
-<p>Or by using <a class="reference external" href="http://brew.sh">homebrew</a> or <a class="reference external" href="http://linuxbrew.sh">linuxbrew</a>
-with a custom tap:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">jrderuiter</span><span class="o">/</span><span class="n">tap</span>
-<span class="n">brew</span> <span class="n">update</span>
-<span class="n">brew</span> <span class="n">install</span> <span class="n">subread</span>
-</pre></div>
-</div>
-</div>
-</div>
+<p>Unfortunately, STAR-Fusion and subread (featureCounts) are currently not
+available in homebrew and will therefore need to be installed manually.</p>
 </div>
 </div>
 
