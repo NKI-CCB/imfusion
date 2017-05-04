@@ -11,14 +11,13 @@ with open('HISTORY.rst') as history_file:
     HISTORY = history_file.read()
 
 INSTALL_REQUIRES = [
-    'future', 'pandas>=0.19.0', 'numexpr', 'pysam>=0.9.1', 'toolz',
-    'pyfaidx', 'scipy', 'intervaltree', 'pathlib2', 'htseq>=0.7.2',
-    'typing; python_version < "3.5"'
+    'future', 'pandas>=0.19.0', 'numexpr', 'pysam>=0.9.1', 'toolz', 'pyfaidx',
+    'scipy', 'intervaltree', 'pathlib2', 'htseq>=0.7.2', 'matplotlib',
+    'seaborn', 'typing; python_version < "3.5"'
 ]
 
 EXTRAS_REQUIRE = {
     'de_single': ['rpy2'],
-    'plotting': ['seaborn'],
     'dev': [
         'sphinx', 'sphinx-autobuild', 'sphinx-rtd-theme', 'bumpversion',
         'pytest>=2.7', 'pytest-mock', 'pytest-helpers-namespace', 'pytest-cov',

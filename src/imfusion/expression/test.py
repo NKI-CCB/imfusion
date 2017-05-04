@@ -17,37 +17,14 @@ import pandas as pd
 from scipy.stats import mannwhitneyu
 import toolz
 
-try:
-    from matplotlib import pyplot as plt
-except ImportError:
-    plt = None
-
-try:
-    import seaborn as sns
-except ImportError:
-    sns = None
-
 from imfusion.model import Insertion
 from .counts import estimate_size_factors, normalize_counts
 from .stats import NegativeBinomial
 
-
-
-
-def _check_plot_dependencies(check_seaborn=True):
-    """Checks if plotting dependecies have been installed."""
-
-    if plt is None:
-        raise ImportError('Matplotlib is not installed (or not installed '
-                          'properly), but is required for using these plotting '
-                          'functions. Please install matplotlib and make sure '
-                          'you can import matplotlib without any errors.')
-
-    if check_seaborn and sns is None:
-        raise ImportError('Seaborn is not installed, but is required required '
-                          'for using these plotting functions. Please install '
-                          'seaborn and make sure you can import seaborn '
-                          'without any errors.')
+MATPLOTLIB_IMPORT_ERR_MSG = (
+    'Unable to import matplotlib/seaborn. Please make sure that both packages '
+    'are installed and can be imported without any errors. (Often issues '
+    'are due to misconfigured matplotlib backends.)')
 
 
 def test_de(
@@ -366,7 +343,12 @@ class DeResult(object):
         """Plots boxplot of 'after' expression for samples with/without
         insertions in the gene."""
 
-        _check_plot_dependencies(check_seaborn=True)
+        # Lazy load matplotlib/seaborn.
+        try:
+            from matplotlib import pyplot as plt
+            import seaborn as sns
+        except ImportError:
+            raise ImportError(MATPLOTLIB_IMPORT_ERR_MSG)
 
         ax = ax or plt.subplots()[1]
 
@@ -443,7 +425,12 @@ def _plot_sums(before,
                line_kws=None):
     """Helper function for plotting expression sums in line graph."""
 
-    _check_plot_dependencies(check_seaborn=False)
+    # Lazy load matplotlib/seaborn.
+    try:
+        from matplotlib import pyplot as plt
+        import seaborn as sns
+    except ImportError:
+        raise ImportError(MATPLOTLIB_IMPORT_ERR_MSG)
 
     if ax is None:
         _, ax = plt.subplots()
@@ -734,7 +721,12 @@ class DeGeneResult(object):
     def plot_boxplot(self, ax=None, log=False, box_kws=None):
         """Plots boxplot comparing expression between the two groups."""
 
-        _check_plot_dependencies(check_seaborn=True)
+        # Lazy load matplotlib/seaborn.
+        try:
+            from matplotlib import pyplot as plt
+            import seaborn as sns
+        except ImportError:
+            raise ImportError(MATPLOTLIB_IMPORT_ERR_MSG)
 
         if ax is None:
             _, ax = plt.subplots()

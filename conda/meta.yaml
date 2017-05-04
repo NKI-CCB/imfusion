@@ -27,6 +27,8 @@ requirements:
     - typing # [py27 or py34]
     - htslib <1.4
     - htseq >=0.7.2
+    - matplotlib
+    - seaborn
 
   run:
     # Python dependencies.
@@ -45,6 +47,8 @@ requirements:
     - typing # [py27 or py34]
     - htslib <1.4
     - htseq >=0.7.2
+    - matplotlib
+    - seaborn
 
     # External dependencies.
     - star
