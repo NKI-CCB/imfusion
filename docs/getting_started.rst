@@ -50,19 +50,24 @@ more sensitivity in the results.
 
 For building a reference, the following files are required:
 
-    - The reference genome sequence, in Fasta format.
-    - The reference gene features, adhering to Ensembl's GTF format.
-    - The transposon sequence, in Fasta format.
-    - A tab-separated file describing the different features of the transposon.
+    - The reference genome sequence, (Fasta file).
+    - The reference gene features. (GTF file, adhering to Ensembl's GTF format).
+    - The transposon sequence (Fasta file).
+    - The transposon features file (tab-separated file).
 
 The transposon feature file describes the locations of the splice-donor and
 splice-acceptor sites that are present in the transposon. The file should
-contain the following columns: name, start, end, strand and type; with each
-row describing a single feature. The first four of these columns describe the
-name, location and orientation of each feature. The last column specifies the
-type of the feature, which should be either ‘SD’ or ‘SA’ for splice-donor or
-splice-acceptor sites respectively. The field may also be left empty for other
-types of features, however these features will not be used by IM-Fusion.
+contain the following columns: ``name``, ``start``, ``end``, ``strand`` and
+``type``; with each row describing a single feature. The first four of these
+columns describe the name, location and orientation of each feature,
+respectively. The last column specifies the type of the feature, which should
+be either ‘SD’ or ‘SA’ for splice-donor or splice-acceptor sites respectively.
+The field may also be left empty for other types of features, however these
+features will not be used by IM-Fusion.
+
+Example sequence and feature files for the Sleeping Beauty
+*T2/Onc2* and Piggybac transposons are available in the GitHub `respository
+<https://github.com/jrderuiter/imfusion/tree/develop/data>`_.
 
 Finally, for generating the exon-level expression counts, IM-Fusion needs a
 flattened exon representation of the reference gene features (in GTF format).

@@ -29,6 +29,8 @@ class NegativeBinomial(object):
 
     NegativeBinomial class that wraps functionality from the R MASS
     and stats packages for fitting and evaluating Negative Binomials.
+    Requires rpy2 to be installed.
+
     """
 
     def __init__(self, mu=None, size=None):
@@ -39,6 +41,7 @@ class NegativeBinomial(object):
 
     @classmethod
     def fit(cls, data):
+        """First the distribution using the given observations."""
         cls._check_rpy()
 
         fit = r_mass.fitdistr(data, densfun='negative binomial')
@@ -49,21 +52,27 @@ class NegativeBinomial(object):
 
     @staticmethod
     def _check_rpy():
-        """Checks if Mass and Stats are available from Rpy2."""
+        """Checks if Mass and Stats are available from rpy2."""
         if r_mass is None or r_stats is None:
-            raise ValueError('Rpy2 is required to use the '
-                             'NegativeBinomial test')
+            raise ValueError('Rpy2 must be installed to use the '
+                             'NegativeBinomial distribution.')
 
     def pdf(self, x, log=False):
+        """Returns the pdf of the distribution."""
+
         return np.array(
             r_stats.dnbinom(
                 x=x, mu=self._mu, size=self._size, log=log))
 
     def cdf(self, q, log_p=False):
+        """Returns the cdf of the distribution."""
+
         return self._pnbinom(
             q, mu=self._mu, size=self._size, lower_tail=True, log_p=log_p)
 
     def sf(self, q, log_p=False):
+        """Returns the sf of the distribution."""
+
         return self._pnbinom(
             q, mu=self._mu, size=self._size, lower_tail=False, log_p=log_p)
 

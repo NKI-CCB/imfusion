@@ -19,8 +19,12 @@ import pandas as pd
 import toolz
 
 from imfusion.build.indexers.star import StarReference
+from imfusion.external.star import star_align
+from imfusion.external.stringtie import stringtie_assemble
+from imfusion.external.compound import sort_bam
+from imfusion.external.util import which, parse_arguments
 from imfusion.model import Fusion, TransposonFusion
-from imfusion.util import shell, tabix, path
+from imfusion.util import tabix, path
 
 from .base import Aligner, register_aligner
 from .. import util
@@ -158,13 +162,6 @@ class StarAligner(Aligner):
 
         programs = ['STAR']
 
-        if self._external_sort:
-            if shell.which('sambamba') is None:
-                # Fall back to samtools if sambamba is not available.
-                programs += ['samtools']
-            else:
-                programs += ['sambamba']
-
         if self._assemble:
             programs += ['stringtie']
 
@@ -199,20 +196,20 @@ class StarAligner(Aligner):
         # Perform alignment using STAR.
         alignment_path = output_dir / 'alignment.bam'
         if not alignment_path.exists():
-            self._logger.info('Performing alignment')
+            self._logger.info('Performing alignment using STAR')
             self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
         else:
-            self._logger.info('Using existing alignment')
+            self._logger.info('Using existing STAR alignment')
 
         # Assemble transcripts if requested.
         if self._assemble:
             assembled_path = output_dir / 'assembled.gtf.gz'
             if not assembled_path.exists():
-                self._logger.info('Assembling transcripts')
+                self._logger.info('Assembling transcripts using Stringtie')
 
                 # Generate assembled GTF.
                 stringtie_out_path = assembled_path.with_suffix('')
-                util.stringtie_assemble(
+                stringtie_assemble(
                     alignment_path,
                     gtf_path=self._reference.gtf_path,
                     output_path=stringtie_out_path)
@@ -221,17 +218,17 @@ class StarAligner(Aligner):
                 tabix.index_gtf(stringtie_out_path, output_path=assembled_path)
                 stringtie_out_path.unlink()
             else:
-                self._logger.info('Using existing assembly')
+                self._logger.info('Using existing Stringtie assembly')
         else:
             assembled_path = None
 
         # Extract identified fusions.
-        self._logger.info('Extracting fusions')
+        self._logger.info('Extracting gene-transposon fusions')
         fusion_path = output_dir / 'fusions.out'
         fusions = list(self._extract_fusions(fusion_path))
 
         # Extract insertions.
-        self._logger.info('Extracting insertions')
+        self._logger.info('Summarizing insertions')
         insertions = list(
             util.extract_insertions(
                 fusions,
@@ -241,7 +238,7 @@ class StarAligner(Aligner):
                 ffpm_fastq_path=fastq_path,
                 chromosomes=None))
 
-        self._logger.info('Filtering insertions')
+        # self._logger.info('Filtering insertions')
         insertions = util.filter_insertions(
             insertions,
             features=self._filter_features,
@@ -273,17 +270,14 @@ class StarAligner(Aligner):
             fastq2_path=fastq2_path,
             index_path=self._reference.index_path,
             output_dir=star_dir,
-            extra_args=toolz.merge(args, self._extra_args),
-            stdout=sys.stderr,
-            logger=self._logger)
+            extra_args=toolz.merge(args, self._extra_args))
 
         # If not yet sorted, sort bam file using samtools/sambamba.
         sorted_bam_path = star_dir / 'Aligned.sortedByCoord.out.bam'
 
         if sort_type == 'Unsorted':
             unsorted_bam_path = star_dir / 'Aligned.out.bam'
-            _sort_bam(
-                unsorted_bam_path, sorted_bam_path, threads=self._threads)
+            sort_bam(unsorted_bam_path, sorted_bam_path, threads=self._threads)
             unsorted_bam_path.unlink()
 
         # Symlink fusions and alignment into expected location.
@@ -332,8 +326,7 @@ class StarAligner(Aligner):
         star_group.add_argument('--star_min_flank', type=int, default=12)
         star_group.add_argument(
             '--star_external_sort', default=False, action='store_true')
-        star_group.add_argument(
-            '--star_args', type=shell.parse_arguments, default='')
+        star_group.add_argument('--star_args', default='')
 
         star_group.add_argument('--merge_junction_dist', default=10, type=int)
         star_group.add_argument('--max_spanning_dist', default=300, type=int)
@@ -362,7 +355,7 @@ class StarAligner(Aligner):
             reference=StarReference(args.reference),
             min_flank=args.star_min_flank,
             threads=args.star_threads,
-            extra_args=args.star_args,
+            extra_args=parse_arguments(args.star_args),
             external_sort=args.star_external_sort,
             assemble=args.assemble,
             merge_junction_dist=args.merge_junction_dist,
@@ -372,84 +365,10 @@ class StarAligner(Aligner):
             filter_orientation=args.filter_orientation,
             filter_blacklist=args.blacklisted_genes)
 
-        return kws
+        return toolz.merge(super()._parse_args(args), kws)
 
 
 register_aligner('star', StarAligner)
-
-
-def _sort_bam(input_bam, output_bam, threads=1):
-    if shell.which('sambamba') is not None:
-        tmp_dir = output_bam.parent / '_tmp'
-        args = [
-            'sambamba', 'sort', '-o', str(output_bam),
-            '--tmpdir={}'.format(str(tmp_dir)), '-t', str(threads),
-            str(input_bam)
-        ]
-    elif shell.which('samtools') is not None:
-        args = ['samtools', 'sort', '-o', str(output_bam), str(input_bam)]
-    else:
-        raise ValueError('Samtools or Sambamba must be installed for '
-                         'external sorting')
-
-    shell.run_command(args=args)
-
-
-def build_star_index(reference_path,
-                     gtf_path,
-                     output_base_path,
-                     overhang=100,
-                     stdout=None,
-                     stderr=None):
-    """Runs STAR in build mode to generate a reference index."""
-
-    if not output_base_path.exists():
-        output_base_path.mkdir(parents=True)
-
-    cmdline_args = [
-        'STAR', '--runMode', 'genomeGenerate', '--genomeDir',
-        str(output_base_path), '--genomeFastaFiles', str(reference_path),
-        '--sjdbGTFfile', str(gtf_path), '--sjdbOverhang', str(overhang)
-    ]
-
-    shell.run_command(args=cmdline_args, stdout=stdout, stderr=stderr)
-
-
-def star_align(fastq_path,
-               index_path,
-               output_dir,
-               fastq2_path=None,
-               extra_args=None,
-               stdout=None,
-               stderr=None,
-               logger=None):
-    """Runs STAR in alignment mode for the given fastqs."""
-
-    extra_args = extra_args or {}
-
-    if not output_dir.exists():
-        output_dir.mkdir(parents=True)
-
-    # Check if files are gzipped.
-    if fastq_path.suffixes[-1] == '.gz':
-        extra_args['--readFilesCommand'] = ('gunzip', '-c')
-
-    # Assemble arguments.
-    if fastq2_path is None:
-        fastq_args = [str(fastq_path)]
-    else:
-        fastq_args = [str(fastq_path), str(fastq2_path)]
-
-    cmdline_args = [
-        'STAR', '--genomeDir', str(index_path), '--outFileNamePrefix',
-        str(output_dir) + '/', '--readFilesIn'
-    ] + fastq_args
-    cmdline_args += [
-        str(arg) for arg in shell.flatten_arguments(extra_args or {})
-    ]
-
-    shell.run_command(
-        args=cmdline_args, stdout=stdout, stderr=stderr, logger=logger)
 
 
 def read_chimeric_junctions(chimeric_path):
@@ -507,8 +426,8 @@ def read_chimeric_junctions(chimeric_path):
         sep='\t',
         header=None,
         names=names,
-        dtype={'seqname_a': str,
-               'seqname_b': str})
+        dtype={'seqname_a': 'str',
+               'seqname_b': 'str'})
 
     for strand_col in ['strand_a', 'strand_b']:
         junctions[strand_col] = junctions[strand_col].map({'+': 1, '-': -1})
@@ -668,8 +587,6 @@ def _flank_sizes(row):
 
 def _flank_size(row, donor=True):
     """Calculates flank size of a spanning read on one side of the fusion."""
-
-    # TODO: account for deletions/insertions etc.
 
     if donor:
         mate_index = -1 if row.strand_a == 1 else 0

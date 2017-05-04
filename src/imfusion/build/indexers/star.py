@@ -10,8 +10,7 @@ from typing import Any
 
 import toolz
 
-from imfusion.util import shell
-
+from imfusion.external.star import star_index
 from .base import Indexer, Reference, register_indexer
 
 
@@ -27,10 +26,11 @@ class StarIndexer(Indexer):
     length of the used reads.
     """
 
-    def __init__(self, logger=None, overhang=100):
+    def __init__(self, logger=None, skip_index=False, overhang=100, threads=1):
         # type: (Any, int) -> None
-        super().__init__(logger=logger)
-        self.overhang = overhang
+        super().__init__(logger=logger, skip_index=skip_index)
+        self._overhang = overhang
+        self._threads = threads
 
     @property
     def _reference_class(self):
@@ -45,21 +45,15 @@ class StarIndexer(Indexer):
     def _build_indices(self, reference):
         # type: (StarReference) -> None
 
-        # Create index directory.
-        index_dir = reference.index_path
-        index_dir.mkdir(exist_ok=False)
+        self._logger.info('Building STAR index')
 
-        # Run STAR.
-        cmdline_args = [
-            'STAR', '--runMode', 'genomeGenerate', '--genomeDir',
-            str(index_dir), '--genomeFastaFiles', str(reference.fasta_path),
-            '--sjdbGTFfile', str(reference.gtf_path), '--sjdbOverhang',
-            str(self.overhang)
-        ]
-
-        log_path = reference.base_path / 'star.log'
-        with log_path.open('w') as log_file:
-            shell.run_command(cmdline_args, stdout=log_file)
+        star_index(
+            fasta_path=reference.fasta_path,
+            gtf_path=reference.gtf_path,
+            output_dir=reference.index_path,
+            overhang=self._overhang,
+            threads=self._threads,
+            log_path=reference.base_path / 'star.log')
 
     @classmethod
     def configure_args(cls, parser):
@@ -77,12 +71,16 @@ class StarIndexer(Indexer):
         """
         super().configure_args(parser)
         star_group = parser.add_argument_group('STAR arguments')
-        star_group.add_argument('--overhang', type=int, default=100)
+        star_group.add_argument('--star_overhang', type=int, default=100)
+        star_group.add_argument('--star_threads', type=int, default=1)
 
     @classmethod
     def _parse_args(cls, args):
         super_args = super()._parse_args(args)
-        return toolz.merge(super_args, {'overhang': args.overhang})
+        return toolz.merge(super_args, {
+            'overhang': args.star_overhang,
+            'threads': args.star_threads
+        })
 
 
 class StarReference(Reference):

@@ -8,12 +8,9 @@ from builtins import *
 
 import logging
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
-from imfusion.util import shell
+from imfusion.external.util import check_dependencies
 
 _aligner_registry = {}
 
@@ -63,7 +60,7 @@ class Aligner(object):
 
         Raises a ValueError if any dependencies are missing.
         """
-        shell.check_dependencies(self.dependencies)
+        check_dependencies(self.dependencies)
 
     @classmethod
     def configure_args(cls, parser):
@@ -112,7 +109,7 @@ class Aligner(object):
     @classmethod
     def _parse_args(cls, args):
         """Parses arguments from argparse into a dict."""
-        raise NotImplementedError()
+        return {}
 
     @classmethod
     def from_args(cls, args):

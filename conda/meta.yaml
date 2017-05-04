@@ -1,6 +1,6 @@
 package:
   name: imfusion
-  version: 0.2.0
+  version: 0.3.0
 
 build:
   number: 0
@@ -23,11 +23,12 @@ requirements:
     - seaborn
     - pyfaidx >=0.4.8.1
     - intervaltree
-    - pathlib2 # [py27]
-    - typing # [py27]
-    - r
-    - rpy2 >=2.7.4
+    - pathlib2
+    - typing # [py27 or py34]
     - htslib <1.4
+    - htseq >=0.7.2
+    - matplotlib
+    - seaborn
 
   run:
     # Python dependencies.
@@ -42,17 +43,18 @@ requirements:
     - seaborn
     - pyfaidx >=0.4.8.1
     - intervaltree
-    - pathlib2 # [py27]
-    - typing # [py27]
-    - r
-    - rpy2 >=2.7.4
+    - pathlib2
+    - typing # [py27 or py34]
     - htslib <1.4
+    - htseq >=0.7.2
+    - matplotlib
+    - seaborn
 
     # External dependencies.
     - star
     - subread
     - stringtie
-    - tophat2 # [py27]
+    - tophat >=2.1.0 # [py27]
     - bowtie # [py27]
 
 test:

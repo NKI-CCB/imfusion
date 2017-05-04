@@ -9,19 +9,22 @@ from builtins import *
 import bisect
 import itertools
 import logging
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Union
 
 from future.utils import native
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import mannwhitneyu
-import seaborn as sns
 import toolz
 
 from imfusion.model import Insertion
 from .counts import estimate_size_factors, normalize_counts
 from .stats import NegativeBinomial
+
+MATPLOTLIB_IMPORT_ERR_MSG = (
+    'Unable to import matplotlib/seaborn. Please make sure that both packages '
+    'are installed and can be imported without any errors. (Often issues '
+    'are due to misconfigured matplotlib backends.)')
 
 
 def test_de(
@@ -95,7 +98,7 @@ def _test_gene(insertions, gene_counts, gene_id):
 
 
 def test_de_exon(
-        insertions,  # type: List[Insertion]
+        insertions,  # type: Union[List[Insertion], pd.DataFrame]
         exon_counts,  # type: pd.DataFrame
         gene_id,  # type: str
         pos_samples=None,  # type: Set[str]
@@ -118,7 +121,7 @@ def test_de_exon(
 
     Parameters
     ----------
-    insertions : List[Insertion]
+    insertions : List[Insertion] or pd.DataFrame
         List of insertions.
     exon_counts : pandas.DataFrame
         Matrix containing exon counts, with samples along the columns and
@@ -142,21 +145,19 @@ def test_de_exon(
 
     """
 
-    # Subset counts and exons for gene.
-    counts = exon_counts.ix[gene_id]
-
-    insertions = [ins for ins in insertions
-                  if ins.metadata['gene_id'] == gene_id] # yapf: disable
+    # Convert insertions to objects (if needed) and subset for gene.
+    insertion_objs = _preprocess_insertions(insertions, gene_id)
 
     # Split counts by insertions.
-    before, after, dropped_samples = split_counts(counts, insertions)
+    before, after, dropped_samples = split_counts(
+        exon_counts, insertion_objs, gene_id=gene_id)
 
     # Define postive/negative sample groups (positive = with insertion).
     if pos_samples is None:
-        pos_samples = set(ins.metadata['sample'] for ins in insertions)
+        pos_samples = set(ins.metadata['sample'] for ins in insertion_objs)
 
     if neg_samples is None:
-        neg_samples = set(counts.columns) - pos_samples
+        neg_samples = set(exon_counts.columns) - pos_samples
 
     pos_samples -= dropped_samples
     neg_samples -= dropped_samples
@@ -191,9 +192,23 @@ def test_de_exon(
                     dropped_samples, direction, p_value)
 
 
+def _preprocess_insertions(insertions, gene_id):
+    """Converts insertions into common object format and subsets for gene."""
+
+    if isinstance(insertions, pd.DataFrame):
+        insertions = insertions.loc[insertions['gene_id'] == gene_id]
+        insertions = list(Insertion.from_frame(insertions))
+    else:
+        insertions = [ins for ins in insertions
+                      if ins.metadata['gene_id'] == gene_id]  # yapf: disable
+
+    return insertions
+
+
 def split_counts(
         counts,  # type: pd.DataFrame,
-        insertions,  # type: List[Insertion]
+        insertions,  # type: Union[List[Insertion], pd.DataFrame]
+        gene_id,  # type: str
         min_before=1,  # type: int
         min_after=1  # type: int
 ):  # type: (...) -> Tuple[pd.DataFrame, pd.DataFrame, Set[str]]
@@ -206,8 +221,10 @@ def split_counts(
         and samples along the columns. The index of the DataFrame should
         be a multi-level index containing the following levels: gene_id,
         chromosome, start, end and strand.
-    insertions : List[Insertion]
+    insertions : List[Insertion] or pandas.DataFrame
         List of identified insertions.
+    gene_id : str
+        Gene identifier.
     min_before : int
         Minimum number of exons to retain before the split. Samples with less
         exons before their insertion sites will be dropped.
@@ -228,8 +245,11 @@ def split_counts(
 
     # TODO: tests for min_before/min_after.
 
+    # Convert insertions to objects (if needed) and subset for gene.
+    insertion_objs = _preprocess_insertions(insertions, gene_id)
+
     # Extract exon information from counts.
-    exons = _get_exons(counts)
+    exons = _get_exons(counts.loc[gene_id])
     strand = exons.iloc[0].strand
 
     # Switch limits if gene on - strand.
@@ -242,7 +262,7 @@ def split_counts(
     dropped = set()  # type: Set[str]
 
     curr_min, curr_max = len(exons), 0
-    for insertion in insertions:
+    for insertion in insertion_objs:
         idx = bisect.bisect_right(exons.end, insertion.position)
 
         if idx < min_before or idx > max_after:
@@ -258,9 +278,9 @@ def split_counts(
     if curr_min > curr_max:
         raise ValueError('No valid split found')
 
-    # Apply split.
-    before = counts.iloc[:curr_min]
-    after = counts.iloc[curr_max:]
+    # Apply split to full frame (includes gene_id).
+    before = counts.loc[[gene_id]].iloc[:curr_min]
+    after = counts.loc[[gene_id]].iloc[curr_max:]
 
     # Switch if gene on - strand.
     if strand == -1:
@@ -322,6 +342,13 @@ class DeResult(object):
                      strip_kws=None):
         """Plots boxplot of 'after' expression for samples with/without
         insertions in the gene."""
+
+        # Lazy load matplotlib/seaborn.
+        try:
+            from matplotlib import pyplot as plt
+            import seaborn as sns
+        except ImportError:
+            raise ImportError(MATPLOTLIB_IMPORT_ERR_MSG)
 
         ax = ax or plt.subplots()[1]
 
@@ -398,6 +425,13 @@ def _plot_sums(before,
                line_kws=None):
     """Helper function for plotting expression sums in line graph."""
 
+    # Lazy load matplotlib/seaborn.
+    try:
+        from matplotlib import pyplot as plt
+        import seaborn as sns
+    except ImportError:
+        raise ImportError(MATPLOTLIB_IMPORT_ERR_MSG)
+
     if ax is None:
         _, ax = plt.subplots()
 
@@ -443,7 +477,7 @@ def _plot_sums_sample(before, after, width, ax, **kwargs):
 
 
 def test_de_exon_single(
-        insertions,  # type: List[Insertion]
+        insertions,  # type: Union[List[Insertion], pd.DataFrame]
         exon_counts,  # type: pd.DataFrame
         insertion_id,  # type: str
         gene_id,  # type: str
@@ -466,7 +500,7 @@ def test_de_exon_single(
 
     Parameters
     ----------
-    insertions : List[Insertion]
+    insertions : Union[List[Insertion], pd.DataFrame]
         List of insertions.
     exon_counts : pandas.DataFrame
         Matrix containing exon counts, with samples along the columns and
@@ -487,26 +521,25 @@ def test_de_exon_single(
 
     """
 
-    # Subset counts and exons for gene.
-    counts = exon_counts.ix[gene_id]
-
-    insertions = [ins for ins in insertions
-                  if ins.metadata['gene_id'] == gene_id] # yapf: disable
+    # Convert insertions to objects (if needed) and subset for gene.
+    insertion_objs = _preprocess_insertions(insertions, gene_id)
 
     # Extract selected insertion.
-    insertions_by_id = {ins.id: ins for ins in insertions}
+    insertions_by_id = {ins.id: ins for ins in insertion_objs}
     selected_ins = insertions_by_id[insertion_id]
 
     # Split counts by selected insertion.
-    before, after, _ = split_counts(counts, [selected_ins])
+    before, after, _ = split_counts(
+        exon_counts, [selected_ins], gene_id=gene_id)
 
     # Define postive/negative sample groups (positive = with the insertion,
     # negative = all samples without an insertion).
     pos_sample = selected_ins.metadata['sample']
 
     if neg_samples is None:
-        samples_with_ins = set(ins.metadata['sample'] for ins in insertions)
-        neg_samples = set(counts.columns) - samples_with_ins
+        samples_with_ins = set(ins.metadata['sample']
+                               for ins in insertion_objs)
+        neg_samples = set(exon_counts.columns) - samples_with_ins
 
     if len(neg_samples) == 0:
         raise ValueError('No samples in negative set')
@@ -584,7 +617,7 @@ class DeSingleResult(object):
 
 
 def test_de_gene(
-        insertions,  # type: List[Insertion]
+        insertions,  # type: Union[List[Insertion], pd.DataFrame]
         gene_counts,  # type: pd.DataFrame
         gene_id,  # type: str
         pos_samples=None,  # type: Set[str]
@@ -600,7 +633,7 @@ def test_de_gene(
 
     Parameters
     ----------
-    insertions : List[Insertion]
+    insertions : Union[List[Insertion], pd.DataFrame]
         List of insertions.
     gene_counts : pandas.DataFrame
         Matrix containing gene counts, with samples along the columns and
@@ -627,10 +660,14 @@ def test_de_gene(
 
     # Split into positive/negative samples.
     if pos_samples is None:
-        pos_samples = set([
-            ins.metadata['sample'] for ins in insertions
-            if ins.metadata['gene_id'] == gene_id
-        ])
+        if isinstance(insertions, pd.DataFrame):
+            mask = insertions['gene_id'] == gene_id
+            pos_samples = set(insertions.loc[mask]['sample'])
+        else:
+            pos_samples = set([
+                ins.metadata['sample'] for ins in insertions
+                if ins.metadata['gene_id'] == gene_id
+            ])
 
     if neg_samples is None:
         neg_samples = set(gene_counts.columns) - pos_samples
@@ -683,6 +720,13 @@ class DeGeneResult(object):
 
     def plot_boxplot(self, ax=None, log=False, box_kws=None):
         """Plots boxplot comparing expression between the two groups."""
+
+        # Lazy load matplotlib/seaborn.
+        try:
+            from matplotlib import pyplot as plt
+            import seaborn as sns
+        except ImportError:
+            raise ImportError(MATPLOTLIB_IMPORT_ERR_MSG)
 
         if ax is None:
             _, ax = plt.subplots()

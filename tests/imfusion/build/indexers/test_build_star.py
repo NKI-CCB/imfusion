@@ -11,10 +11,7 @@ import argparse
 import pyfaidx
 import pytest
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 from imfusion.build.indexers import star
 
@@ -34,7 +31,7 @@ class TestStarIndexer(object):
         """Tests build using example files."""
 
         # Mock STAR call.
-        mock = mocker.patch.object(star.shell, 'run_command')
+        mock = mocker.patch.object(star, 'star_index')
 
         # Build reference.
         indexer = star.StarIndexer()
@@ -47,7 +44,7 @@ class TestStarIndexer(object):
         assert ref.fasta_path.exists()
         assert ref.gtf_path.exists()
         assert ref.indexed_gtf_path.exists()
-        assert ref.index_path.exists()
+        # assert ref.index_path.exists()
         assert ref.transposon_name == 'T2onc'
         assert ref.transposon_path.exists()
         assert ref.features_path.exists()
@@ -58,12 +55,12 @@ class TestStarIndexer(object):
 
         # Check call to STAR for building the index.
         mock.assert_called_once_with(
-            [
-                'STAR', '--runMode', 'genomeGenerate', '--genomeDir',
-                str(ref.index_path), '--genomeFastaFiles', str(ref.fasta_path),
-                '--sjdbGTFfile', str(ref.gtf_path), '--sjdbOverhang', '100'
-            ],
-            stdout=pytest.helpers.mock_any(object))
+            fasta_path=ref.fasta_path,
+            gtf_path=ref.gtf_path,
+            output_dir=ref.index_path,
+            log_path=build_kws['output_dir'] / 'star.log',
+            overhang=100,
+            threads=1)
 
     def test_from_args(self, cmdline_args):
         """Tests creation from command line."""
@@ -83,12 +80,13 @@ class TestStarIndexer(object):
         assert args.transposon_features == Path('/path/to/feat')
 
         # Check instance.
-        assert indexer.overhang == 100
+        assert indexer._overhang == 100
+        assert indexer._threads == 1
 
     def test_from_args_extra(self, cmdline_args):
         """Tests creation from command line using extra args."""
 
-        cmdline_args += ['--overhang', '200']
+        cmdline_args += ['--star_overhang', '50', '--star_threads', '10']
 
         # Setup parser.
         parser = argparse.ArgumentParser()
@@ -99,7 +97,8 @@ class TestStarIndexer(object):
         indexer = star.StarIndexer.from_args(args)
 
         # Check instance.
-        assert indexer.overhang == 200
+        assert indexer._overhang == 50
+        assert indexer._threads == 10
 
 
 class TestStarReference(object):

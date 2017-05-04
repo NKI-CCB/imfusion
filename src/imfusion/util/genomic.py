@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
+from heapq import heappush, heappop
 import itertools
 import operator
 from typing import Iterable

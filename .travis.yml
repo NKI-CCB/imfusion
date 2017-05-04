@@ -3,12 +3,13 @@ language: python
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
   - '2.7'
+  - '3.4'
   - '3.5'
 
 install:
   - sudo apt-get update
 
-  # Install Anaconda.
+  # Install Miniconda.
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
     -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
@@ -20,19 +21,14 @@ install:
   # Useful for debugging any issues with conda.
   - conda info -a
 
-  # Create conda environment and install dependencies.
-  - "conda create -q -n test -c jrderuiter -c bioconda -c r
-    python=$TRAVIS_PYTHON_VERSION intervaltree future pandas
-    numexpr pysam>=0.9.1 toolz scipy seaborn pyfaidx intervaltree pathlib2
-    r rpy2 samtools bowtie subread mock pytest pytest-datafiles
-    pytest-mock pytest-helpers-namespace 'htslib<1.4'"
+  # Create conda environment and install matplotlib dependency
+  # (as this can't be installed outside of conda on OSX).
+  - "conda create -q -n test -c bioconda -c r -c defaults -c conda-forge
+    python=$TRAVIS_PYTHON_VERSION matplotlib"
 
-  # Activate environment and install im-fusion.
+  # Activate environment and install IM-Fusion.
   - source activate test
-  - pip install .
-
-  # Install coverage dependencies.
-  - pip install pytest-cov python-coveralls
+  - pip install .[dev]
 
 before_script:
   # Use xvfb during testing for matplotlib.
@@ -40,7 +36,8 @@ before_script:
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start
 
-script: py.test --cov imfusion --cov-report term-missing
+script:
+    py.test --cov imfusion --cov-report term-missing
 
 after_success:
     - coveralls

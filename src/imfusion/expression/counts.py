@@ -17,16 +17,13 @@ import subprocess
 import tempfile
 from typing import Any, Iterable
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 import numpy as np
 import pandas as pd
 import toolz
 
-from imfusion.util.shell import flatten_arguments
+from imfusion.external.feature_counts import feature_counts
 
 # Disable E1101 checks which stumble on pandas classes.
 # pylint: disable=E1101
@@ -96,8 +93,11 @@ def generate_exon_counts(
     # Run feature counts and read output.
     try:
         output_path = tmp_dir / 'counts.txt'
-        _feature_counts(bam_files, gtf_path, output_path=output_path,
-                        extra_kws=extra_kws)  # yapf: disable
+        feature_counts(
+            bam_files=bam_files,
+            gtf_path=gtf_path,
+            output_path=output_path,
+            extra_kws=extra_kws)
         counts = _read_feature_count_output(output_path, names=names)
     finally:
         if not keep_tmp:
@@ -123,49 +123,6 @@ def generate_exon_counts(
     return counts
 
 
-def _feature_counts(
-        bam_files,  # type: Iterable[pathlib.Path]
-        gtf_path,  # type: pathlib.Path
-        output_path,  # type: pathlib.Path
-        extra_kws=None  # type: Dict[str, Any]
-):  # type: (...) -> None
-    """Generates counts using featureCounts with given options.
-
-    Main function used to run featureCounts. Used by and
-    `generate_exon_counts` to generate expression counts.
-
-    Parameters
-    ----------
-    bam_files : list[pathlib.Path]
-        List of paths to the bam files for which counts should be generated.
-    gtf_path : pathlib.Path
-        Path to the GTF file containing gene features.
-    output_path : pathlib.Path
-        Path to output file.
-    extra_kws : dict[str, tuple]:
-        Dictionary of extra arguments that should be passed to feature counts.
-        Keys should correspond to argument names (including dashes),
-        values should be tuples containing the argument values.
-
-    Returns
-    -------
-    pandas.Dataframe
-        DataFrame containing feature counts for the given bam files. The rows
-        correspond to the counted features, the columns correspond to the
-        index values (chomosome, position etc.) and the bam files.
-
-    """
-
-    extra_kws = extra_kws or {}
-
-    # Run feature counts.
-    args = (['featureCounts'] + flatten_arguments(extra_kws) +
-            ['-a', str(gtf_path), '-o', str(output_path)] +
-            [str(bf) for bf in bam_files])
-
-    subprocess.check_output(args)
-
-
 def _read_feature_count_output(file_path, names=None):
     # type (pathlib.Path, Dict[str, str]) -> pd.DataFrame
     """Reads counts from featureCounts output.
@@ -182,7 +139,7 @@ def _read_feature_count_output(file_path, names=None):
 
     # Read counts.
     counts = pd.read_csv(
-        str(file_path), sep='\t', comment='#', dtype={'Chr': str})
+        str(file_path), sep='\t', comment='#', dtype={'Chr': 'str'})
 
     # If names are given, rename columns.
     if names is not None:
@@ -226,7 +183,7 @@ def _read_counts(file_path, prefix=None, **kwargs):
     """Reads counts from file, optionally filtering for given prefix."""
 
     # Read counts, optionally filtering for given prefix.
-    default_kws = dict(sep='\t', dtype={'chr': str}, comment='#')
+    default_kws = dict(sep='\t', dtype={'chr': 'str'}, comment='#')
     read_csv_kws = toolz.merge(default_kws, kwargs)
 
     if prefix is None:

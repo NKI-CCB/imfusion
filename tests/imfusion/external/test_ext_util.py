@@ -6,9 +6,17 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
+import subprocess
+
 import pytest
 
-from imfusion.util import shell
+from imfusion.external import util
+
+# Define FileNotFoundError for Python 2.7.
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = OSError
 
 
 class TestWhich(object):
@@ -17,12 +25,12 @@ class TestWhich(object):
     def test_positive_example(self):
         """Tests example with existing executable."""
 
-        assert shell.which('ls') is not None
+        assert util.which('ls') is not None
 
     def test_negative_example(self):
         """Tests example with non-existent executable."""
 
-        assert shell.which('non-existent-binary-path') is None
+        assert util.which('non-existent-binary-path') is None
 
 
 class TestCheckDependencies(object):
@@ -31,13 +39,13 @@ class TestCheckDependencies(object):
     def test_positive_example(self):
         """Tests example with existing executable."""
 
-        shell.check_dependencies(['ls'])
+        util.check_dependencies(['ls'])
 
     def test_negative_example(self):
         """Tests example with non-existent executable."""
 
         with pytest.raises(ValueError):
-            shell.check_dependencies(['non-existent-binary-path'])
+            util.check_dependencies(['non-existent-binary-path'])
 
 
 class TestParseArguments(object):
@@ -47,13 +55,25 @@ class TestParseArguments(object):
         """Tests a call with all basic argument types."""
 
         arg_str = '--single 5 --flag --multiple test1 test2 -s a'
-        args = shell.parse_arguments(arg_str)
+        args = util.parse_arguments(arg_str)
 
         assert len(args) == 4
         assert args['--flag'] == ()
         assert args['--single'] == ('5', )
         assert args['--multiple'] == ('test1', 'test2')
         assert args['-s'] == ('a', )
+
+    def test_empty_example(self):
+        """Tests call with improper example."""
+
+        assert util.parse_arguments('') == {}
+
+    def test_improper_example(self):
+        """Tests call with improper example."""
+
+        with pytest.raises(ValueError):
+            arg_str = 'whatever --test'
+            util.parse_arguments(arg_str)
 
 
 class TestFlattenArguments(object):
@@ -67,7 +87,7 @@ class TestFlattenArguments(object):
             '--multiple': ('test1', 'test2'),
             '-s': ('a', )}  # yapf: disable
 
-        flat = shell.flatten_arguments(args)
+        flat = util.flatten_arguments(args)
         assert flat == [
             '--flag', '--multiple', 'test1', 'test2', '--single', '5', '-s',
             'a'
@@ -80,6 +100,13 @@ class TestRunCommand(object):
     def test_example(self, mocker):
         """Tests a simple call to ls."""
 
-        mock = mocker.patch.object(shell.subprocess, 'check_call')
-        shell.run_command(args=['ls', '-l'], stdout=None, stderr=None)
-        mock.assert_called_once_with(['ls', '-l'], stdout=None, stderr=None)
+        mock = mocker.spy(util.subprocess, 'Popen')
+        util.run_command(args=['ls', '-l'])
+        mock.assert_called_once_with(
+            ['ls', '-l'], stdout=util.DEVNULL, stderr=subprocess.PIPE)
+
+    def test_missing_example(self):
+        """Tests call with missing external dependency."""
+
+        with pytest.raises(FileNotFoundError):
+            util.run_command(args=['non_existant', '-l'])

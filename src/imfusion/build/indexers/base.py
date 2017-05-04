@@ -13,14 +13,12 @@ import logging
 import shutil
 from typing import Any, Type, Tuple
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
 import pyfaidx
 
-from imfusion.util import shell, tabix
+from imfusion.external.util import check_dependencies
+from imfusion.util import tabix
 
 from .. import util as build_util
 
@@ -68,12 +66,17 @@ class Indexer(object):
     ----------
     logger : logging.Logger
         Logger to be used for logging messages.
+    skip_index : bool
+        Whether to skip building the index. Mostly used for debugging purposes,
+        as this typically results in an incomplete reference.
 
     """
 
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, skip_index=False):
         # type: (Any) -> None
+
         self._logger = logger or logging.getLogger()
+        self._skip_index = skip_index
 
     @property
     def _reference_class(self):  # type: (...) -> Type[Reference]
@@ -91,7 +94,7 @@ class Indexer(object):
         Raises a ValueError if any dependencies are missing.
         """
 
-        shell.check_dependencies(self.dependencies)
+        check_dependencies(self.dependencies)
 
     def build(
             self,
@@ -141,38 +144,41 @@ class Indexer(object):
         """
 
         # Create output directory.
-        output_dir.mkdir(parents=True, exist_ok=False)
+        try:
+            output_dir.mkdir(parents=True, exist_ok=False)
+        except FileExistsError as ex:
+            ex.strerror = 'Output directory already exists'
+            raise ex
 
         # Use dummy Reference instance for paths.
         reference = self._reference_class(output_dir)
 
-        # Copy and index additional files (GTF etc.).
-        self._copy_and_index_files(
-            reference=reference,
-            gtf_path=gtf_path,
-            transposon_path=transposon_path,
-            transposon_features_path=transposon_features_path)
+        # Copy transposon files.
+        self._logger.info('Copying transposon files')
+        shutil.copy(str(transposon_path), str(reference.transposon_path))
+
+        build_util.check_feature_file(transposon_features_path)
+        shutil.copy(str(transposon_features_path),
+                    str(reference.features_path)) # yapf: disable
+
+        # Build indexed reference gtf.
+        self._logger.info('Building indexed reference gtf')
+        gtf_frame = tabix.read_gtf_frame(gtf_path)
+        gtf_frame = tabix.sort_gtf_frame(gtf_frame)
+
+        tabix.write_gtf_frame(gtf_frame, reference.gtf_path)
+        tabix.index_gtf(
+            reference.gtf_path,
+            output_path=reference.indexed_gtf_path,
+            sort=False)
+
+        # Build flattened exon gtf.
+        self._logger.info('Building flattened exon gtf')
+        gtf_frame_flat = tabix.flatten_gtf_frame(gtf_frame)
+        tabix.write_gtf_frame(
+            gtf_frame_flat, file_path=reference.exon_gtf_path)
 
         # Build augmented reference.
-        self._build_reference(
-            reference=reference,
-            refseq_path=refseq_path,
-            transposon_path=transposon_path,
-            blacklist_genes=blacklist_genes,
-            blacklist_regions=blacklist_regions)
-
-        # Build any required indices using files.
-        self._build_indices(reference)
-
-    def _build_reference(
-            self,
-            reference,  # type: Reference
-            refseq_path,  # type: pathlib.Path
-            transposon_path,  # type: pathlib.Path
-            blacklist_regions=None,  # type: List[Tuple[str, int, int]]
-            blacklist_genes=None  # type: List[str]
-    ):  # type (...) -> None
-
         self._logger.info('Building augmented reference')
 
         blacklist_regions = blacklist_regions or []
@@ -188,27 +194,12 @@ class Indexer(object):
             output_path=reference.fasta_path,
             blacklisted_regions=blacklist)
 
-    def _copy_and_index_files(
-            self,
-            reference,  # type: Reference
-            gtf_path,  # type: pathlib.Path
-            transposon_path,  # type: pathlib.Path
-            transposon_features_path  # type: pathlib.Path
-    ):  # type: (...) -> None
-        """Copies and indexes additional reference files (GTF, transposon)."""
-
-        # Copy additional reference files.
-        self._logger.info('Copying files')
-        shutil.copy(str(transposon_path), str(reference.transposon_path))
-
-        shutil.copy(str(transposon_features_path),
-                    str(reference.features_path)) # yapf: disable
-
-        shutil.copy(str(gtf_path), str(reference.gtf_path))
-
-        self._logger.info('Indexing reference gtf')
-        tabix.index_gtf(reference.gtf_path,
-                        output_path=reference.indexed_gtf_path) # yapf: disable
+        # Build any required indices using files.
+        if self._skip_index:
+            self._logger.warning('Skipping the building of the index. '
+                                 'Reference will not be usable for alignment.')
+        else:
+            self._build_indices(reference)
 
     def _build_indices(self, reference):
         raise NotImplementedError()
@@ -276,11 +267,19 @@ class Indexer(object):
             help='Genes to blacklist. Should correspond with '
             'the gene ids used in the reference gtf file.')
 
+        debug_group = parser.add_argument_group('Debugging')
+        debug_group.add_argument(
+            '--skip_index',
+            default=False,
+            action='store_true',
+            help=('Whether to skip the building of the genome indices. '
+                  'Mainly used for debugging purposes.'))
+
     @classmethod
     def _parse_args(cls, args):
         # type: (argparse.Namespace) -> Dict[str, Any]
         """Parses argparse argument to a dict."""
-        return {}
+        return {'skip_index': args.skip_index}
 
     @classmethod
     def from_args(cls, args):
@@ -345,6 +344,12 @@ class Reference(object):
         # type: (...) -> pathlib.Path
         """Path to reference gtf."""
         return self._reference / 'reference.gtf.gz'
+
+    @property
+    def exon_gtf_path(self):
+        # type: (...) -> pathlib.Path
+        """Path to exon gtf."""
+        return self._reference / 'exons.gtf'
 
     @property
     def index_path(self):

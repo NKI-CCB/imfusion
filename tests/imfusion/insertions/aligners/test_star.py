@@ -9,10 +9,7 @@ from builtins import *
 import argparse
 import shutil
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 import pytest
 
@@ -184,92 +181,6 @@ class TestExtractSpanningFusions(object):
 
 
 @pytest.fixture
-def star_align_kws(tmpdir):
-    "Basic arguments for star_align." ""
-    return {
-        'fastq_path': Path('in.R1.fastq.gz'),
-        'fastq2_path': Path('in.R2.fastq.gz'),
-        'index_path': Path('/path/to/index'),
-        'output_dir': Path(native_str(tmpdir / '_star')),
-        'extra_args': None
-    }
-
-
-class TestStarAlign(object):
-    """Tests for star_align function."""
-
-    def test_basic(self, star_align_kws, mocker):
-        """Tests basic call."""
-
-        mock_align = mocker.patch.object(star.shell, 'run_command')
-        star.star_align(**star_align_kws)
-
-        # Check if output directory was created.
-        assert star_align_kws['output_dir'].exists()
-
-        # Check arguments to run command. Checks if we have an extra slash
-        # added to output dir, if the fastqs were added properly, and if
-        # readFilesCommand is added for the gzipped files.
-        mock_align.assert_called_once_with(
-            args=[
-                'STAR', '--genomeDir', '/path/to/index', '--outFileNamePrefix',
-                str(star_align_kws['output_dir']) + '/', '--readFilesIn',
-                str(star_align_kws['fastq_path']),
-                str(star_align_kws['fastq2_path']), '--readFilesCommand',
-                'gunzip', '-c'
-            ],
-            stdout=None,
-            stderr=None,
-            logger=pytest.helpers.mock_any(object))
-
-    def test_extra_args(self, star_align_kws, mocker):
-        """Tests call with extra args."""
-
-        star_align_kws['extra_args'] = {
-            '--alignIntronMax': (200000, ),
-            '--twopassMode': ('None', )
-        }
-
-        mock_align = mocker.patch.object(star.shell, 'run_command')
-        star.star_align(**star_align_kws)
-
-        args = pytest.helpers.mock_call(mock_align)[1]['args']
-
-        # Check new argument.
-        assert '--alignIntronMax' in args
-        assert args[args.index('--alignIntronMax') + 1] == '200000'
-
-        # Check overridden argument.
-        assert '--twopassMode' in args
-        assert args[args.index('--twopassMode') + 1] == 'None'
-
-    def test_unpaired(self, star_align_kws, mocker):
-        """Tests call for unpaired samples."""
-
-        star_align_kws['fastq2_path'] = None
-
-        mock_align = mocker.patch.object(star.shell, 'run_command')
-        star.star_align(**star_align_kws)
-
-        args = pytest.helpers.mock_call(mock_align)[1]['args']
-        assert '--readFilesIn' in args
-        assert args[args.index('--readFilesIn') + 1] == str(star_align_kws[
-            'fastq_path'])
-
-    def test_no_gzip(self, star_align_kws, mocker):
-        """Tests call for non-gzipped file."""
-
-        star_align_kws['fastq_path'] = Path('in1.fastq')
-        star_align_kws['fastq2_path'] = Path('in2.fastq')
-
-        mock_align = mocker.patch.object(star.shell, 'run_command')
-        star.star_align(**star_align_kws)
-
-        args = pytest.helpers.mock_call(mock_align)[1]['args']
-        assert '--readFilesCommand' not in args
-
-
-@pytest.fixture
 def read_paths():
     """Example read paths."""
     return (Path('a.fastq.gz'), Path('b.fastq.gz'))
@@ -321,17 +232,11 @@ class TestStarAligner(object):
 
         # Using external sort.
         aligner2 = star.StarAligner(star_reference, external_sort=True)
-        assert aligner2.dependencies == ['STAR', 'samtools']
+        assert aligner2.dependencies == ['STAR']
 
         # Using assembly.
         aligner3 = star.StarAligner(star_reference, assemble=True)
         assert aligner3.dependencies == ['STAR', 'stringtie']
-
-        # Using external sort with sambamba installed.
-        mocker.patch.object(
-            star.shell, 'which', return_value='/usr/bin/sambamba')
-        aligner4 = star.StarAligner(star_reference, external_sort=True)
-        assert aligner4.dependencies == ['STAR', 'sambamba']
 
     def test_identify_insertions(self, read_paths, star_reference,
                                  star_output_dir, mocker):
@@ -364,9 +269,7 @@ class TestStarAligner(object):
                 '--runThreadN': (1, ),
                 '--chimSegmentMin': (12, ),
                 '--outSAMstrandField': ('intronMotif', )
-            },
-            stdout=pytest.helpers.mock_any(object),
-            logger=pytest.helpers.mock_any(object))
+            })
 
         # Check result, including specific Cblb insertion.
         assert len(ins) == 5

@@ -9,10 +9,7 @@ from builtins import *
 import argparse
 import shutil
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 from future.utils import native_str
 import pytest
@@ -117,8 +114,7 @@ class TestTophatAligner(object):
                 '--num-threads': (1, ),
                 '--bowtie1': (),
                 '--fusion-anchor-length': (12, )
-            },
-            logger=pytest.helpers.mock_any(object))
+            })
 
         # Check result, including specific Cblb insertion.
         assert len(ins) == 7
@@ -201,73 +197,3 @@ class TestTophatAligner(object):
         assert not aligner._filter_features
         assert not aligner._filter_orientation
         assert aligner._filter_blacklist == ['En2']
-
-
-@pytest.fixture
-def tophat_align_kws(tmpdir):
-    """Example tophat2_align keyword arguments."""
-    return {
-        'fastq_path': Path('in.R1.fastq.gz'),
-        'fastq2_path': Path('in.R2.fastq.gz'),
-        'index_path': Path('/path/to/index'),
-        'output_dir': Path(native_str(tmpdir / '_tophat')),
-        'extra_args': None
-    }
-
-
-class TestTophat2Align(object):
-    """Tests for tophat2_align function."""
-
-    def test_basic(self, tophat_align_kws, mocker):
-        """Test basic invocation."""
-
-        mock_align = mocker.patch.object(tophat.shell, 'run_command')
-        tophat.tophat2_align(**tophat_align_kws)
-
-        # Check if output directory was created.
-        assert tophat_align_kws['output_dir'].exists()
-
-        # Check arguments to run command. Checks if we have an extra slash
-        # added to output dir, if the fastqs were added properly, and if
-        # readFilesCommand is added for the gzipped files.
-        mock_align.assert_called_once_with(
-            args=[
-                'tophat2', '--output-dir',
-                native_str(tophat_align_kws['output_dir']), '/path/to/index',
-                native_str(tophat_align_kws['fastq_path']),
-                native_str(tophat_align_kws['fastq2_path'])
-            ],
-            stdout=None,
-            stderr=None,
-            logger=pytest.helpers.mock_any(object))
-
-    def test_extra_args(self, tophat_align_kws, mocker):
-        """Test adding extra arguments."""
-
-        tophat_align_kws['extra_args'] = {
-            '--mate-std-dev': (20, ),
-            '--num-threads': (10, )
-        }
-
-        mock_align = mocker.patch.object(tophat.shell, 'run_command')
-        tophat.tophat2_align(**tophat_align_kws)
-
-        args = pytest.helpers.mock_call(mock_align)[1]['args']
-
-        # Check new argument.
-        assert '--mate-std-dev' in args
-        assert args[args.index('--mate-std-dev') + 1] == '20'
-
-        assert '--num-threads' in args
-        assert args[args.index('--num-threads') + 1] == '10'
-
-    def test_unpaired(self, tophat_align_kws, mocker):
-        """Test single end case."""
-
-        tophat_align_kws['fastq2_path'] = None
-
-        mock_align = mocker.patch.object(tophat.shell, 'run_command')
-        tophat.tophat2_align(**tophat_align_kws)
-
-        args = pytest.helpers.mock_call(mock_align)[1]['args']
-        assert args[-1] == native_str(tophat_align_kws['fastq_path'])

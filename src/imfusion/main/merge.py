@@ -8,11 +8,9 @@ from builtins import *
 
 import argparse
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
+import imfusion
 from imfusion.merge import merge_samples
 from imfusion.model import Insertion
 
@@ -42,6 +40,11 @@ def _parse_args():
     """Parses command-line arguments for im-fusion-merge."""
 
     parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='IM-Fusion ' + imfusion.__version__)
 
     parser.add_argument(
         '--sample_dirs',

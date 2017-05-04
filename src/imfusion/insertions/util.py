@@ -12,12 +12,9 @@ import itertools
 import operator
 from typing import Any, Callable, Iterable, Tuple
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
-from future.utils import native
+from future.utils import native_str
 import numpy as np
 import pysam
 import toolz
@@ -25,7 +22,7 @@ import toolz
 from intervaltree import IntervalTree
 
 from imfusion.model import MetadataFrameMixin, Insertion, Fusion
-from imfusion.util import shell, tabix
+from imfusion.util import tabix
 from imfusion.util.frozendict import frozendict
 
 
@@ -223,7 +220,7 @@ class TranscriptReference(object):
         """Builds an Reference instance from the given GTF file."""
 
         # Open gtf file.
-        gtf = pysam.TabixFile(native(str(gtf_path)), parser=pysam.asGTF())
+        gtf = pysam.TabixFile(native_str(gtf_path), parser=pysam.asGTF())
 
         if chromosomes is None:
             chromosomes = gtf.contigs
@@ -392,29 +389,6 @@ class TransposonFeature(_TransposonFeature, MetadataFrameMixin):
     """Transposon feature model class."""
 
     __slots__ = ()
-
-
-def stringtie_assemble(
-        bam_path,  # type: pathlib.Path
-        gtf_path,  # type: pathlib.Path
-        output_path,  # type: pathlib.Path
-        extra_args=None  # type: Dict[str, Iterable[Any]]
-):  # type: (...) -> None
-    """Runs stringtie to assemble transripts."""
-
-    extra_args = extra_args or {}
-
-    # Inject args.
-    extra_args['-G'] = (str(gtf_path), )
-    extra_args['-o'] = (str(output_path), )
-
-    # Format args.
-    extra_cmdline_args = shell.flatten_arguments(extra_args)
-    extra_cmdline_args = [str(arg) for arg in extra_cmdline_args]
-
-    # Assemble full argument list.
-    cmdline_args = ['stringtie', str(bam_path)] + extra_cmdline_args
-    shell.run_command(cmdline_args)
 
 
 def filter_insertions(

@@ -6,16 +6,17 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
+import re
 from typing import Iterable, Tuple
 
-try:
-    import pathlib
-except ImportError:
-    import pathlib2 as pathlib
+import pathlib2 as pathlib
 
+import pandas as pd
 import pyfaidx
 
 from imfusion.util.tabix import GtfIterator
+
+REGION_REGEX = re.compile(r'(?P<chromosome>\w+):(?P<start>\d+)-(?P<end>\d+)')
 
 
 def build_reference(
@@ -78,12 +79,24 @@ def _concatenate_fastas(fasta_paths, output_path):
     with output_path.open('wt') as fileobj:
         for fasta_path in fasta_paths:
             # Open fasta file.
-            fasta = pyfaidx.Fasta(str(fasta_path))
+            fasta = _open_fasta_file(fasta_path)
 
             # Read/write sequences.
             for record in fasta:
                 _write_fasta_record(
                     fileobj, name=record.long_name, sequence=str(record))
+
+
+def _open_fasta_file(file_path, **kwargs):
+    """Opens a fasta file using pyfaidx."""
+
+    try:
+        fasta = pyfaidx.Fasta(str(file_path), **kwargs)
+    except pyfaidx.FastaIndexingError:
+        raise ValueError('Failed to read fasta file ({}). Ensure that '
+                         'the file is a valid fasta file.'.format(
+                             str(file_path)))
+    return fasta
 
 
 def _write_fasta_record(fileobj, name, sequence, max_width=80):
@@ -117,7 +130,7 @@ def mask_reference(reference_path, blacklist_regions):
     """
 
     # Open the reference as a mutable sequence.
-    ref = pyfaidx.Fasta(str(reference_path), mutable=True)
+    ref = _open_fasta_file(reference_path, mutable=True)
 
     # Mask regions.
     for seqname, start, end in blacklist_regions:
@@ -153,9 +166,16 @@ def regions_from_strings(region_strs):
 
 def _parse_region_str(region_str):
     # type: (str) -> Tuple[str, int, int]
-    seqname, range_str = region_str.split(':')
-    start, end = tuple(int(e) for e in range_str.split('-'))
-    return seqname, start, end
+
+    match = REGION_REGEX.search(region_str)
+
+    if match is None:
+        raise ValueError('Unable to parse region {!r}. Ensure that region '
+                         'specifications are in the required format '
+                         '(chromosome:start-end).'.format(region_str))
+    else:
+        groups = match.groupdict()
+        return groups['chromosome'], int(groups['start']), int(groups['end'])
 
 
 def regions_from_genes(gene_ids, gtf_path):
@@ -186,29 +206,35 @@ def regions_from_genes(gene_ids, gtf_path):
     # Check for missing genes.
     for gene_id, record in zip(gene_ids, gene_records):
         if record is None:
-            raise ValueError('Gene {} not found in GTF'.format(gene_id))
+            raise ValueError(
+                'Gene {!r} not found in reference gtf. Make sure that the '
+                'correct gene ID is being used (corresponding with the '
+                'gene_id annotation in the GTF file).'.format(gene_id))
 
     return [(gene.contig, gene.start, gene.end) for gene in gene_records]
 
 
-# def check_features(feature_path):
-#     """Checks if a transposon feature frame is valid."""
+def check_feature_file(feature_path):
+    """Checks if a transposon feature frame is valid."""
 
-#     # TODO: update function to use model class and path input.
-#     raise NotImplementedError()
+    transposon_features = pd.read_csv(str(feature_path), sep='\t')
 
-#     # Check dataframe columns.
-#     for req_col in ['name', 'start', 'end', 'strand', 'type']:
-#         if req_col not in transposon_features.columns:
-#             raise ValueError('Missing required column '
-#                              '{!r} in transposon features'.format(req_col))
+    # Check dataframe columns.
+    req_cols = {'name', 'start', 'end', 'strand', 'type'}
+    missing_cols = req_cols - set(transposon_features.columns)
 
-#     # Check if we have any features.
-#     if len(transposon_features) < 1:
-#         raise ValueError('Transposon features is empty')
+    if len(missing_cols) > 0:
+        raise ValueError('Missing required columns {!r} in the transposon '
+                         'file. Make sure that the file is a properly '
+                         'formatted tab-separated file (see documentation for '
+                         'more details).'.format(missing_cols))
 
-#     # Check if we have a valid feature.
-#     num_valid = transposon_features['type'].isin({'SA', 'SD'}).sum()
-#     if num_valid < 1:
-#         raise ValueError('No valid features (with type = SD or SA)'
-#                          'were found in transposon features')
+    # Check if we have any features.
+    if len(transposon_features) < 1:
+        raise ValueError('Transposon feature file is empty.')
+
+    # Check if we have a valid feature.
+    num_valid = transposon_features['type'].isin({'SA', 'SD'}).sum()
+    if num_valid < 1:
+        raise ValueError('No valid features (with type = SD or SA)'
+                         'were found in the transposon feature file.')

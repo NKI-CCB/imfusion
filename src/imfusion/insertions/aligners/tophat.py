@@ -6,17 +6,17 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 
 import pandas as pd
 import toolz
 
 from imfusion.build.indexers.tophat import TophatReference
+from imfusion.external.stringtie import stringtie_assemble
+from imfusion.external.tophat import tophat2_align
+from imfusion.external.util import parse_arguments
 from imfusion.model import TransposonFusion
-from imfusion.util import shell, path, tabix
+from imfusion.util import path, tabix
 from imfusion.util.frozendict import frozendict
 
 from .base import Aligner, register_aligner
@@ -102,20 +102,20 @@ class TophatAligner(Aligner):
         # Perform alignment using STAR.
         alignment_path = output_dir / 'alignment.bam'
         if not alignment_path.exists():
-            self._logger.info('Performing alignment')
+            self._logger.info('Performing alignment using Tophat2')
             self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
         else:
-            self._logger.info('Using existing alignment')
+            self._logger.info('Using existing Tophat2 alignment')
 
         # Assemble transcripts if requested.
         if self._assemble:
             assembled_path = output_dir / 'assembled.gtf.gz'
             if not assembled_path.exists():
-                self._logger.info('Assembling transcripts')
+                self._logger.info('Assembling transcripts using Stringie')
 
                 # Generate assembled GTF.
                 stringtie_out_path = assembled_path.with_suffix('')
-                util.stringtie_assemble(
+                stringtie_assemble(
                     alignment_path,
                     gtf_path=self._reference.gtf_path,
                     output_path=stringtie_out_path)
@@ -124,17 +124,17 @@ class TophatAligner(Aligner):
                 tabix.index_gtf(stringtie_out_path, output_path=assembled_path)
                 stringtie_out_path.unlink()
             else:
-                self._logger.info('Using existing assembly')
+                self._logger.info('Using existing Stringtie assembly')
         else:
             assembled_path = None
 
         # Extract identified fusions.
-        self._logger.info('Extracting fusions')
+        self._logger.info('Extracting gene-transposon fusions')
         fusion_path = output_dir / 'fusions.out'
         fusions = self._extract_fusions(fusion_path)
 
         # Extract insertions.
-        self._logger.info('Extracting insertions')
+        self._logger.info('Summarizing insertions')
         insertions = list(
             util.extract_insertions(
                 fusions,
@@ -144,7 +144,6 @@ class TophatAligner(Aligner):
                 ffpm_fastq_path=fastq_path,
                 chromosomes=None))
 
-        self._logger.info('Filtering insertions')
         insertions = util.filter_insertions(
             insertions,
             features=self._filter_features,
@@ -176,8 +175,7 @@ class TophatAligner(Aligner):
             fastq2_path=fastq2_path,
             index_path=self._reference.index_path,
             output_dir=tophat_dir,
-            extra_args=args,
-            logger=self._logger)
+            extra_args=args)
 
         # Symlink alignment into expected location for gene counts.
         path.symlink_relative(
@@ -204,8 +202,7 @@ class TophatAligner(Aligner):
         group = parser.add_argument_group('Tophat2 arguments')
         group.add_argument('--tophat_threads', type=int, default=1)
         group.add_argument('--tophat_min_flank', type=int, default=12)
-        group.add_argument(
-            '--tophat_args', type=shell.parse_arguments, default='')
+        group.add_argument('--tophat_args', type=parse_arguments, default='')
 
         assemble_group = parser.add_argument_group('Assembly')
         assemble_group.add_argument(
@@ -226,7 +223,7 @@ class TophatAligner(Aligner):
 
     @classmethod
     def _parse_args(cls, args):
-        return dict(
+        kws = dict(
             reference=TophatReference(args.reference),
             min_flank=args.tophat_min_flank,
             threads=args.tophat_threads,
@@ -235,69 +232,10 @@ class TophatAligner(Aligner):
             filter_features=args.filter_features,
             filter_orientation=args.filter_orientation,
             filter_blacklist=args.blacklisted_genes)
+        return toolz.merge(super()._parse_args(args), kws)
 
 
 register_aligner('tophat', TophatAligner)
-
-
-def tophat2_align(fastq_path,
-                  index_path,
-                  output_dir,
-                  fastq2_path=None,
-                  extra_args=None,
-                  stdout=None,
-                  stderr=None,
-                  logger=None):
-    """Aligns fastq files to a reference genome using Tophat2.
-
-    This function is used to call TopHat2 from Python to perform an
-    RNA-seq alignment. As Tophat2 is written in Python 2.7, this function
-    cannot be used in Python 3.0+.
-
-    Parameters
-    ----------
-    fastq_path : pathlib.Path
-        Paths to the fastq file that should be used for the Tophat2
-        alignment.
-    index_path : pathlib.Path
-        Path to the bowtie index of the (augmented)
-        genome that should be used in the alignment. This index is
-        typically generated by the *build_reference* function.
-    output_dir : pathlib.Path
-        Path to the output directory.
-    fastq2_path : pathlib.Path
-        Path to the fastq file of the second pair (for paired-end sequencing).
-    kwargs : dict
-        Dict of extra command line arguments for Tophat2.
-    path : pathlib.Path
-        Path to the Tophat2 executable.
-
-    """
-
-    extra_args = extra_args or {}
-
-    # Create output_dir if needed.
-    if not output_dir.exists():
-        output_dir.mkdir(parents=True)
-
-    # Inject own arguments.
-    extra_args['--output-dir'] = (str(output_dir), )
-
-    # Build command-line arguments.
-    if fastq2_path is None:
-        fastqs = [str(fastq_path)]
-    else:
-        fastqs = [str(fastq_path), str(fastq2_path)]
-
-    optional_args = list(shell.flatten_arguments(extra_args))
-    positional_args = [str(index_path)] + fastqs
-
-    cmdline_args = ['tophat2'] + optional_args + positional_args
-    cmdline_args = [str(s) for s in cmdline_args]
-
-    # Run Tophat2!
-    shell.run_command(
-        args=cmdline_args, stdout=stdout, stderr=stderr, logger=logger)
 
 
 def read_fusion_out(fusion_path):

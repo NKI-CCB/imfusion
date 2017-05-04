@@ -52,6 +52,8 @@ The command for building a Tophat-Fusion-based reference is nearly identical:
 
 However, both aligners do have some aligner-specific arguments for building
 their references. See the help of the respective sub-commands for more details.
+For STAR, special attention should be paid to memory usage, as STAR requires
+approximately 30GB of memory for building the reference genome.
 
 Detecting insertions (per sample)
 ---------------------------------
