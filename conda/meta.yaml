@@ -1,9 +1,9 @@
 package:
   name: imfusion
-  version: 0.2.0
+  version: 0.3.0
 
 build:
-  number: 1
+  number: 0
 
 source:
   path: ../
@@ -54,7 +54,7 @@ requirements:
     - star
     - subread
     - stringtie
-    - tophat2 # [py27]
+    - tophat >=2.1.0 # [py27]
     - bowtie # [py27]
 
 test:
