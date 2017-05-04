@@ -178,34 +178,24 @@ available soon. In the meantime, please use pip to install.</strong></p>
 <p>The recommended way to install IM-Fusion is using bioconda, as this installs
 IM-Fusion together with its external dependencies into an isolated environment
 using a single command:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">imfusion</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="n">imfusion</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">imfusion</span> <span class="n">imfusion</span>
 </pre></div>
 </div>
-<p>Note that this assumes that condas channels have been configured as
-<a class="reference external" href="https://bioconda.github.io/#set-up-channels">recommended</a> by bioconda.</p>
+<p>This assumes that condas channels have been configured as <a class="reference external" href="https://bioconda.github.io/#set-up-channels">recommended</a>
+by bioconda.</p>
 <p>Alternatively, IM-Fusion can be installed in an existing environment using:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">jrderuiter</span> <span class="n">imfusion</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">imfusion</span>
 </pre></div>
 </div>
-<p>Note that the bioconda package does not install rpy2 (which is only required
-for the single-sample differential expression test and can be difficult to
-install) and matplotlib/seaborn (which is only required for the differential
-expression plots and can give issues on headless servers).</p>
-<p>If you wish to use the single-sample differential expression test (which
-requires rpy2), you can install R and rpy2 can be installed using:</p>
+<p>Note that the bioconda package does not install rpy2, which is only required
+for the single-sample differential expression (DE) test and can be difficult to
+install. If you wish to use the single-sample DE test, you can install R and
+rpy2 can be installed using as follows:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Using conda</span>
 <span class="n">conda</span> <span class="n">install</span> <span class="n">rpy2</span>
 
-<span class="c1"># Using pip (allows use of existing R installation)</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="n">rpy2</span>
-</pre></div>
-</div>
-<p>Similarly, matplotlib/seaborn can be installed as follows:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Using conda</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">matplotlib</span> <span class="n">seaborn</span>
-
 <span class="c1"># Using pip</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="n">matplotlib</span> <span class="n">seaborn</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">rpy2</span>
 </pre></div>
 </div>
 </div>
@@ -217,10 +207,10 @@ requires rpy2), you can install R and rpy2 can be installed using:</p>
 </div>
 <p>Note that this does not install any of the required external dependencies,
 which must therefore be installed manually (see below for more details).
-This does also not install rpy2 or matplotlib/seaborn, which must also be
-installed using pip if you plan to use single-sample differential expression
-test or the differential expression plotting functions.</p>
-<p>If you don&#8217;t have numpy installed, you may run into the following error:</p>
+This does also not install rpy2, which must also be installed using pip if you
+plan to use single-sample differential expression test.</p>
+<p>If you don&#8217;t already have numpy installed, you may run into the following
+error during installation:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">Downloading</span> <span class="n">HTSeq</span><span class="o">-</span><span class="mf">0.7</span><span class="o">.</span><span class="mf">2.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span> <span class="p">(</span><span class="mi">548</span><span class="n">kB</span><span class="p">)</span>
     <span class="n">Complete</span> <span class="n">output</span> <span class="kn">from</span> <span class="nn">command</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">egg_info</span><span class="p">:</span>
     <span class="n">Setup</span> <span class="n">script</span> <span class="k">for</span> <span class="n">HTSeq</span><span class="p">:</span> <span class="n">Failed</span> <span class="n">to</span> <span class="kn">import</span> <span class="s1">&#39;numpy&#39;</span><span class="o">.</span>
@@ -229,14 +219,14 @@ test or the differential expression plotting functions.</p>
 </div>
 <p>This can be fixed by first installing numpy before trying to install IM-Fusion,
 as numpy is an install-time dependency of one of IM-Fusions dependencies
-(HTSeq). Similarly, HTSeq requires liblzma to be installed to build properly,
-otherwise you will encounter the following error:</p>
+(HTSeq). Additionally, HTSeq requires liblzma to be installed to build
+properly, otherwise you will encounter the following error:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ld</span><span class="p">:</span> <span class="n">cannot</span> <span class="n">find</span> <span class="o">-</span><span class="n">llzma</span>
 <span class="n">collect2</span><span class="p">:</span> <span class="n">error</span><span class="p">:</span> <span class="n">ld</span> <span class="n">returned</span> <span class="mi">1</span> <span class="n">exit</span> <span class="n">status</span>
 </pre></div>
 </div>
-<p>This can be fixed by installing liblzma-dev. On linux (assuming an apt-get
-based distribution) this can be done as follows:</p>
+<p>This can be fixed by installing the liblzma-dev package. On linux (assuming an
+apt-get based distribution) this can be done as follows:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">update</span>
 <span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="o">-</span><span class="n">y</span> <span class="n">install</span> <span class="n">liblzma</span><span class="o">-</span><span class="n">dev</span>
 </pre></div>
@@ -265,24 +255,24 @@ Tophat-Fusion.</li>
 <li><a class="reference external" href="https://github.com/STAR-Fusion/STAR-Fusion">STAR-Fusion</a> (optional) &#8211; for identifying endogenous gene fusions using STAR.</li>
 <li><a class="reference external" href="http://lomereiter.github.io/sambamba">Sambamba</a> (optional) &#8211; for faster sorting of BAM files.</li>
 </ul>
-<p>Note that either STAR or Tophat2 needs to be installed, depending on your
-preference for the RNA-seq aligner. If you are unsure, we recommend using STAR.
-StringTie is only required if you plan to perform reference-guided assembly
-(used to detect novel transcripts resulting from insertions). Similarly,
-STAR-Fusion is only needed if you plan to do endogenous fusion detection.
-Sambamba is used for faster sorting of BAM files in the STAR pipeline, but is
-also not a strict requirement.</p>
+<p>Note that either STAR or Tophat2/Bowtie need to be installed (not both
+necessarily), depending on your preference for the RNA-seq aligner. If you are
+unsure, we recommend using STAR. StringTie is only required if you plan to
+perform reference-guided assembly (used to detect novel transcripts resulting
+from insertions). Similarly, STAR-Fusion is only needed if you plan to do
+endogenous fusion detection. Sambamba is used for faster sorting of BAM files
+in the STAR pipeline, but is also not a strict requirement.</p>
 <p>Each of these packages can be installed manually by downloading binaries from
 the respective websites and making sure the unpacked binaries are available in
 the current <code class="docutils literal"><span class="pre">$PATH</span></code>. Alternatively, the dependencies can easily be installed
-using (bio)conda:</p>
+using bioconda:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">star</span> <span class="n">bowtie</span> <span class="n">tophat</span> <span class="n">stringtie</span> \
     <span class="n">subread</span> <span class="n">star</span><span class="o">-</span><span class="n">fusion</span> <span class="n">sambamba</span>
 </pre></div>
 </div>
-<p>Note that Tophat will not function properly in Python 3. Bioconda also does not
-provide any macOS builds of STAR-Fusion, meaning that STAR-Fusion will have to
-be installed manually on macOS.</p>
+<p>Note that Tophat2 will not function properly in Python 3. Bioconda also does
+not provide macOS builds of STAR-Fusion, meaning that STAR-Fusion will have
+to be installed manually on macOS.</p>
 <p>If you don&#8217;t use conda, a number of these tools can also be installed using
 <a class="reference external" href="http://brew.sh">homebrew</a> or <a class="reference external" href="http://linuxbrew.sh">linuxbrew</a>:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">brew</span> <span class="n">tap</span> <span class="n">homebrew</span><span class="o">/</span><span class="n">science</span>

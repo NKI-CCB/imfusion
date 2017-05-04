@@ -13,10 +13,10 @@ using a single command:
 
 .. code:: bash
 
-  conda create -n imfusion -c jrderuiter imfusion
+  conda create -n imfusion imfusion
 
-Note that this assumes that condas channels have been configured as
-recommended_ by bioconda.
+This assumes that condas channels have been configured as recommended_
+by bioconda.
 
 .. _recommended: https://bioconda.github.io/#set-up-channels
 
@@ -24,33 +24,20 @@ Alternatively, IM-Fusion can be installed in an existing environment using:
 
 .. code:: bash
 
-  conda install -c jrderuiter imfusion
+  conda install imfusion
 
-Note that the bioconda package does not install rpy2 (which is only required
-for the single-sample differential expression test and can be difficult to
-install) and matplotlib/seaborn (which is only required for the differential
-expression plots and can give issues on headless servers).
-
-If you wish to use the single-sample differential expression test (which
-requires rpy2), you can install R and rpy2 can be installed using:
+Note that the bioconda package does not install rpy2, which is only required
+for the single-sample differential expression (DE) test and can be difficult to
+install. If you wish to use the single-sample DE test, you can install R and
+rpy2 can be installed using as follows:
 
 .. code:: bash
 
     # Using conda
     conda install rpy2
 
-    # Using pip (allows use of existing R installation)
-    pip install rpy2
-
-Similarly, matplotlib/seaborn can be installed as follows:
-
-.. code:: bash
-
-    # Using conda
-    conda install matplotlib seaborn
-
     # Using pip
-    pip install matplotlib seaborn
+    pip install rpy2
 
 Using pip
 ~~~~~~~~~
@@ -63,11 +50,11 @@ IM-Fusion can also be installed using pip:
 
 Note that this does not install any of the required external dependencies,
 which must therefore be installed manually (see below for more details).
-This does also not install rpy2 or matplotlib/seaborn, which must also be
-installed using pip if you plan to use single-sample differential expression
-test or the differential expression plotting functions.
+This does also not install rpy2, which must also be installed using pip if you
+plan to use single-sample differential expression test.
 
-If you don't have numpy installed, you may run into the following error:
+If you don't already have numpy installed, you may run into the following
+error during installation:
 
 .. code:: bash
 
@@ -78,16 +65,16 @@ If you don't have numpy installed, you may run into the following error:
 
 This can be fixed by first installing numpy before trying to install IM-Fusion,
 as numpy is an install-time dependency of one of IM-Fusions dependencies
-(HTSeq). Similarly, HTSeq requires liblzma to be installed to build properly,
-otherwise you will encounter the following error:
+(HTSeq). Additionally, HTSeq requires liblzma to be installed to build
+properly, otherwise you will encounter the following error:
 
 .. code:: bash
 
     /usr/bin/ld: cannot find -llzma
     collect2: error: ld returned 1 exit status
 
-This can be fixed by installing liblzma-dev. On linux (assuming an apt-get
-based distribution) this can be done as follows:
+This can be fixed by installing the liblzma-dev package. On linux (assuming an
+apt-get based distribution) this can be done as follows:
 
 .. code:: bash
 
@@ -120,13 +107,13 @@ for full functionality:
 - STAR-Fusion_ (optional) -- for identifying endogenous gene fusions using STAR.
 - Sambamba_ (optional) -- for faster sorting of BAM files.
 
-Note that either STAR or Tophat2 needs to be installed, depending on your
-preference for the RNA-seq aligner. If you are unsure, we recommend using STAR.
-StringTie is only required if you plan to perform reference-guided assembly
-(used to detect novel transcripts resulting from insertions). Similarly,
-STAR-Fusion is only needed if you plan to do endogenous fusion detection.
-Sambamba is used for faster sorting of BAM files in the STAR pipeline, but is
-also not a strict requirement.
+Note that either STAR or Tophat2/Bowtie need to be installed (not both
+necessarily), depending on your preference for the RNA-seq aligner. If you are
+unsure, we recommend using STAR. StringTie is only required if you plan to
+perform reference-guided assembly (used to detect novel transcripts resulting
+from insertions). Similarly, STAR-Fusion is only needed if you plan to do
+endogenous fusion detection. Sambamba is used for faster sorting of BAM files
+in the STAR pipeline, but is also not a strict requirement.
 
 .. _Bowtie: http://bowtie-bio.sourceforge.net/index.shtml
 .. _Tophat2: https://ccb.jhu.edu/software/tophat/index.shtml
@@ -139,16 +126,16 @@ also not a strict requirement.
 Each of these packages can be installed manually by downloading binaries from
 the respective websites and making sure the unpacked binaries are available in
 the current ``$PATH``. Alternatively, the dependencies can easily be installed
-using (bio)conda:
+using bioconda:
 
 .. code:: bash
 
     conda install -c bioconda star bowtie tophat stringtie \
         subread star-fusion sambamba
 
-Note that Tophat will not function properly in Python 3. Bioconda also does not
-provide any macOS builds of STAR-Fusion, meaning that STAR-Fusion will have to
-be installed manually on macOS.
+Note that Tophat2 will not function properly in Python 3. Bioconda also does
+not provide macOS builds of STAR-Fusion, meaning that STAR-Fusion will have
+to be installed manually on macOS.
 
 If you don't use conda, a number of these tools can also be installed using
 `homebrew <http://brew.sh>`_ or `linuxbrew <http://linuxbrew.sh>`_:
