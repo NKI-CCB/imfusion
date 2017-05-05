@@ -11,3 +11,18 @@ recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
+
+include .bumpversion.cfg
+include .coveragerc
+include Makefile
+include pylintrc
+include pytest.ini
+include tox.ini
+recursive-include conda *.sh
+recursive-include conda *.yaml
+recursive-include conda *.yml
+recursive-include data *.fa
+recursive-include data *.gbk
+recursive-include data *.txt
+recursive-include scripts *.py
+recursive-include scripts *.sh
