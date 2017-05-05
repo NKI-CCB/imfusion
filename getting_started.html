@@ -234,14 +234,6 @@ The field may also be left empty for other types of features, however these
 features will not be used by IM-Fusion.</p>
 <p>Example sequence and feature files for the Sleeping Beauty
 <em>T2/Onc2</em> and Piggybac transposons are available in the GitHub <a class="reference external" href="https://github.com/jrderuiter/imfusion/tree/develop/data">respository</a>.</p>
-<p>Finally, for generating the exon-level expression counts, IM-Fusion needs a
-flattened exon representation of the reference gene features (in GTF format).
-This file is most easily generated from the reference gene features using the
-<code class="docutils literal"><span class="pre">dexseq_prepare_annotation.py</span></code> script from <a class="reference external" href="http://bioconductor.org/packages/release/bioc/html/DEXSeq.html">DEXSeq</a>. Using this script,
-the exon gtf file can be generated as follows:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">dexseq_prepare_annotation</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">aggr</span> <span class="n">no</span> <span class="n">reference</span><span class="o">.</span><span class="n">gtf</span> <span class="n">exons</span><span class="o">.</span><span class="n">gtf</span>
-</pre></div>
-</div>
 </div>
 </div>
 
