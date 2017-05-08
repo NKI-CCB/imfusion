@@ -8,15 +8,12 @@ from builtins import *
 
 import subprocess
 
+from future.utils import native_str
+from pathlib2 import Path
 import pytest
 
+from imfusion.compat import FileNotFoundError
 from imfusion.external import util
-
-# Define FileNotFoundError for Python 2.7.
-try:
-    FileNotFoundError
-except NameError:
-    FileNotFoundError = OSError
 
 
 class TestWhich(object):
@@ -110,3 +107,9 @@ class TestRunCommand(object):
 
         with pytest.raises(FileNotFoundError):
             util.run_command(args=['non_existant', '-l'])
+
+    def test_with_log(self, tmpdir):
+        """Tests call with log file."""
+
+        log_path = Path(native_str(tmpdir)) / 'test.log'
+        util.run_command(['echo', 'test'], log_path=log_path)
