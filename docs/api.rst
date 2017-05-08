@@ -47,8 +47,8 @@ corresponding aligner.
 Identifying insertions
 ----------------------
 
-``Aligner`` classes are used to identify insertions using the different RNA-seq
-aligners, with one class provided for each supported aligner. The main
+IM-Fusion uses ``Aligner`` classes to identify insertions using the different
+RNA-seq aligners, with one class provided for each supported aligner. The main
 methods provided by the Indexers are the ``check_dependencies`` and
 ``identify_insertions`` methods. The latter should be called with a reference
 instance and the sequence read files to identify insertions.
@@ -63,7 +63,49 @@ instance and the sequence read files to identify insertions.
     :members:
 
 
-Testing for differential expression
------------------------------------
+Differential expression
+-----------------------
 
-TODO
+Quantification
+~~~~~~~~~~~~~~
+
+The ``imfusion.expression`` module provides several functions for generating,
+reading and normalizing exon expression counts. These functions are used by
+IM-Fusion to prepare counts for the differential expression tests.
+
+.. autofunction:: imfusion.expression.generate_exon_counts
+.. autofunction:: imfusion.expression.read_exon_counts
+.. autofunction:: imfusion.expression.normalize_counts
+.. autofunction:: imfusion.expression.estimate_size_factors
+
+DE tests
+~~~~~~~~
+
+IM-Fusion provides three differential expression tests, which are implemented
+in their own functions (``test_de_exon``, ``test_de_exon_single`` and
+``test_de_gene``). Each of these functions returns a corresponding test result
+instance (see below for more details). The ``test_de`` function is a
+convenient wrapper that applies the group-wise exon-level test for multiple
+genes, and provides an optional fallback to the gene-level test for genes that
+cannot be tested at the exon-level.
+
+.. autofunction:: imfusion.expression.test_de
+.. autofunction:: imfusion.expression.test_de_exon
+.. autofunction:: imfusion.expression.test_de_exon_single
+.. autofunction:: imfusion.expression.test_de_gene
+
+DE results
+~~~~~~~~~~
+
+Each of the three differential expression tests returns a result instance that
+contains the results of the test and provides several functions for
+visualizing the test result.
+
+.. autoclass:: imfusion.expression.test.DeResult
+    :members:
+
+.. autoclass:: imfusion.expression.test.DeSingleResult
+    :members:
+
+.. autoclass:: imfusion.expression.test.DeGeneResult
+    :members:

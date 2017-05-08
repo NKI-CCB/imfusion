@@ -34,7 +34,13 @@ def test_de(
         fallback_to_gene=False,  # type: bool
         gene_counts=None  # type: pd.DataFrame
 ):  # type: (...) -> pd.DataFrame
-    """Performs DE test for multiple genes and summarizes in table.
+    """Performs and summarizes group-wise DE tests for multiple genes.
+
+    High-level function that performs the group-wise DE tests for multiple
+    genes and summarizes the results in a single table. Provides an optional
+    fallback to perform the gene-level test for genes that can not be tested
+    using the exon level test (typically due to a lack of exons before/after
+    the insertion sites in the gene).
 
     Parameters
     ----------
@@ -46,6 +52,15 @@ def test_de(
     gene_ids : List[str]
         IDs of genes to test for differential expression. Expected to conform
         with gene_ids used for the insertions and the expression counts.
+    fallback_to_gene : bool
+        If true, the gene-level test is used as a fallback for genes that do
+        not have any exons before/after their insertion sites. If false, no
+        test is performed for these genes.
+    gene_counts : pd.DataFrame
+        Optional matrix of gene expression counts to use for the gene-level
+        test. If not given, the exon expression counts are used to estimate
+        gene-level expression by summing the expression values of the gene
+        exons.
 
     Returns
     -------

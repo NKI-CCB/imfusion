@@ -94,12 +94,3 @@ class TestReadExonCounts(object):
 
         assert exon_counts.shape == (7, 2)
         assert list(exon_counts.columns) == ['a', 'b']
-
-    def test_example_with_gene_id(self, exon_counts_path):
-        """Tests filtering for a given gene id."""
-
-        exon_counts = counts.read_exon_counts(
-            exon_counts_path, gene_id='ENSMUSG00000051951')
-
-        assert exon_counts.shape == (5, 2)
-        assert list(exon_counts.columns) == ['a', 'b']
