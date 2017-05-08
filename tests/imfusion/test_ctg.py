@@ -319,3 +319,14 @@ class TestTestCtgs(object):
 
         # Check result.
         assert result.ix['gene_a', 'p_value'] < 0.05
+
+    def test_empty(self, ctg_reference):
+        """Test example without insertions."""
+
+        result = ctg.test_ctgs(
+            [], ctg_reference, window=(4, 0), per_sample=False)
+
+        assert len(result) == 0
+        assert list(result.columns) == [
+            'gene_id', 'p_value', 'q_value', 'gene_name', 'n_samples'
+        ]

@@ -57,7 +57,7 @@ def test_ctgs(
         List of genes to test (defaults to all genes with an insertion).
     chromosomes : List[str]
         List of chromosomes to include, defaults to all chromosomes
-        in the given reference GTF.
+        shared between the reference sequence and the reference gtf.
     pattern : str
         Specificity pattern of the used transposon.
     per_sample : bool
@@ -80,6 +80,22 @@ def test_ctgs(
         multiple testing using bonferroni correction.
 
     """
+
+    # Default to shared chromosome sequences (typically drops some
+    # of the more esoteric extra scaffold/patch sequences).
+    if chromosomes is None:
+        reference_seq = pyfaidx.Fasta(str(reference.fasta_path))
+        reference_gtf = GtfIterator(reference.indexed_gtf_path)
+
+        chromosomes = list(
+            set(reference_seq.keys()) & set(reference_gtf.contigs))
+
+        if len(chromosomes) == 0:
+            ValueError('No chromosomes are shared between the reference '
+                       'sequence and reference gtf files')
+
+    if len(chromosomes) == 0:
+        raise ValueError('At least one chromosome must be given')
 
     # Determine gene windows using GTF.
     logging.info('Generating gene windows')
@@ -132,19 +148,25 @@ def test_ctgs(
     # Sort by q-value and p-value.
     result.sort_values(by=['q_value', 'p_value'], inplace=True)
 
-    # Annotate with gene_name if possible.
-    if 'gene_name' in insertions[0].metadata:
-        name_map = {
-            ins.metadata['gene_id']: ins.metadata['gene_name']
-            for ins in insertions
-        }
-        result.insert(1, 'gene_name', result['gene_id'].map(name_map))
+    if len(insertions) > 0:
+        # Annotate with gene_name if possible.
+        if 'gene_name' in insertions[0].metadata:
+            name_map = {
+                ins.metadata['gene_id']: ins.metadata['gene_name']
+                for ins in insertions
+            }
+            result.insert(1, 'gene_name', result['gene_id'].map(name_map))
+        else:
+            result['gene_name'] = np.nan
 
-    # Annotate with frequency.
-    frequency = (Insertion.to_frame(insertions)
-                 .groupby('gene_id')['sample'].nunique()
-                 .reset_index(name='n_samples'))
-    result = pd.merge(result, frequency, on='gene_id', how='left')
+        # Annotate with frequency.
+        frequency = (Insertion.to_frame(insertions)
+                     .groupby('gene_id')['sample'].nunique()
+                     .reset_index(name='n_samples'))
+        result = pd.merge(result, frequency, on='gene_id', how='left')
+    else:
+        result['gene_name'] = np.nan
+        result['n_samples'] = np.nan
 
     return result
 
