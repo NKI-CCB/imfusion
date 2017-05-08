@@ -186,9 +186,11 @@ and Tophat-Fusion).</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">build</span> <span class="n">star</span> \
     <span class="o">--</span><span class="n">reference_seq</span> <span class="n">Mus_musculus</span><span class="o">.</span><span class="n">GRCm38</span><span class="o">.</span><span class="n">dna</span><span class="o">.</span><span class="n">primary_assembly</span><span class="o">.</span><span class="n">fa</span> \
     <span class="o">--</span><span class="n">reference_gtf</span> <span class="n">Mus_musculus</span><span class="o">.</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">gtf</span> \
-    <span class="o">--</span><span class="n">transposon_seq</span> <span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
-    <span class="o">--</span><span class="n">transposon_features</span> <span class="n">transposon</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">txt</span> \
-    <span class="o">--</span><span class="n">output_dir</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span>
+    <span class="o">--</span><span class="n">transposon_seq</span> <span class="n">t2onc2</span><span class="o">.</span><span class="n">sequence</span><span class="o">.</span><span class="n">fa</span> \
+    <span class="o">--</span><span class="n">transposon_features</span> <span class="n">t2onc2</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">txt</span> \
+    <span class="o">--</span><span class="n">output_dir</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
+    <span class="o">--</span><span class="n">blacklist_genes</span> <span class="n">ENSMUSG00000039095</span> <span class="n">ENSMUSG00000038402</span> \
+    <span class="o">--</span><span class="n">star_threads</span> <span class="mi">4</span>
 </pre></div>
 </div>
 <p>Here, the <code class="docutils literal"><span class="pre">--reference_seq</span></code> argument points to the fasta file containing
@@ -197,19 +199,22 @@ file containing the reference gene features, <code class="docutils literal"><spa
 the transposon sequence and <code class="docutils literal"><span class="pre">--transposon_features</span></code> points to a file
 describing the transposon features. The reference files are written to the
 path specified by <code class="docutils literal"><span class="pre">--output_dir</span></code>.</p>
-<p>Optionally, specific genomic regions can be blacklisted using the
-<code class="docutils literal"><span class="pre">--blacklist_genes</span></code> and <code class="docutils literal"><span class="pre">--blacklist_regions</span></code> arguments. The former can
-be used to blacklist entire genes (specified by their Ensembl ID), whilst the
-latter can be used to blacklist specific regions (specified as chr:start-end).
-Sequences of blacklisted regions are replaced by &#8216;N&#8217; nucleotides in the
-generated reference.</p>
-<p>The command for building a Tophat-Fusion-based reference is nearly identical:</p>
+<p>It is important to blacklist genes or genomic sequences that are part of the
+transposon sequence using the optional <code class="docutils literal"><span class="pre">--blacklist_genes</span></code> and
+<code class="docutils literal"><span class="pre">--blacklist_regions</span></code> arguments. The former can be used to blacklist entire
+genes (specified by their ID in the GTF file), whilst the latter can be used
+to blacklist specific regions (specified as chr:start-end). Sequences of
+blacklisted regions are replaced by &#8216;N&#8217; nucleotides in the generated reference.</p>
+<p><strong>Failure to blacklist shared sequences will result in multiple alignments and
+prevent proper identification of transposon insertions.</strong></p>
+<p>The command for building a Tophat-Fusion reference is nearly identical:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">build</span> <span class="n">tophat</span> \
     <span class="o">--</span><span class="n">reference_seq</span> <span class="n">Mus_musculus</span><span class="o">.</span><span class="n">GRCm38</span><span class="o">.</span><span class="n">dna</span><span class="o">.</span><span class="n">primary_assembly</span><span class="o">.</span><span class="n">fa</span> \
     <span class="o">--</span><span class="n">reference_gtf</span> <span class="n">Mus_musculus</span><span class="o">.</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">gtf</span> \
     <span class="o">--</span><span class="n">transposon_seq</span> <span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
     <span class="o">--</span><span class="n">transposon_features</span> <span class="n">transposon</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">txt</span> \
-    <span class="o">--</span><span class="n">output_dir</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">tophat</span>
+    <span class="o">--</span><span class="n">output_dir</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">tophat</span> \
+    <span class="o">--</span><span class="n">blacklist_genes</span> <span class="n">ENSMUSG00000039095</span> <span class="n">ENSMUSG00000038402</span> \
 </pre></div>
 </div>
 <p>However, both aligners do have some aligner-specific arguments for building
@@ -269,12 +274,13 @@ of samples.</p>
 </pre></div>
 </div>
 <p>Here, the <code class="docutils literal"><span class="pre">--sample_dir</span></code> argument should point to a sample directory (which
-was previously generated by <code class="docutils literal"><span class="pre">imfusion-insertions</span></code>). The generated counts are
-written to this sample directory as the TSV file exon_counts.txt.</p>
-<p>The <code class="docutils literal"><span class="pre">--reference</span></code> argument should point to the reference that was used to
-identify insertions. Two optional arguments <code class="docutils literal"><span class="pre">--paired</span></code> and <code class="docutils literal"><span class="pre">--stranded</span></code> can
-be used to indicate whether the alignment contains paired-end sequencing data
-and to indicate the strandedness of the RNA-seq reads.</p>
+was previously generated by <code class="docutils literal"><span class="pre">imfusion-insertions</span></code>). The <code class="docutils literal"><span class="pre">--reference</span></code>
+argument should point to the reference that was used to identify insertions.
+Two optional arguments <code class="docutils literal"><span class="pre">--paired</span></code> and <code class="docutils literal"><span class="pre">--stranded</span></code> can be used to indicate
+whether the alignment contains paired-end sequencing data and to indicate the
+strandedness of the RNA-seq reads.</p>
+<p>The generated counts are written to the sample directory as the TSV
+file <code class="docutils literal"><span class="pre">exon_counts.txt</span></code>.</p>
 </div>
 <div class="section" id="merging-sample-results">
 <h2>Merging sample results<a class="headerlink" href="#merging-sample-results" title="Permalink to this headline">¶</a></h2>
@@ -283,10 +289,10 @@ the individual sample results into a combined dataset using <code class="docutil
 This command effectively concatenates the individual results into combined
 <code class="docutils literal"><span class="pre">insertions.txt</span></code> and <code class="docutils literal"><span class="pre">exon_counts.txt</span></code> files.</p>
 <p>The basic command is as follows:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">merge</span> <span class="o">--</span><span class="n">sample_dirs</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">sample_s1</span> \
-                              <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">sample_s2</span> \
-                <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span> \
-                <span class="o">--</span><span class="n">output_expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">merge</span> <span class="o">--</span><span class="n">sample_dirs</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">sample_s1</span> \
+                             <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">sample_s2</span> \
+               <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span> \
+               <span class="o">--</span><span class="n">output_expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span>
 </pre></div>
 </div>
 <p>In this command, the <code class="docutils literal"><span class="pre">--sample_dirs</span></code> argument points to the sample
@@ -301,41 +307,47 @@ argument may be omitted if no expression counts were generated for the samples.<
 genes, or CTGs), IM-Fusion uses the Poisson distribution to test whether a
 given gene has more insertions than may be expected by chance. This test is
 performed on the merged dataset using the <code class="docutils literal"><span class="pre">imfusion-ctg</span></code> command:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
-              <span class="o">--</span><span class="n">expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span> \
-              <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
-              <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
+             <span class="o">--</span><span class="n">expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span> \
+             <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
+             <span class="o">--</span><span class="n">chromosomes</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span> <span class="mi">7</span> <span class="mi">8</span> <span class="mi">9</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> \
+                           <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span> <span class="n">X</span> \
+             <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span>
 </pre></div>
 </div>
 <p>Here, <code class="docutils literal"><span class="pre">--insertions</span></code> and <code class="docutils literal"><span class="pre">--expression</span></code> should point to the merged
 insertions and expression files generated by <code class="docutils literal"><span class="pre">imfusion-merge</span></code>. The
 <code class="docutils literal"><span class="pre">--reference</span></code> argument refers to the same reference as used for the
-alignment, whilst <code class="docutils literal"><span class="pre">--output</span></code> specifies the path where the CTG output
-should be written.</p>
+alignment, whilst <code class="docutils literal"><span class="pre">--output</span></code> specifies the path where the CTG output should
+be written. The <code class="docutils literal"><span class="pre">--chromosomes</span></code> argument specifies which chromosomes
+should be included in the test and is mainly used to omit chromosomes
+containing the transposon donor loci.</p>
 <p>The parameters for the CTG test can be changed using the <code class="docutils literal"><span class="pre">--window</span></code>,
 <code class="docutils literal"><span class="pre">--pattern</span></code> and <code class="docutils literal"><span class="pre">--chromosomes</span></code> arguments. The <code class="docutils literal"><span class="pre">--window</span></code> parameter
 specifies the size of the window around genes within which insertions should
 be included. The <code class="docutils literal"><span class="pre">--pattern</span></code> argument can be used to account for integration
 biases of the transposon, if the transposon is known to integrate at specific
-nucleotide sequences. The <code class="docutils literal"><span class="pre">--chromosome</span></code> argument specifies which chromosomes
-should be included in the test and is mainly used to omit chromosomes
-containing the transposon donor loci.</p>
+nucleotide sequences.</p>
 <p>Finally, the significance thresholds for the CTG and DE tests can be specified
 using the <code class="docutils literal"><span class="pre">--threshold</span></code> and <code class="docutils literal"><span class="pre">--de_threshold</span></code> arguments:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
-              <span class="o">--</span><span class="n">expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span> \
-              <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
-              <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span> \
-              <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.05</span> \
-              <span class="o">--</span><span class="n">de_threshold</span> <span class="mf">0.05</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
+             <span class="o">--</span><span class="n">expression</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">txt</span> \
+             <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
+             <span class="o">--</span><span class="n">chromosomes</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span> <span class="mi">7</span> <span class="mi">8</span> <span class="mi">9</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> \
+                           <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span> <span class="n">X</span> \
+             <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span> \
+             <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.05</span> \
+             <span class="o">--</span><span class="n">de_threshold</span> <span class="mf">0.05</span>
 </pre></div>
 </div>
 <p>Optionally, the differential expression test can be skipped by not providing
 the expression data. In this case, only the CTG test is performed:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">im</span><span class="o">-</span><span class="n">fusion</span> <span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
-              <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
-              <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span>
-              <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.05</span> \
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">ctg</span> <span class="o">--</span><span class="n">insertions</span> <span class="o">./</span><span class="n">merged</span><span class="o">.</span><span class="n">insertions</span><span class="o">.</span><span class="n">txt</span>  \
+             <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
+             <span class="o">--</span><span class="n">chromosomes</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span> <span class="mi">7</span> <span class="mi">8</span> <span class="mi">9</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> \
+                           <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span> <span class="n">X</span> \
+             <span class="o">--</span><span class="n">output</span> <span class="o">./</span><span class="n">output</span><span class="o">/</span><span class="n">merged</span><span class="o">.</span><span class="n">ctgs</span><span class="o">.</span><span class="n">txt</span>
+             <span class="o">--</span><span class="n">threshold</span> <span class="mf">0.05</span> \
 </pre></div>
 </div>
 </div>
