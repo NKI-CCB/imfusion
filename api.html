@@ -102,7 +102,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#identifying-insertions">Identifying insertions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#testing-for-differential-expression">Testing for differential expression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#differential-expression">Differential expression</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#quantification">Quantification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#de-tests">DE tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#de-results">DE results</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="extras.html">Extras</a></li>
@@ -476,8 +481,8 @@ index that is used by Tophat during alignment.</p>
 </div>
 <div class="section" id="identifying-insertions">
 <h2>Identifying insertions<a class="headerlink" href="#identifying-insertions" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">Aligner</span></code> classes are used to identify insertions using the different RNA-seq
-aligners, with one class provided for each supported aligner. The main
+<p>IM-Fusion uses <code class="docutils literal"><span class="pre">Aligner</span></code> classes to identify insertions using the different
+RNA-seq aligners, with one class provided for each supported aligner. The main
 methods provided by the Indexers are the <code class="docutils literal"><span class="pre">check_dependencies</span></code> and
 <code class="docutils literal"><span class="pre">identify_insertions</span></code> methods. The latter should be called with a reference
 instance and the sequence read files to identify insertions.</p>
@@ -764,9 +769,456 @@ transposon feature is in the wrong orientation.</li>
 </dd></dl>
 
 </div>
-<div class="section" id="testing-for-differential-expression">
-<h2>Testing for differential expression<a class="headerlink" href="#testing-for-differential-expression" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<div class="section" id="differential-expression">
+<h2>Differential expression<a class="headerlink" href="#differential-expression" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="quantification">
+<h3>Quantification<a class="headerlink" href="#quantification" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal"><span class="pre">imfusion.expression</span></code> module provides several functions for generating,
+reading and normalizing exon expression counts. These functions are used by
+IM-Fusion to prepare counts for the differential expression tests.</p>
+<dl class="function">
+<dt id="imfusion.expression.generate_exon_counts">
+<code class="descclassname">imfusion.expression.</code><code class="descname">generate_exon_counts</code><span class="sig-paren">(</span><em>bam_files</em>, <em>gtf_path</em>, <em>names=None</em>, <em>extra_kws=None</em>, <em>tmp_dir=None</em>, <em>keep_tmp=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/counts.html#generate_exon_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.generate_exon_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates exon counts for given bam files using featureCounts.</p>
+<p>This function is used to generate a m-by-n matrix (m = number of samples,
+n = number of exons) of exon expression counts. This matrix is generated
+using featureCounts, whose results are then parsed and returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bam_files</strong> (<em>list</em><em>[</em><em>pathlib.Path</em><em>]</em><em></em>) &#8211; List of paths to the bam files for which counts should be generated.</li>
+<li><strong>gtf_path</strong> (<em>pathlib.Path</em>) &#8211; Path to the GTF file containing gene features.</li>
+<li><strong>names</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em></em>) &#8211; Alternative names to use for the given bam
+files. Keys of the dict should correspond to bam file paths, values
+should reflect the sample names that should be used in the
+resulting count matrix.</li>
+<li><strong>extra_kws</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>tuple</em><em>]</em><em>:</em>) &#8211; Dictionary of extra arguments that should be passed to feature counts.
+Keys should correspond to argument names (including dashes),
+values should be tuples containing the argument values.</li>
+<li><strong>tmp_dir</strong> (<em>pathlib.Path</em>) &#8211; Temp directory to use for generating counts.</li>
+<li><strong>keep_tmp</strong> (<em>bool</em>) &#8211; Whether to keep the temp directory (default = False).</li>
+<li><strong>**kwargs</strong> &#8211; Any kwargs are passed to <cite>feature_counts</cite>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">DataFrame containing counts. The index of the DataFrame contains
+gene ids corresponding to exons in the gff file, the columns
+correspond to samples/bam files. Column names are either the bam
+file paths, or the alternative sample names if given.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pandas.DataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="imfusion.expression.read_exon_counts">
+<code class="descclassname">imfusion.expression.</code><code class="descname">read_exon_counts</code><span class="sig-paren">(</span><em>file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/counts.html#read_exon_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.read_exon_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads exon counts from an IM-Fusion expression file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file_path</strong> (<em>pathlib.Path</em>) &#8211; Path to the exon count file.</li>
+<li><strong>gene_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em><em></em>) &#8211; Optional gene_id.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Matrix of exon counts. The rows correspond to the
+counted features, the columns correspond to the index values
+(chomosome, position etc.) and the samples.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="imfusion.expression.normalize_counts">
+<code class="descclassname">imfusion.expression.</code><code class="descname">normalize_counts</code><span class="sig-paren">(</span><em>counts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/counts.html#normalize_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.normalize_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalizes counts for sequencing depth using median-of-ratios.</p>
+<p>Normalizes gene expression counts for differences in sequencing depth
+between samples using the median-of-ratios approach described in DESeq2.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>counts</strong> (<em>pd.DataFrame</em>) &#8211; Matrix of gene counts, with genes along the rows and samples
+along the columns.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Matrix of normalized expression counts.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd.DataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="imfusion.expression.estimate_size_factors">
+<code class="descclassname">imfusion.expression.</code><code class="descname">estimate_size_factors</code><span class="sig-paren">(</span><em>counts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/counts.html#estimate_size_factors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.estimate_size_factors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates size factors using median-of-ratios.</p>
+<p>Calculates normalization factors for the median-of-ratios approach for
+normalizing expression counts for differences in sequencing depths between
+samples.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>counts</strong> (<em>pd.DataFrame</em>) &#8211; Matrix of gene counts, with genes along the rows and samples
+along the columns.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Array of normalization factors, with one entry per sample.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">np.Array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="de-tests">
+<h3>DE tests<a class="headerlink" href="#de-tests" title="Permalink to this headline">¶</a></h3>
+<p>IM-Fusion provides three differential expression tests, which are implemented
+in their own functions (<code class="docutils literal"><span class="pre">test_de_exon</span></code>, <code class="docutils literal"><span class="pre">test_de_exon_single</span></code> and
+<code class="docutils literal"><span class="pre">test_de_gene</span></code>). Each of these functions returns a corresponding test result
+instance (see below for more details). The <code class="docutils literal"><span class="pre">test_de</span></code> function is a
+convenient wrapper that applies the group-wise exon-level test for multiple
+genes, and provides an optional fallback to the gene-level test for genes that
+cannot be tested at the exon-level.</p>
+<dl class="function">
+<dt id="imfusion.expression.test_de">
+<code class="descclassname">imfusion.expression.</code><code class="descname">test_de</code><span class="sig-paren">(</span><em>insertions</em>, <em>exon_counts</em>, <em>gene_ids</em>, <em>fallback_to_gene=False</em>, <em>gene_counts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#test_de"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test_de" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs and summarizes group-wise DE tests for multiple genes.</p>
+<p>High-level function that performs the group-wise DE tests for multiple
+genes and summarizes the results in a single table. Provides an optional
+fallback to perform the gene-level test for genes that can not be tested
+using the exon level test (typically due to a lack of exons before/after
+the insertion sites in the gene).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>insertions</strong> (<em>List</em><em>[</em><em>Insertion</em><em>]</em><em></em>) &#8211; Insertions to use for test.</li>
+<li><strong>counts</strong> (<em>pd.DataFrame</em>) &#8211; Exon expression counts to use for test. Expected to conform to
+the format returned by the <cite>read_exon_counts</cite> function.</li>
+<li><strong>gene_ids</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em></em>) &#8211; IDs of genes to test for differential expression. Expected to conform
+with gene_ids used for the insertions and the expression counts.</li>
+<li><strong>fallback_to_gene</strong> (<em>bool</em>) &#8211; If true, the gene-level test is used as a fallback for genes that do
+not have any exons before/after their insertion sites. If false, no
+test is performed for these genes.</li>
+<li><strong>gene_counts</strong> (<em>pd.DataFrame</em>) &#8211; Optional matrix of gene expression counts to use for the gene-level
+test. If not given, the exon expression counts are used to estimate
+gene-level expression by summing the expression values of the gene
+exons.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">DataFrame summarizing the results of the DE tests. Contains three
+columns: &#8216;gene_id&#8217;, &#8216;p_value&#8217; and &#8216;direction&#8217;. The p-value indicates
+the significance of the differential expression for the given gene,
+whilst the direction indicates whether the expression goes up (=1)
+in samples with an insertion or goes down (=-1).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="imfusion.expression.test_de_exon">
+<code class="descclassname">imfusion.expression.</code><code class="descname">test_de_exon</code><span class="sig-paren">(</span><em>insertions</em>, <em>exon_counts</em>, <em>gene_id</em>, <em>pos_samples=None</em>, <em>neg_samples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#test_de_exon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test_de_exon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the groupwise exon-level differential expression test.</p>
+<p>Tests if the expression of exons after the insertion site(s) in a
+gene is significantly increased or decreased in samples with an
+insertion (pos_samples) compared to samples without an insertion
+(neg_samples). The test is performed by comparing normalized counts
+after the insertion sites between samples with and without an insertion
+in the gene, using the non-parametric Mann-Whitney-U test.</p>
+<p>Note that the before/after split for the groupwise test is taken as the
+common set of before/after exons over all samples with an insertion. In
+cases where either set is empty, for example due to insertions before the
+first exon of the gene, we attempt to drop samples that prevent a proper
+split and perform the test without these samples.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>insertions</strong> (<em>List</em><em>[</em><em>Insertion</em><em>] or </em><em>pd.DataFrame</em>) &#8211; List of insertions.</li>
+<li><strong>exon_counts</strong> (<em>pandas.DataFrame</em>) &#8211; Matrix containing exon counts, with samples along the columns and
+exons along the rows. The DataFrame should have a multi-index
+containing the chromosome, start, end and strand of the exon. The
+samples should correspond with samples in the insertions frame.</li>
+<li><strong>gene_id</strong> (<em>str</em>) &#8211; ID of the gene of interest. Should correspond with a
+gene in the count matrix.</li>
+<li><strong>pos_samples</strong> (<em>Set</em><em>[</em><em>str</em><em>]</em><em></em>) &#8211; Set of positive samples (with insertion) to use in the test. Defaults
+to all samples with an insertion in the gene of interest.</li>
+<li><strong>neg_samples</strong> (<em>Set</em><em>[</em><em>str</em><em>]</em><em></em>) &#8211; Set of negative samples (without insertion) to use in the test.
+Defaults to all samples not in the positive set.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Result of the differential expression test.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#imfusion.expression.test.DeResult" title="imfusion.expression.test.DeResult">DeResult</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="imfusion.expression.test_de_exon_single">
+<code class="descclassname">imfusion.expression.</code><code class="descname">test_de_exon_single</code><span class="sig-paren">(</span><em>insertions</em>, <em>exon_counts</em>, <em>insertion_id</em>, <em>gene_id</em>, <em>neg_samples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#test_de_exon_single"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test_de_exon_single" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the single sample exon-level differential expression test.</p>
+<p>Tests if the expression of exons after the insertion site(s) in a
+gene is significantly increased or decreased in the sample with the given
+insertion compared to samples without an insertion (neg_samples).
+The test is performed by comparing normalized counts between the given
+sample and the set of background samples using the negative binomial
+distribution.</p>
+<p>Note that the before/after split for the groupwise test is taken as the
+common set of before/after exons over all samples with an insertion. In
+cases where either set is empty, for example due to insertions before the
+first exon of the gene, we attempt to drop samples that prevent a proper
+split and perform the test without these samples.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>insertions</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>Insertion</em><em>]</em><em></em><em>, </em><em>pd.DataFrame</em><em>]</em><em></em>) &#8211; List of insertions.</li>
+<li><strong>exon_counts</strong> (<em>pandas.DataFrame</em>) &#8211; Matrix containing exon counts, with samples along the columns and
+exons along the rows. The DataFrame should have a multi-index
+containing the chromosome, start, end and strand of the exon. The
+samples should correspond with samples in the insertions frame.</li>
+<li><strong>gene_id</strong> (<em>str</em>) &#8211; ID of the gene of interest. Should correspond with a
+gene in the count matrix.</li>
+<li><strong>neg_samples</strong> (<em>Set</em><em>[</em><em>str</em><em>]</em><em></em>) &#8211; Set of negative samples (without insertion) to use in the test.
+Defaults to all samples without an insertion in the gene.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Result of the differential expression test.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#imfusion.expression.test.DeSingleResult" title="imfusion.expression.test.DeSingleResult">DeSingleResult</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="imfusion.expression.test_de_gene">
+<code class="descclassname">imfusion.expression.</code><code class="descname">test_de_gene</code><span class="sig-paren">(</span><em>insertions</em>, <em>gene_counts</em>, <em>gene_id</em>, <em>pos_samples=None</em>, <em>neg_samples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#test_de_gene"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test_de_gene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the groupwise gene-level differential expression test.</p>
+<p>Tests if the expression of the given gene is signficantly increased
+or decreased in samples with an insertion in the gene. Significance
+is calculated using a mannwhitneyu test between the two groups, after
+normalizing for sequencing depth using median-of-ratios normalization
+(as implemented in DESeq2).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>insertions</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>Insertion</em><em>]</em><em></em><em>, </em><em>pd.DataFrame</em><em>]</em><em></em>) &#8211; List of insertions.</li>
+<li><strong>gene_counts</strong> (<em>pandas.DataFrame</em>) &#8211; Matrix containing gene counts, with samples along the columns and
+genes along the rows.</li>
+<li><strong>gene_id</strong> (<em>str</em>) &#8211; ID of the gene of interest. Should correspond with a
+gene in the count matrix.</li>
+<li><strong>pos_samples</strong> (<em>Set</em><em>[</em><em>str</em><em>]</em><em></em>) &#8211; Set of positive samples (with insertion) to use in the test. Defaults
+to all samples with an insertion in the gene of interest.</li>
+<li><strong>neg_samples</strong> (<em>Set</em><em>[</em><em>str</em><em>]</em><em></em>) &#8211; Set of negative samples (without insertion) to use in the test.
+Defaults to all samples not in the positive set.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Result of the differential expression test.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#imfusion.expression.test.DeResult" title="imfusion.expression.test.DeResult">DeResult</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="de-results">
+<h3>DE results<a class="headerlink" href="#de-results" title="Permalink to this headline">¶</a></h3>
+<p>Each of the three differential expression tests returns a result instance that
+contains the results of the test and provides several functions for
+visualizing the test result.</p>
+<dl class="class">
+<dt id="imfusion.expression.test.DeResult">
+<em class="property">class </em><code class="descclassname">imfusion.expression.test.</code><code class="descname">DeResult</code><span class="sig-paren">(</span><em>before</em>, <em>after</em>, <em>pos_samples</em>, <em>neg_samples</em>, <em>dropped_samples</em>, <em>direction</em>, <em>p_value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#DeResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test.DeResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class embodying the results of the groupwise exon-level DE test.</p>
+<dl class="attribute">
+<dt id="DeResult.before">
+<code class="descname">before</code><a class="headerlink" href="#DeResult.before" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>pandas.DataFrame</em> &#8211; Expression counts of exons before the split.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeResult.after">
+<code class="descname">after</code><a class="headerlink" href="#DeResult.after" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>pandas.DataFrame</em> &#8211; Expression counts of exons after the split.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeResult.positive_samples">
+<code class="descname">positive_samples</code><a class="headerlink" href="#DeResult.positive_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Set[str]</em> &#8211; Samples with an insertion.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeResult.negative_samples">
+<code class="descname">negative_samples</code><a class="headerlink" href="#DeResult.negative_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Set[str]</em> &#8211; Samples without an insertion.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeResult.dropped_samples">
+<code class="descname">dropped_samples</code><a class="headerlink" href="#DeResult.dropped_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Set[str]</em> &#8211; Samples that were dropped from the analysis, because of violating
+the constraints on the minimum number of exons before/after the split.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeResult.direction">
+<code class="descname">direction</code><a class="headerlink" href="#DeResult.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Direction of the differential expression (1 = positive, -1 = negative).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeResult.p_value">
+<code class="descname">p_value</code><a class="headerlink" href="#DeResult.p_value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; P-value of the differential expression test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imfusion.expression.test.DeResult.plot_boxplot">
+<code class="descname">plot_boxplot</code><span class="sig-paren">(</span><em>log=False</em>, <em>ax=None</em>, <em>show_points=True</em>, <em>box_kws=None</em>, <em>strip_kws=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#DeResult.plot_boxplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test.DeResult.plot_boxplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots boxplot of &#8216;after&#8217; expression for samples with/without
+insertions in the gene.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imfusion.expression.test.DeResult.plot_sums">
+<code class="descname">plot_sums</code><span class="sig-paren">(</span><em>log=False</em>, <em>ax=None</em>, <em>line_kws=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#DeResult.plot_sums"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test.DeResult.plot_sums" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the distribution of before/after counts for the samples.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="imfusion.expression.test.DeSingleResult">
+<em class="property">class </em><code class="descclassname">imfusion.expression.test.</code><code class="descname">DeSingleResult</code><span class="sig-paren">(</span><em>before</em>, <em>after</em>, <em>pos_sample</em>, <em>neg_samples</em>, <em>direction</em>, <em>p_value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#DeSingleResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test.DeSingleResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class embodying the results of the single-sample exon-level DE test.</p>
+<dl class="attribute">
+<dt id="DeSingleResult.before">
+<code class="descname">before</code><a class="headerlink" href="#DeSingleResult.before" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>pandas.DataFrame</em> &#8211; Expression counts of exons before the split.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeSingleResult.after">
+<code class="descname">after</code><a class="headerlink" href="#DeSingleResult.after" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>pandas.DataFrame</em> &#8211; Expression counts of exons after the split.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeSingleResult.positive_sample">
+<code class="descname">positive_sample</code><a class="headerlink" href="#DeSingleResult.positive_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Samples with an insertion.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeSingleResult.negative_samples">
+<code class="descname">negative_samples</code><a class="headerlink" href="#DeSingleResult.negative_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Set[str]</em> &#8211; Samples without an insertion.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeSingleResult.direction">
+<code class="descname">direction</code><a class="headerlink" href="#DeSingleResult.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Direction of the differential expression (1 = positive, -1 = negative).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeSingleResult.p_value">
+<code class="descname">p_value</code><a class="headerlink" href="#DeSingleResult.p_value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; P-value of the differential expression test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imfusion.expression.test.DeSingleResult.plot_sums">
+<code class="descname">plot_sums</code><span class="sig-paren">(</span><em>log=False</em>, <em>ax=None</em>, <em>line_kws=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#DeSingleResult.plot_sums"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test.DeSingleResult.plot_sums" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the distribution of before/after counts for the samples.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="imfusion.expression.test.DeGeneResult">
+<em class="property">class </em><code class="descclassname">imfusion.expression.test.</code><code class="descname">DeGeneResult</code><span class="sig-paren">(</span><em>counts</em>, <em>pos_samples</em>, <em>neg_samples</em>, <em>direction</em>, <em>p_value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#DeGeneResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test.DeGeneResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class embodying the results of the groupwise gene-level DE test.</p>
+<dl class="attribute">
+<dt id="DeGeneResult.counts">
+<code class="descname">counts</code><a class="headerlink" href="#DeGeneResult.counts" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>pandas.Series</em> &#8211; Expression counts of gene for the different samples.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeGeneResult.positive_samples">
+<code class="descname">positive_samples</code><a class="headerlink" href="#DeGeneResult.positive_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Set[str]</em> &#8211; Samples with an insertion.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeGeneResult.negative_samples">
+<code class="descname">negative_samples</code><a class="headerlink" href="#DeGeneResult.negative_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Set[str]</em> &#8211; Samples without an insertion.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeGeneResult.direction">
+<code class="descname">direction</code><a class="headerlink" href="#DeGeneResult.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Direction of the differential expression (1 = positive, -1 = negative).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DeGeneResult.p_value">
+<code class="descname">p_value</code><a class="headerlink" href="#DeGeneResult.p_value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; P-value of the differential expression test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="imfusion.expression.test.DeGeneResult.plot_boxplot">
+<code class="descname">plot_boxplot</code><span class="sig-paren">(</span><em>ax=None</em>, <em>log=False</em>, <em>box_kws=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/imfusion/expression/test.html#DeGeneResult.plot_boxplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#imfusion.expression.test.DeGeneResult.plot_boxplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots boxplot comparing expression between the two groups.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 </div>
 

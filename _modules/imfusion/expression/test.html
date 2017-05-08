@@ -1,0 +1,1003 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.expression.test &mdash; IM-Fusion 0.3.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="IM-Fusion 0.3.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">IM-Fusion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../extras.html">Extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">IM-Fusion</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>imfusion.expression.test</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.expression.test</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Contains functions that test for differential expression.&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+
+<span class="kn">import</span> <span class="nn">bisect</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">native</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">mannwhitneyu</span>
+<span class="kn">import</span> <span class="nn">toolz</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.model</span> <span class="k">import</span> <span class="n">Insertion</span>
+<span class="kn">from</span> <span class="nn">.counts</span> <span class="k">import</span> <span class="n">estimate_size_factors</span><span class="p">,</span> <span class="n">normalize_counts</span>
+<span class="kn">from</span> <span class="nn">.stats</span> <span class="k">import</span> <span class="n">NegativeBinomial</span>
+
+<span class="n">MATPLOTLIB_IMPORT_ERR_MSG</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;Unable to import matplotlib/seaborn. Please make sure that both packages &#39;</span>
+    <span class="s1">&#39;are installed and can be imported without any errors. (Often issues &#39;</span>
+    <span class="s1">&#39;are due to misconfigured matplotlib backends.)&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="test_de"><a class="viewcode-back" href="../../../api.html#imfusion.expression.test_de">[docs]</a><span class="k">def</span> <span class="nf">test_de</span><span class="p">(</span>
+        <span class="n">insertions</span><span class="p">,</span>  <span class="c1"># type: List[Insertion]</span>
+        <span class="n">exon_counts</span><span class="p">,</span>  <span class="c1"># type: pd.DataFrame</span>
+        <span class="n">gene_ids</span><span class="p">,</span>  <span class="c1"># type: List[str]</span>
+        <span class="n">fallback_to_gene</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># type: bool</span>
+        <span class="n">gene_counts</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># type: pd.DataFrame</span>
+<span class="p">):</span>  <span class="c1"># type: (...) -&gt; pd.DataFrame</span>
+    <span class="sd">&quot;&quot;&quot;Performs and summarizes group-wise DE tests for multiple genes.</span>
+
+<span class="sd">    High-level function that performs the group-wise DE tests for multiple</span>
+<span class="sd">    genes and summarizes the results in a single table. Provides an optional</span>
+<span class="sd">    fallback to perform the gene-level test for genes that can not be tested</span>
+<span class="sd">    using the exon level test (typically due to a lack of exons before/after</span>
+<span class="sd">    the insertion sites in the gene).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertions : List[Insertion]</span>
+<span class="sd">        Insertions to use for test.</span>
+<span class="sd">    counts : pd.DataFrame</span>
+<span class="sd">        Exon expression counts to use for test. Expected to conform to</span>
+<span class="sd">        the format returned by the `read_exon_counts` function.</span>
+<span class="sd">    gene_ids : List[str]</span>
+<span class="sd">        IDs of genes to test for differential expression. Expected to conform</span>
+<span class="sd">        with gene_ids used for the insertions and the expression counts.</span>
+<span class="sd">    fallback_to_gene : bool</span>
+<span class="sd">        If true, the gene-level test is used as a fallback for genes that do</span>
+<span class="sd">        not have any exons before/after their insertion sites. If false, no</span>
+<span class="sd">        test is performed for these genes.</span>
+<span class="sd">    gene_counts : pd.DataFrame</span>
+<span class="sd">        Optional matrix of gene expression counts to use for the gene-level</span>
+<span class="sd">        test. If not given, the exon expression counts are used to estimate</span>
+<span class="sd">        gene-level expression by summing the expression values of the gene</span>
+<span class="sd">        exons.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        DataFrame summarizing the results of the DE tests. Contains three</span>
+<span class="sd">        columns: &#39;gene_id&#39;, &#39;p_value&#39; and &#39;direction&#39;. The p-value indicates</span>
+<span class="sd">        the significance of the differential expression for the given gene,</span>
+<span class="sd">        whilst the direction indicates whether the expression goes up (=1)</span>
+<span class="sd">        in samples with an insertion or goes down (=-1).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">gene_id</span> <span class="ow">in</span> <span class="n">gene_ids</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Determine p-value and direction.</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">test_de_exon</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">exon_counts</span><span class="p">,</span> <span class="n">gene_id</span><span class="o">=</span><span class="n">gene_id</span><span class="p">)</span>
+            <span class="n">p_value</span><span class="p">,</span> <span class="n">dir_</span><span class="p">,</span> <span class="n">type_</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">p_value</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="s1">&#39;exon&#39;</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="c1"># Failed to find split.</span>
+            <span class="k">if</span> <span class="n">fallback_to_gene</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Using gene test for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">gene_id</span><span class="p">)</span>
+
+                <span class="c1"># Fallback to gene test.</span>
+                <span class="k">if</span> <span class="n">gene_counts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Using summed exon counts to approximate &#39;</span>
+                                    <span class="s1">&#39;gene counts for gene DE test&#39;</span><span class="p">)</span>
+                    <span class="n">gene_counts</span> <span class="o">=</span> <span class="n">exon_counts</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+                <span class="c1"># Use helper function to avoid nesteed try/except.</span>
+                <span class="n">p_value</span><span class="p">,</span> <span class="n">dir_</span><span class="p">,</span> <span class="n">type_</span> <span class="o">=</span> <span class="n">_test_gene</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_counts</span><span class="p">,</span>
+                                                  <span class="n">gene_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Return NaNs for failed test.</span>
+                <span class="n">p_value</span><span class="p">,</span> <span class="n">dir_</span><span class="p">,</span> <span class="n">type_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;exon&#39;</span>
+
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">gene_id</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">dir_</span><span class="p">,</span> <span class="n">type_</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">,</span> <span class="s1">&#39;p_value&#39;</span><span class="p">,</span> <span class="s1">&#39;direction&#39;</span><span class="p">,</span> <span class="s1">&#39;test_type&#39;</span><span class="p">])</span></div>
+
+
+<span class="k">def</span> <span class="nf">_test_gene</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_counts</span><span class="p">,</span> <span class="n">gene_id</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">test_de_gene</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_counts</span><span class="p">,</span> <span class="n">gene_id</span><span class="o">=</span><span class="n">gene_id</span><span class="p">)</span>
+        <span class="n">p_value</span><span class="p">,</span> <span class="n">dir_</span><span class="p">,</span> <span class="n">type_</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">p_value</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="s1">&#39;gene&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">p_value</span><span class="p">,</span> <span class="n">dir_</span><span class="p">,</span> <span class="n">type_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;exon&#39;</span>
+    <span class="k">return</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">dir_</span><span class="p">,</span> <span class="n">type_</span>
+
+
+<div class="viewcode-block" id="test_de_exon"><a class="viewcode-back" href="../../../api.html#imfusion.expression.test_de_exon">[docs]</a><span class="k">def</span> <span class="nf">test_de_exon</span><span class="p">(</span>
+        <span class="n">insertions</span><span class="p">,</span>  <span class="c1"># type: Union[List[Insertion], pd.DataFrame]</span>
+        <span class="n">exon_counts</span><span class="p">,</span>  <span class="c1"># type: pd.DataFrame</span>
+        <span class="n">gene_id</span><span class="p">,</span>  <span class="c1"># type: str</span>
+        <span class="n">pos_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: Set[str]</span>
+        <span class="n">neg_samples</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># type: Set[str]</span>
+<span class="p">):</span>  <span class="c1"># type: (...) -&gt; DeResult</span>
+    <span class="sd">&quot;&quot;&quot;Performs the groupwise exon-level differential expression test.</span>
+
+<span class="sd">    Tests if the expression of exons after the insertion site(s) in a</span>
+<span class="sd">    gene is significantly increased or decreased in samples with an</span>
+<span class="sd">    insertion (pos_samples) compared to samples without an insertion</span>
+<span class="sd">    (neg_samples). The test is performed by comparing normalized counts</span>
+<span class="sd">    after the insertion sites between samples with and without an insertion</span>
+<span class="sd">    in the gene, using the non-parametric Mann-Whitney-U test.</span>
+
+<span class="sd">    Note that the before/after split for the groupwise test is taken as the</span>
+<span class="sd">    common set of before/after exons over all samples with an insertion. In</span>
+<span class="sd">    cases where either set is empty, for example due to insertions before the</span>
+<span class="sd">    first exon of the gene, we attempt to drop samples that prevent a proper</span>
+<span class="sd">    split and perform the test without these samples.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertions : List[Insertion] or pd.DataFrame</span>
+<span class="sd">        List of insertions.</span>
+<span class="sd">    exon_counts : pandas.DataFrame</span>
+<span class="sd">        Matrix containing exon counts, with samples along the columns and</span>
+<span class="sd">        exons along the rows. The DataFrame should have a multi-index</span>
+<span class="sd">        containing the chromosome, start, end and strand of the exon. The</span>
+<span class="sd">        samples should correspond with samples in the insertions frame.</span>
+<span class="sd">    gene_id : str</span>
+<span class="sd">        ID of the gene of interest. Should correspond with a</span>
+<span class="sd">        gene in the count matrix.</span>
+<span class="sd">    pos_samples : Set[str]</span>
+<span class="sd">        Set of positive samples (with insertion) to use in the test. Defaults</span>
+<span class="sd">        to all samples with an insertion in the gene of interest.</span>
+<span class="sd">    neg_samples : Set[str]</span>
+<span class="sd">        Set of negative samples (without insertion) to use in the test.</span>
+<span class="sd">        Defaults to all samples not in the positive set.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DeResult</span>
+<span class="sd">        Result of the differential expression test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Convert insertions to objects (if needed) and subset for gene.</span>
+    <span class="n">insertion_objs</span> <span class="o">=</span> <span class="n">_preprocess_insertions</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_id</span><span class="p">)</span>
+
+    <span class="c1"># Split counts by insertions.</span>
+    <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">dropped_samples</span> <span class="o">=</span> <span class="n">split_counts</span><span class="p">(</span>
+        <span class="n">exon_counts</span><span class="p">,</span> <span class="n">insertion_objs</span><span class="p">,</span> <span class="n">gene_id</span><span class="o">=</span><span class="n">gene_id</span><span class="p">)</span>
+
+    <span class="c1"># Define postive/negative sample groups (positive = with insertion).</span>
+    <span class="k">if</span> <span class="n">pos_samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pos_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ins</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertion_objs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">neg_samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">neg_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">-</span> <span class="n">pos_samples</span>
+
+    <span class="n">pos_samples</span> <span class="o">-=</span> <span class="n">dropped_samples</span>
+    <span class="n">neg_samples</span> <span class="o">-=</span> <span class="n">dropped_samples</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_samples</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No samples in positive set&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neg_samples</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No samples in negative set&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Normalize counts using before counts.</span>
+    <span class="n">size_factors</span> <span class="o">=</span> <span class="n">estimate_size_factors</span><span class="p">(</span><span class="n">before</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">norm_before</span> <span class="o">=</span> <span class="n">before</span> <span class="o">/</span> <span class="n">size_factors</span>
+    <span class="n">norm_after</span> <span class="o">=</span> <span class="n">after</span> <span class="o">/</span> <span class="n">size_factors</span>
+
+    <span class="c1"># Check for missing samples.</span>
+    <span class="n">missing_samples</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos_samples</span> <span class="o">|</span> <span class="n">neg_samples</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_samples</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Missing samples in counts (</span><span class="si">{}</span><span class="s1">)&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_samples</span><span class="p">)))</span>
+
+    <span class="c1"># Calculate p-value between groups.</span>
+    <span class="n">pos_sums</span> <span class="o">=</span> <span class="n">norm_after</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">pos_samples</span><span class="p">)]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">neg_sums</span> <span class="o">=</span> <span class="n">norm_after</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">neg_samples</span><span class="p">)]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="n">p_value</span> <span class="o">=</span> <span class="n">mannwhitneyu</span><span class="p">(</span><span class="n">pos_sums</span><span class="p">,</span> <span class="n">neg_sums</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;two-sided&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">direction</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">pos_sums</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">neg_sums</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># Return result.</span>
+    <span class="k">return</span> <span class="n">DeResult</span><span class="p">(</span><span class="n">norm_before</span><span class="p">,</span> <span class="n">norm_after</span><span class="p">,</span> <span class="n">pos_samples</span><span class="p">,</span> <span class="n">neg_samples</span><span class="p">,</span>
+                    <span class="n">dropped_samples</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">p_value</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_preprocess_insertions</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts insertions into common object format and subsets for gene.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="n">insertions</span> <span class="o">=</span> <span class="n">insertions</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">insertions</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">gene_id</span><span class="p">]</span>
+        <span class="n">insertions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Insertion</span><span class="o">.</span><span class="n">from_frame</span><span class="p">(</span><span class="n">insertions</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">insertions</span> <span class="o">=</span> <span class="p">[</span><span class="n">ins</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertions</span>
+                      <span class="k">if</span> <span class="n">ins</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">gene_id</span><span class="p">]</span>  <span class="c1"># yapf: disable</span>
+
+    <span class="k">return</span> <span class="n">insertions</span>
+
+
+<span class="k">def</span> <span class="nf">split_counts</span><span class="p">(</span>
+        <span class="n">counts</span><span class="p">,</span>  <span class="c1"># type: pd.DataFrame,</span>
+        <span class="n">insertions</span><span class="p">,</span>  <span class="c1"># type: Union[List[Insertion], pd.DataFrame]</span>
+        <span class="n">gene_id</span><span class="p">,</span>  <span class="c1"># type: str</span>
+        <span class="n">min_before</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># type: int</span>
+        <span class="n">min_after</span><span class="o">=</span><span class="mi">1</span>  <span class="c1"># type: int</span>
+<span class="p">):</span>  <span class="c1"># type: (...) -&gt; Tuple[pd.DataFrame, pd.DataFrame, Set[str]]</span>
+    <span class="sd">&quot;&quot;&quot;Splits count frame for exons before and after insertion sites.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    counts : pd.DataFrame</span>
+<span class="sd">        Matrix of exon expression counts, with positions along the rows</span>
+<span class="sd">        and samples along the columns. The index of the DataFrame should</span>
+<span class="sd">        be a multi-level index containing the following levels: gene_id,</span>
+<span class="sd">        chromosome, start, end and strand.</span>
+<span class="sd">    insertions : List[Insertion] or pandas.DataFrame</span>
+<span class="sd">        List of identified insertions.</span>
+<span class="sd">    gene_id : str</span>
+<span class="sd">        Gene identifier.</span>
+<span class="sd">    min_before : int</span>
+<span class="sd">        Minimum number of exons to retain before the split. Samples with less</span>
+<span class="sd">        exons before their insertion sites will be dropped.</span>
+<span class="sd">    min_after : int</span>
+<span class="sd">        Minimum number of exons to retain after the split. Samples with less</span>
+<span class="sd">        exons after their insertion sites will be dropped.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Tuple[pd.DataFrame, pd.DataFrame, Set[str]]</span>
+
+<span class="sd">        Returns a tuple of two DataFrames, representing the counts before</span>
+<span class="sd">        and after the split respectively, and a set of sample names that</span>
+<span class="sd">        were dropped from the split for violating the min_before/min_after</span>
+<span class="sd">        restrictions.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: tests for min_before/min_after.</span>
+
+    <span class="c1"># Convert insertions to objects (if needed) and subset for gene.</span>
+    <span class="n">insertion_objs</span> <span class="o">=</span> <span class="n">_preprocess_insertions</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_id</span><span class="p">)</span>
+
+    <span class="c1"># Extract exon information from counts.</span>
+    <span class="n">exons</span> <span class="o">=</span> <span class="n">_get_exons</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gene_id</span><span class="p">])</span>
+    <span class="n">strand</span> <span class="o">=</span> <span class="n">exons</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strand</span>
+
+    <span class="c1"># Switch limits if gene on - strand.</span>
+    <span class="k">if</span> <span class="n">strand</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">min_after</span><span class="p">,</span> <span class="n">min_before</span> <span class="o">=</span> <span class="n">min_before</span><span class="p">,</span> <span class="n">min_after</span>
+
+    <span class="n">max_after</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">exons</span><span class="p">)</span> <span class="o">-</span> <span class="n">min_after</span>
+
+    <span class="c1"># Search for common split.</span>
+    <span class="n">dropped</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># type: Set[str]</span>
+
+    <span class="n">curr_min</span><span class="p">,</span> <span class="n">curr_max</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">exons</span><span class="p">),</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">insertion</span> <span class="ow">in</span> <span class="n">insertion_objs</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">bisect</span><span class="o">.</span><span class="n">bisect_right</span><span class="p">(</span><span class="n">exons</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">insertion</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="n">min_before</span> <span class="ow">or</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="n">max_after</span><span class="p">:</span>
+            <span class="c1"># Add to invalid samples.</span>
+            <span class="n">dropped</span> <span class="o">|=</span> <span class="p">{</span><span class="n">insertion</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="n">curr_max</span><span class="p">:</span>
+                <span class="n">curr_max</span> <span class="o">=</span> <span class="n">idx</span>
+
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="n">curr_min</span><span class="p">:</span>
+                <span class="n">curr_min</span> <span class="o">=</span> <span class="n">idx</span>
+
+    <span class="k">if</span> <span class="n">curr_min</span> <span class="o">&gt;</span> <span class="n">curr_max</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No valid split found&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Apply split to full frame (includes gene_id).</span>
+    <span class="n">before</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">gene_id</span><span class="p">]]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="n">curr_min</span><span class="p">]</span>
+    <span class="n">after</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">gene_id</span><span class="p">]]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">curr_max</span><span class="p">:]</span>
+
+    <span class="c1"># Switch if gene on - strand.</span>
+    <span class="k">if</span> <span class="n">strand</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">before</span><span class="p">,</span> <span class="n">after</span> <span class="o">=</span> <span class="n">after</span><span class="p">,</span> <span class="n">before</span>
+
+    <span class="k">return</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">dropped</span>
+
+
+<span class="k">def</span> <span class="nf">_get_exons</span><span class="p">(</span><span class="n">counts</span><span class="p">):</span>
+    <span class="c1"># type: (pd.DataFrame) -&gt; pd.DataFrame</span>
+    <span class="sd">&quot;&quot;&quot;Extracts exon position information from given count frame.&quot;&quot;&quot;</span>
+
+    <span class="n">exons</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span>
+        <span class="n">native</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_values</span><span class="p">())),</span>
+        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;chromosome&#39;</span><span class="p">,</span> <span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="s1">&#39;strand&#39;</span><span class="p">])</span>
+    <span class="n">exons</span><span class="p">[</span><span class="s1">&#39;strand&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">exons</span><span class="p">[</span><span class="s1">&#39;strand&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">({</span><span class="s1">&#39;-&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">exons</span>
+
+
+<div class="viewcode-block" id="DeResult"><a class="viewcode-back" href="../../../api.html#imfusion.expression.DeResult">[docs]</a><span class="k">class</span> <span class="nc">DeResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class embodying the results of the groupwise exon-level DE test.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    before : pandas.DataFrame</span>
+<span class="sd">        Expression counts of exons before the split.</span>
+<span class="sd">    after : pandas.DataFrame</span>
+<span class="sd">        Expression counts of exons after the split.</span>
+<span class="sd">    positive_samples : Set[str]</span>
+<span class="sd">        Samples with an insertion.</span>
+<span class="sd">    negative_samples : Set[str]</span>
+<span class="sd">        Samples without an insertion.</span>
+<span class="sd">    dropped_samples : Set[str]</span>
+<span class="sd">        Samples that were dropped from the analysis, because of violating</span>
+<span class="sd">        the constraints on the minimum number of exons before/after the split.</span>
+<span class="sd">    direction : int</span>
+<span class="sd">        Direction of the differential expression (1 = positive, -1 = negative).</span>
+<span class="sd">    p_value : float</span>
+<span class="sd">        P-value of the differential expression test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">pos_samples</span><span class="p">,</span> <span class="n">neg_samples</span><span class="p">,</span>
+                 <span class="n">dropped_samples</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">p_value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">before</span> <span class="o">=</span> <span class="n">before</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">after</span> <span class="o">=</span> <span class="n">after</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">positive_samples</span> <span class="o">=</span> <span class="n">pos_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">negative_samples</span> <span class="o">=</span> <span class="n">neg_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropped_samples</span> <span class="o">=</span> <span class="n">dropped_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="n">direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_value</span> <span class="o">=</span> <span class="n">p_value</span>
+
+<div class="viewcode-block" id="DeResult.plot_boxplot"><a class="viewcode-back" href="../../../api.html#imfusion.expression.DeResult.plot_boxplot">[docs]</a>    <span class="k">def</span> <span class="nf">plot_boxplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                     <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">show_points</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">box_kws</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">strip_kws</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots boxplot of &#39;after&#39; expression for samples with/without</span>
+<span class="sd">        insertions in the gene.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Lazy load matplotlib/seaborn.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+            <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">MATPLOTLIB_IMPORT_ERR_MSG</span><span class="p">)</span>
+
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span> <span class="ow">or</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Calculate sums.</span>
+        <span class="n">plot_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;after&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)})</span>
+
+        <span class="c1"># Subset to samples and assign insertion status.</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive_samples</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative_samples</span>
+        <span class="n">plot_data</span> <span class="o">=</span> <span class="n">plot_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">samples</span><span class="p">)]</span>
+        <span class="n">plot_data</span><span class="p">[</span><span class="s1">&#39;insertion&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive_samples</span>
+                                  <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">plot_data</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="c1"># yapf: disable</span>
+
+        <span class="c1"># Sanity check.</span>
+        <span class="n">stat</span> <span class="o">=</span> <span class="n">mannwhitneyu</span><span class="p">(</span>
+            <span class="n">plot_data</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;insertion == True&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">after</span><span class="p">,</span>
+            <span class="n">plot_data</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;insertion == False&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">after</span><span class="p">,</span>
+            <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;two-sided&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stat</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-6</span>
+
+        <span class="c1"># Log transform data if needed.</span>
+        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+            <span class="n">plot_data</span><span class="p">[</span><span class="s1">&#39;after&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">plot_data</span><span class="p">[</span><span class="s1">&#39;after&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Plot using Seaborn.</span>
+        <span class="n">sns</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">plot_data</span><span class="p">,</span>
+            <span class="n">x</span><span class="o">=</span><span class="s1">&#39;insertion&#39;</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="s1">&#39;after&#39;</span><span class="p">,</span>
+            <span class="n">showfliers</span><span class="o">=</span><span class="ow">not</span> <span class="n">show_points</span><span class="p">,</span>
+            <span class="n">order</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">],</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="o">**</span><span class="p">(</span><span class="n">box_kws</span> <span class="ow">or</span> <span class="p">{}))</span>
+
+        <span class="k">if</span> <span class="n">show_points</span><span class="p">:</span>
+            <span class="n">default_kws</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">jitter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">strip_kws</span> <span class="o">=</span> <span class="n">toolz</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">default_kws</span><span class="p">,</span> <span class="n">strip_kws</span> <span class="ow">or</span> <span class="p">{})</span>
+
+            <span class="n">sns</span><span class="o">.</span><span class="n">stripplot</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">plot_data</span><span class="p">,</span>
+                <span class="n">x</span><span class="o">=</span><span class="s1">&#39;insertion&#39;</span><span class="p">,</span>
+                <span class="n">y</span><span class="o">=</span><span class="s1">&#39;after&#39;</span><span class="p">,</span>
+                <span class="n">order</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">],</span>
+                <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">strip_kws</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="s1">&#39;Without</span><span class="se">\n</span><span class="s1">insertion&#39;</span><span class="p">,</span> <span class="s1">&#39;With</span><span class="se">\n</span><span class="s1">insertion&#39;</span><span class="p">])</span>
+
+        <span class="n">ylabel</span> <span class="o">=</span> <span class="s1">&#39;Normalized expression after insertion sites&#39;</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ylabel</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">log</span> <span class="k">else</span> <span class="n">ylabel</span> <span class="o">+</span> <span class="s1">&#39; (log2)&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ax</span></div>
+
+<div class="viewcode-block" id="DeResult.plot_sums"><a class="viewcode-back" href="../../../api.html#imfusion.expression.DeResult.plot_sums">[docs]</a>    <span class="k">def</span> <span class="nf">plot_sums</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line_kws</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots the distribution of before/after counts for the samples.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">_plot_sums</span><span class="p">(</span>
+            <span class="n">before</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">before</span><span class="p">,</span>
+            <span class="n">after</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="p">,</span>
+            <span class="n">pos_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">positive_samples</span><span class="p">,</span>
+            <span class="n">neg_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">negative_samples</span><span class="p">,</span>
+            <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="n">line_kws</span><span class="o">=</span><span class="n">line_kws</span><span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_plot_sums</span><span class="p">(</span><span class="n">before</span><span class="p">,</span>
+               <span class="n">after</span><span class="p">,</span>
+               <span class="n">pos_samples</span><span class="p">,</span>
+               <span class="n">neg_samples</span><span class="p">,</span>
+               <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+               <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+               <span class="n">line_kws</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function for plotting expression sums in line graph.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Lazy load matplotlib/seaborn.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+        <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">MATPLOTLIB_IMPORT_ERR_MSG</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+    <span class="n">line_kws</span> <span class="o">=</span> <span class="n">line_kws</span> <span class="ow">or</span> <span class="p">{}</span>
+
+    <span class="n">plot_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+        <span class="s1">&#39;before&#39;</span><span class="p">:</span> <span class="n">before</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+        <span class="s1">&#39;after&#39;</span><span class="p">:</span> <span class="n">after</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">})</span>
+
+    <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+        <span class="n">plot_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">plot_data</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Plot background lines for negative samples.</span>
+    <span class="k">for</span> <span class="n">tup</span> <span class="ow">in</span> <span class="n">plot_data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">neg_samples</span><span class="p">]</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+        <span class="n">_plot_sums_sample</span><span class="p">(</span>
+            <span class="n">tup</span><span class="o">.</span><span class="n">before</span><span class="p">,</span> <span class="n">tup</span><span class="o">.</span><span class="n">after</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightgrey&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">line_kws</span><span class="p">)</span>
+
+    <span class="c1"># Plot colored lines for positive samples.</span>
+    <span class="n">pos_samples</span> <span class="o">=</span> <span class="n">plot_data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">pos_samples</span><span class="p">]</span><span class="o">.</span><span class="n">itertuples</span><span class="p">()</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">cycle</span><span class="p">(</span><span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">())</span>
+
+    <span class="k">for</span> <span class="n">tup</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pos_samples</span><span class="p">,</span> <span class="n">colors</span><span class="p">):</span>
+        <span class="n">_plot_sums_sample</span><span class="p">(</span>
+            <span class="n">tup</span><span class="o">.</span><span class="n">before</span><span class="p">,</span> <span class="n">tup</span><span class="o">.</span><span class="n">after</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="o">**</span><span class="n">line_kws</span><span class="p">)</span>
+
+    <span class="c1"># Set ticks.</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="s1">&#39;Before insertion&#39;</span><span class="p">,</span> <span class="s1">&#39;After insertion&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Set axis limits/labels.</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Expression&#39;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">log</span> <span class="k">else</span> <span class="s1">&#39;Expression (log2)&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ax</span>
+
+
+<span class="k">def</span> <span class="nf">_plot_sums_sample</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="n">width</span><span class="p">,</span> <span class="n">width</span><span class="p">],</span> <span class="p">[</span><span class="n">before</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="o">-</span><span class="n">width</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">width</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="n">after</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">width</span><span class="p">,</span> <span class="o">-</span><span class="n">width</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="test_de_exon_single"><a class="viewcode-back" href="../../../api.html#imfusion.expression.test_de_exon_single">[docs]</a><span class="k">def</span> <span class="nf">test_de_exon_single</span><span class="p">(</span>
+        <span class="n">insertions</span><span class="p">,</span>  <span class="c1"># type: Union[List[Insertion], pd.DataFrame]</span>
+        <span class="n">exon_counts</span><span class="p">,</span>  <span class="c1"># type: pd.DataFrame</span>
+        <span class="n">insertion_id</span><span class="p">,</span>  <span class="c1"># type: str</span>
+        <span class="n">gene_id</span><span class="p">,</span>  <span class="c1"># type: str</span>
+        <span class="n">neg_samples</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># type: Set[str]</span>
+<span class="p">):</span>  <span class="c1"># type: (...) -&gt; DeSingleResult</span>
+    <span class="sd">&quot;&quot;&quot;Performs the single sample exon-level differential expression test.</span>
+
+<span class="sd">    Tests if the expression of exons after the insertion site(s) in a</span>
+<span class="sd">    gene is significantly increased or decreased in the sample with the given</span>
+<span class="sd">    insertion compared to samples without an insertion (neg_samples).</span>
+<span class="sd">    The test is performed by comparing normalized counts between the given</span>
+<span class="sd">    sample and the set of background samples using the negative binomial</span>
+<span class="sd">    distribution.</span>
+
+<span class="sd">    Note that the before/after split for the groupwise test is taken as the</span>
+<span class="sd">    common set of before/after exons over all samples with an insertion. In</span>
+<span class="sd">    cases where either set is empty, for example due to insertions before the</span>
+<span class="sd">    first exon of the gene, we attempt to drop samples that prevent a proper</span>
+<span class="sd">    split and perform the test without these samples.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertions : Union[List[Insertion], pd.DataFrame]</span>
+<span class="sd">        List of insertions.</span>
+<span class="sd">    exon_counts : pandas.DataFrame</span>
+<span class="sd">        Matrix containing exon counts, with samples along the columns and</span>
+<span class="sd">        exons along the rows. The DataFrame should have a multi-index</span>
+<span class="sd">        containing the chromosome, start, end and strand of the exon. The</span>
+<span class="sd">        samples should correspond with samples in the insertions frame.</span>
+<span class="sd">    gene_id : str</span>
+<span class="sd">        ID of the gene of interest. Should correspond with a</span>
+<span class="sd">        gene in the count matrix.</span>
+<span class="sd">    neg_samples : Set[str]</span>
+<span class="sd">        Set of negative samples (without insertion) to use in the test.</span>
+<span class="sd">        Defaults to all samples without an insertion in the gene.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DeSingleResult</span>
+<span class="sd">        Result of the differential expression test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Convert insertions to objects (if needed) and subset for gene.</span>
+    <span class="n">insertion_objs</span> <span class="o">=</span> <span class="n">_preprocess_insertions</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">gene_id</span><span class="p">)</span>
+
+    <span class="c1"># Extract selected insertion.</span>
+    <span class="n">insertions_by_id</span> <span class="o">=</span> <span class="p">{</span><span class="n">ins</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">ins</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertion_objs</span><span class="p">}</span>
+    <span class="n">selected_ins</span> <span class="o">=</span> <span class="n">insertions_by_id</span><span class="p">[</span><span class="n">insertion_id</span><span class="p">]</span>
+
+    <span class="c1"># Split counts by selected insertion.</span>
+    <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">split_counts</span><span class="p">(</span>
+        <span class="n">exon_counts</span><span class="p">,</span> <span class="p">[</span><span class="n">selected_ins</span><span class="p">],</span> <span class="n">gene_id</span><span class="o">=</span><span class="n">gene_id</span><span class="p">)</span>
+
+    <span class="c1"># Define postive/negative sample groups (positive = with the insertion,</span>
+    <span class="c1"># negative = all samples without an insertion).</span>
+    <span class="n">pos_sample</span> <span class="o">=</span> <span class="n">selected_ins</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">neg_samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">samples_with_ins</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ins</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span>
+                               <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertion_objs</span><span class="p">)</span>
+        <span class="n">neg_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">-</span> <span class="n">samples_with_ins</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neg_samples</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No samples in negative set&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Normalize counts using before counts.</span>
+    <span class="n">size_factors</span> <span class="o">=</span> <span class="n">estimate_size_factors</span><span class="p">(</span><span class="n">before</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">norm_before</span> <span class="o">=</span> <span class="n">before</span> <span class="o">/</span> <span class="n">size_factors</span>
+    <span class="n">norm_after</span> <span class="o">=</span> <span class="n">after</span> <span class="o">/</span> <span class="n">size_factors</span>
+
+    <span class="c1"># Check for missing samples.</span>
+    <span class="n">missing_samples</span> <span class="o">=</span> <span class="p">({</span><span class="n">pos_sample</span><span class="p">}</span> <span class="o">|</span> <span class="n">neg_samples</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">exon_counts</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_samples</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Missing samples in counts (</span><span class="si">{}</span><span class="s1">)&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_samples</span><span class="p">)))</span>
+
+    <span class="c1"># Calculate p-value between groups.</span>
+    <span class="n">pos_sum</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">norm_after</span><span class="p">[</span><span class="n">pos_sample</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="n">neg_sums</span> <span class="o">=</span> <span class="n">norm_after</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">neg_samples</span><span class="p">)]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">nb_distr</span> <span class="o">=</span> <span class="n">NegativeBinomial</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">neg_sums</span><span class="p">)</span>
+
+    <span class="n">cdf_value</span> <span class="o">=</span> <span class="n">nb_distr</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">pos_sum</span><span class="p">)</span>
+    <span class="n">sf_value</span> <span class="o">=</span> <span class="n">nb_distr</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">pos_sum</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">cdf_value</span> <span class="o">&gt;</span> <span class="n">sf_value</span><span class="p">:</span>
+        <span class="n">p_value</span><span class="p">,</span> <span class="n">direction</span> <span class="o">=</span> <span class="n">sf_value</span><span class="p">,</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">p_value</span><span class="p">,</span> <span class="n">direction</span> <span class="o">=</span> <span class="n">cdf_value</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># Return result.</span>
+    <span class="k">return</span> <span class="n">DeSingleResult</span><span class="p">(</span><span class="n">norm_before</span><span class="p">,</span> <span class="n">norm_after</span><span class="p">,</span> <span class="n">pos_sample</span><span class="p">,</span> <span class="n">neg_samples</span><span class="p">,</span>
+                          <span class="n">direction</span><span class="p">,</span> <span class="n">p_value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DeSingleResult"><a class="viewcode-back" href="../../../api.html#imfusion.expression.DeSingleResult">[docs]</a><span class="k">class</span> <span class="nc">DeSingleResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class embodying the results of the single-sample exon-level DE test.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    before : pandas.DataFrame</span>
+<span class="sd">        Expression counts of exons before the split.</span>
+<span class="sd">    after : pandas.DataFrame</span>
+<span class="sd">        Expression counts of exons after the split.</span>
+<span class="sd">    positive_sample : str</span>
+<span class="sd">        Samples with an insertion.</span>
+<span class="sd">    negative_samples : Set[str]</span>
+<span class="sd">        Samples without an insertion.</span>
+<span class="sd">    direction : int</span>
+<span class="sd">        Direction of the differential expression (1 = positive, -1 = negative).</span>
+<span class="sd">    p_value : float</span>
+<span class="sd">        P-value of the differential expression test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">pos_sample</span><span class="p">,</span> <span class="n">neg_samples</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span>
+                 <span class="n">p_value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">before</span> <span class="o">=</span> <span class="n">before</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">after</span> <span class="o">=</span> <span class="n">after</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">positive_sample</span> <span class="o">=</span> <span class="n">pos_sample</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">negative_samples</span> <span class="o">=</span> <span class="n">neg_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="n">direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_value</span> <span class="o">=</span> <span class="n">p_value</span>
+
+<div class="viewcode-block" id="DeSingleResult.plot_sums"><a class="viewcode-back" href="../../../api.html#imfusion.expression.DeSingleResult.plot_sums">[docs]</a>    <span class="k">def</span> <span class="nf">plot_sums</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">line_kws</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots the distribution of before/after counts for the samples.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">_plot_sums</span><span class="p">(</span>
+            <span class="n">before</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">before</span><span class="p">,</span>
+            <span class="n">after</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="p">,</span>
+            <span class="n">pos_samples</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">positive_sample</span><span class="p">],</span>
+            <span class="n">neg_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">negative_samples</span><span class="p">,</span>
+            <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="n">line_kws</span><span class="o">=</span><span class="n">line_kws</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="test_de_gene"><a class="viewcode-back" href="../../../api.html#imfusion.expression.test_de_gene">[docs]</a><span class="k">def</span> <span class="nf">test_de_gene</span><span class="p">(</span>
+        <span class="n">insertions</span><span class="p">,</span>  <span class="c1"># type: Union[List[Insertion], pd.DataFrame]</span>
+        <span class="n">gene_counts</span><span class="p">,</span>  <span class="c1"># type: pd.DataFrame</span>
+        <span class="n">gene_id</span><span class="p">,</span>  <span class="c1"># type: str</span>
+        <span class="n">pos_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: Set[str]</span>
+        <span class="n">neg_samples</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># type: Set[str]</span>
+<span class="p">):</span>  <span class="c1"># type: (...) -&gt; DeGeneResult</span>
+    <span class="sd">&quot;&quot;&quot;Performs the groupwise gene-level differential expression test.</span>
+
+<span class="sd">    Tests if the expression of the given gene is signficantly increased</span>
+<span class="sd">    or decreased in samples with an insertion in the gene. Significance</span>
+<span class="sd">    is calculated using a mannwhitneyu test between the two groups, after</span>
+<span class="sd">    normalizing for sequencing depth using median-of-ratios normalization</span>
+<span class="sd">    (as implemented in DESeq2).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    insertions : Union[List[Insertion], pd.DataFrame]</span>
+<span class="sd">        List of insertions.</span>
+<span class="sd">    gene_counts : pandas.DataFrame</span>
+<span class="sd">        Matrix containing gene counts, with samples along the columns and</span>
+<span class="sd">        genes along the rows.</span>
+<span class="sd">    gene_id : str</span>
+<span class="sd">        ID of the gene of interest. Should correspond with a</span>
+<span class="sd">        gene in the count matrix.</span>
+<span class="sd">    pos_samples : Set[str]</span>
+<span class="sd">        Set of positive samples (with insertion) to use in the test. Defaults</span>
+<span class="sd">        to all samples with an insertion in the gene of interest.</span>
+<span class="sd">    neg_samples : Set[str]</span>
+<span class="sd">        Set of negative samples (without insertion) to use in the test.</span>
+<span class="sd">        Defaults to all samples not in the positive set.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DeResult</span>
+<span class="sd">        Result of the differential expression test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Normalize gene expression counts.</span>
+    <span class="n">norm_counts</span> <span class="o">=</span> <span class="n">normalize_counts</span><span class="p">(</span><span class="n">gene_counts</span><span class="p">)</span>
+
+    <span class="c1"># Split into positive/negative samples.</span>
+    <span class="k">if</span> <span class="n">pos_samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">insertions</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">gene_id</span>
+            <span class="n">pos_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">insertions</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">][</span><span class="s1">&#39;sample&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pos_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span>
+                <span class="n">ins</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">ins</span> <span class="ow">in</span> <span class="n">insertions</span>
+                <span class="k">if</span> <span class="n">ins</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">gene_id</span>
+            <span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">neg_samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">neg_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">gene_counts</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">-</span> <span class="n">pos_samples</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos_samples</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No samples in positive set&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neg_samples</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No samples in negative set&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Perform test.</span>
+    <span class="n">pos_counts</span> <span class="o">=</span> <span class="n">norm_counts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gene_id</span><span class="p">,</span> <span class="n">pos_samples</span><span class="p">]</span>
+    <span class="n">neg_counts</span> <span class="o">=</span> <span class="n">norm_counts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gene_id</span><span class="p">,</span> <span class="n">neg_samples</span><span class="p">]</span>
+
+    <span class="n">p_value</span> <span class="o">=</span> <span class="n">mannwhitneyu</span><span class="p">(</span><span class="n">pos_counts</span><span class="p">,</span> <span class="n">neg_counts</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;two-sided&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">direction</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">pos_counts</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">neg_counts</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">DeGeneResult</span><span class="p">(</span>
+        <span class="n">counts</span><span class="o">=</span><span class="n">norm_counts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gene_id</span><span class="p">],</span>
+        <span class="n">pos_samples</span><span class="o">=</span><span class="n">pos_samples</span><span class="p">,</span>
+        <span class="n">neg_samples</span><span class="o">=</span><span class="n">neg_samples</span><span class="p">,</span>
+        <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
+        <span class="n">p_value</span><span class="o">=</span><span class="n">p_value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DeGeneResult"><a class="viewcode-back" href="../../../api.html#imfusion.expression.DeGeneResult">[docs]</a><span class="k">class</span> <span class="nc">DeGeneResult</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class embodying the results of the groupwise gene-level DE test.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    counts : pandas.Series</span>
+<span class="sd">        Expression counts of gene for the different samples.</span>
+<span class="sd">    positive_samples : Set[str]</span>
+<span class="sd">        Samples with an insertion.</span>
+<span class="sd">    negative_samples : Set[str]</span>
+<span class="sd">        Samples without an insertion.</span>
+<span class="sd">    direction : int</span>
+<span class="sd">        Direction of the differential expression (1 = positive, -1 = negative).</span>
+<span class="sd">    p_value : float</span>
+<span class="sd">        P-value of the differential expression test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">pos_samples</span><span class="p">,</span> <span class="n">neg_samples</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">p_value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">counts</span> <span class="o">=</span> <span class="n">counts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">positive_samples</span> <span class="o">=</span> <span class="n">pos_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">negative_samples</span> <span class="o">=</span> <span class="n">neg_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="n">direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_value</span> <span class="o">=</span> <span class="n">p_value</span>
+
+<div class="viewcode-block" id="DeGeneResult.plot_boxplot"><a class="viewcode-back" href="../../../api.html#imfusion.expression.DeGeneResult.plot_boxplot">[docs]</a>    <span class="k">def</span> <span class="nf">plot_boxplot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">box_kws</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plots boxplot comparing expression between the two groups.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Lazy load matplotlib/seaborn.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+            <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">MATPLOTLIB_IMPORT_ERR_MSG</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+        <span class="c1"># Assemble plot data.</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">positive_samples</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative_samples</span><span class="p">)</span>
+
+        <span class="n">plot_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;expression&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">counts</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">samples</span><span class="p">]})</span>
+        <span class="n">plot_data</span><span class="p">[</span><span class="s1">&#39;insertion&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">sample</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive_samples</span>
+                                  <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">plot_data</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="c1"># yapf: disable</span>
+
+        <span class="c1"># Log transform if needed.</span>
+        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+            <span class="n">plot_data</span><span class="p">[</span><span class="s1">&#39;expression&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">plot_data</span><span class="p">[</span><span class="s1">&#39;expression&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Draw boxplot with seaborn.</span>
+        <span class="n">sns</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">plot_data</span><span class="p">,</span>
+            <span class="n">x</span><span class="o">=</span><span class="s1">&#39;insertion&#39;</span><span class="p">,</span>
+            <span class="n">order</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">],</span>
+            <span class="n">y</span><span class="o">=</span><span class="s1">&#39;expression&#39;</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="o">**</span><span class="p">(</span><span class="n">box_kws</span> <span class="ow">or</span> <span class="p">{}))</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="s1">&#39;Without</span><span class="se">\n</span><span class="s1">insertion&#39;</span><span class="p">,</span> <span class="s1">&#39;With</span><span class="se">\n</span><span class="s1">insertion&#39;</span><span class="p">])</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Expression&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="s1">&#39; (log2)&#39;</span> <span class="k">if</span> <span class="n">log</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.3.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

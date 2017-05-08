@@ -1,0 +1,477 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>imfusion.expression.counts &mdash; IM-Fusion 0.3.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="IM-Fusion 0.3.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> IM-Fusion
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">IM-Fusion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../extras.html">Extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">IM-Fusion</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>imfusion.expression.counts</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for imfusion.expression.counts</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Contains functions for generating and reading expression counts.&quot;&quot;&quot;</span>
+
+<span class="c1"># pylint: disable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="o">*</span>
+<span class="c1"># pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">StringIO</span> <span class="k">import</span> <span class="n">StringIO</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span>
+
+<span class="kn">import</span> <span class="nn">pathlib2</span> <span class="k">as</span> <span class="nn">pathlib</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">toolz</span>
+
+<span class="kn">from</span> <span class="nn">imfusion.external.feature_counts</span> <span class="k">import</span> <span class="n">feature_counts</span>
+
+<span class="c1"># Disable E1101 checks which stumble on pandas classes.</span>
+<span class="c1"># pylint: disable=E1101</span>
+
+
+<div class="viewcode-block" id="generate_exon_counts"><a class="viewcode-back" href="../../../api.html#imfusion.expression.generate_exon_counts">[docs]</a><span class="k">def</span> <span class="nf">generate_exon_counts</span><span class="p">(</span>
+        <span class="n">bam_files</span><span class="p">,</span>  <span class="c1"># type: Iterable[pathlib.Path]</span>
+        <span class="n">gtf_path</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+        <span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: List[str]</span>
+        <span class="n">extra_kws</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: Dict[str, Iterable[Any]]</span>
+        <span class="n">tmp_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># type: pathlib.Path</span>
+        <span class="n">keep_tmp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># type: bool</span>
+<span class="p">):</span>  <span class="c1"># type: (...) -&gt; pd.DataFrame</span>
+    <span class="sd">&quot;&quot;&quot;Generates exon counts for given bam files using featureCounts.</span>
+
+<span class="sd">    This function is used to generate a m-by-n matrix (m = number of samples,</span>
+<span class="sd">    n = number of exons) of exon expression counts. This matrix is generated</span>
+<span class="sd">    using featureCounts, whose results are then parsed and returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bam_files : list[pathlib.Path]</span>
+<span class="sd">        List of paths to the bam files for which counts should be generated.</span>
+<span class="sd">    gtf_path : pathlib.Path</span>
+<span class="sd">        Path to the GTF file containing gene features.</span>
+<span class="sd">    names : dict[str, str]</span>
+<span class="sd">        Alternative names to use for the given bam</span>
+<span class="sd">        files. Keys of the dict should correspond to bam file paths, values</span>
+<span class="sd">        should reflect the sample names that should be used in the</span>
+<span class="sd">        resulting count matrix.</span>
+<span class="sd">    extra_kws : dict[str, tuple]:</span>
+<span class="sd">        Dictionary of extra arguments that should be passed to feature counts.</span>
+<span class="sd">        Keys should correspond to argument names (including dashes),</span>
+<span class="sd">        values should be tuples containing the argument values.</span>
+<span class="sd">    tmp_dir : pathlib.Path</span>
+<span class="sd">        Temp directory to use for generating counts.</span>
+<span class="sd">    keep_tmp : bool</span>
+<span class="sd">        Whether to keep the temp directory (default = False).</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        Any kwargs are passed to `feature_counts`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.DataFrame</span>
+<span class="sd">        DataFrame containing counts. The index of the DataFrame contains</span>
+<span class="sd">        gene ids corresponding to exons in the gff file, the columns</span>
+<span class="sd">        correspond to samples/bam files. Column names are either the bam</span>
+<span class="sd">        file paths, or the alternative sample names if given.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Set exon-level parameters for feature counts.</span>
+    <span class="n">default_kws</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;-f&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># Feature level</span>
+        <span class="s1">&#39;-t&#39;</span><span class="p">:</span> <span class="s1">&#39;exonic_part&#39;</span><span class="p">,</span>  <span class="c1"># Use &#39;exonic_part&#39; features.</span>
+        <span class="s1">&#39;--minOverlap&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>  <span class="c1"># Minimum overlap with exon.</span>
+        <span class="s1">&#39;-O&#39;</span><span class="p">:</span> <span class="kc">True</span>  <span class="c1"># Include if spanning 1+ exons.</span>
+    <span class="p">}</span>
+    <span class="n">extra_kws</span> <span class="o">=</span> <span class="n">toolz</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">default_kws</span><span class="p">,</span> <span class="n">extra_kws</span> <span class="ow">or</span> <span class="p">{})</span>
+
+    <span class="c1"># Create tmpdir if needed.</span>
+    <span class="k">if</span> <span class="n">tmp_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">tmp_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">tmp_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Run feature counts and read output.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">output_path</span> <span class="o">=</span> <span class="n">tmp_dir</span> <span class="o">/</span> <span class="s1">&#39;counts.txt&#39;</span>
+        <span class="n">feature_counts</span><span class="p">(</span>
+            <span class="n">bam_files</span><span class="o">=</span><span class="n">bam_files</span><span class="p">,</span>
+            <span class="n">gtf_path</span><span class="o">=</span><span class="n">gtf_path</span><span class="p">,</span>
+            <span class="n">output_path</span><span class="o">=</span><span class="n">output_path</span><span class="p">,</span>
+            <span class="n">extra_kws</span><span class="o">=</span><span class="n">extra_kws</span><span class="p">)</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">_read_feature_count_output</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">keep_tmp</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">))</span>
+
+    <span class="c1"># Drop/rename columns.</span>
+    <span class="n">counts</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;Length&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">counts</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+        <span class="n">columns</span><span class="o">=</span><span class="p">{</span>
+            <span class="s1">&#39;Geneid&#39;</span><span class="p">:</span> <span class="s1">&#39;gene_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Chr&#39;</span><span class="p">:</span> <span class="s1">&#39;chr&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Start&#39;</span><span class="p">:</span> <span class="s1">&#39;start&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;End&#39;</span><span class="p">:</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Strand&#39;</span><span class="p">:</span> <span class="s1">&#39;strand&#39;</span>
+        <span class="p">},</span>
+        <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Set and sort by index.</span>
+    <span class="n">counts</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span>
+        <span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">,</span> <span class="s1">&#39;chr&#39;</span><span class="p">,</span> <span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="s1">&#39;strand&#39;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">counts</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">counts</span></div>
+
+
+<span class="k">def</span> <span class="nf">_read_feature_count_output</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># type (pathlib.Path, Dict[str, str]) -&gt; pd.DataFrame</span>
+    <span class="sd">&quot;&quot;&quot;Reads counts from featureCounts output.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path : pathlib.Path</span>
+<span class="sd">        Path to count file.</span>
+<span class="sd">    names : Optional[Dict[str, str]]</span>
+<span class="sd">        Optional dictionary that maps featureCount column names, which are</span>
+<span class="sd">        typically file paths, to more readable sample names.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Read counts.</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">),</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Chr&#39;</span><span class="p">:</span> <span class="s1">&#39;str&#39;</span><span class="p">})</span>
+
+    <span class="c1"># If names are given, rename columns.</span>
+    <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="c1"># TODO: Use logging.</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Warning: missing sample </span><span class="si">{}</span><span class="s1"> for renaming&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">names</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">counts</span>
+
+
+<div class="viewcode-block" id="read_exon_counts"><a class="viewcode-back" href="../../../api.html#imfusion.expression.read_exon_counts">[docs]</a><span class="k">def</span> <span class="nf">read_exon_counts</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="c1"># type: (pathlib.Path) -&gt; pd.DataFrame</span>
+    <span class="sd">&quot;&quot;&quot;Reads exon counts from an IM-Fusion expression file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path : pathlib.Path</span>
+<span class="sd">        Path to the exon count file.</span>
+<span class="sd">    gene_id : Optional[str]</span>
+<span class="sd">        Optional gene_id.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        Matrix of exon counts. The rows correspond to the</span>
+<span class="sd">        counted features, the columns correspond to the index values</span>
+<span class="sd">        (chomosome, position etc.) and the samples.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">),</span>
+        <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;chr&#39;</span><span class="p">:</span> <span class="s1">&#39;str&#39;</span><span class="p">},</span>
+        <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">,</span>
+        <span class="n">index_col</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;gene_id&#39;</span><span class="p">,</span> <span class="s1">&#39;chr&#39;</span><span class="p">,</span> <span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="s1">&#39;strand&#39;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="normalize_counts"><a class="viewcode-back" href="../../../api.html#imfusion.expression.normalize_counts">[docs]</a><span class="k">def</span> <span class="nf">normalize_counts</span><span class="p">(</span><span class="n">counts</span><span class="p">):</span>
+    <span class="c1"># type: (pd.DataFrame) -&gt; pd.DataFrame</span>
+    <span class="sd">&quot;&quot;&quot;Normalizes counts for sequencing depth using median-of-ratios.</span>
+
+<span class="sd">    Normalizes gene expression counts for differences in sequencing depth</span>
+<span class="sd">    between samples using the median-of-ratios approach described in DESeq2.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    counts : pd.DataFrame</span>
+<span class="sd">        Matrix of gene counts, with genes along the rows and samples</span>
+<span class="sd">        along the columns.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        Matrix of normalized expression counts.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+        <span class="n">size_factors</span> <span class="o">=</span> <span class="n">estimate_size_factors</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">counts</span> <span class="o">/</span> <span class="n">size_factors</span></div>
+
+
+<div class="viewcode-block" id="estimate_size_factors"><a class="viewcode-back" href="../../../api.html#imfusion.expression.estimate_size_factors">[docs]</a><span class="k">def</span> <span class="nf">estimate_size_factors</span><span class="p">(</span><span class="n">counts</span><span class="p">):</span>
+    <span class="c1"># type: (pd.DataFrame) -&gt; np.Array</span>
+    <span class="sd">&quot;&quot;&quot;Calculates size factors using median-of-ratios.</span>
+
+<span class="sd">    Calculates normalization factors for the median-of-ratios approach for</span>
+<span class="sd">    normalizing expression counts for differences in sequencing depths between</span>
+<span class="sd">    samples.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    counts : pd.DataFrame</span>
+<span class="sd">        Matrix of gene counts, with genes along the rows and samples</span>
+<span class="sd">        along the columns.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.Array</span>
+<span class="sd">        Array of normalization factors, with one entry per sample.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_estimate_size_factors_col</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">log_geo_means</span><span class="p">):</span>
+        <span class="c1"># type: (pd.DataFrame, np.Array) -&gt; np.Array</span>
+        <span class="n">log_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">log_geo_means</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">counts</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">((</span><span class="n">log_counts</span> <span class="o">-</span> <span class="n">log_geo_means</span><span class="p">)[</span><span class="n">mask</span><span class="p">]))</span>
+
+    <span class="c1"># Convert to float.</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="c1"># Calculate size factors.</span>
+    <span class="n">log_geo_means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">counts</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">size_factors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span>
+        <span class="n">_estimate_size_factors_col</span><span class="p">,</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">arr</span><span class="o">=</span><span class="n">counts</span><span class="p">,</span>
+        <span class="n">log_geo_means</span><span class="o">=</span><span class="n">log_geo_means</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">size_factors</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Julian de Ruiter.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.3.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
