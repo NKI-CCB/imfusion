@@ -74,11 +74,14 @@ def main():
             'p_value': 'de_pvalue',
             'test_type': 'de_test'
         })
-        ctgs = pd.merge(ctgs, de_results, on='gene_id', how='left')
+
+        col_order = (
+            list(ctgs.columns) + ['de_test', 'de_direction', 'de_pvalue'])
+        ctgs = pd.merge(ctgs, de_results, on='gene_id', how='left')[col_order]
 
         if args.de_threshold is not None:
             # Filter for non-significant genes, keeping nans.
-            ctgs = ctgs.ix[~(ctgs['de_pvalue'] > args.de_threshold)]
+            ctgs = ctgs.loc[~(ctgs['de_pvalue'] > args.de_threshold)]
 
     # Write outputs.
     logger.info('Writing outputs')

@@ -461,12 +461,12 @@ def _plot_sums(before,
         plot_data = np.log2(plot_data + 1)
 
     # Plot background lines for negative samples.
-    for tup in plot_data.ix[neg_samples].itertuples():
+    for tup in plot_data.loc[neg_samples].itertuples():
         _plot_sums_sample(
             tup.before, tup.after, width, ax=ax, color='lightgrey', **line_kws)
 
     # Plot colored lines for positive samples.
-    pos_samples = plot_data.ix[pos_samples].itertuples()
+    pos_samples = plot_data.loc[pos_samples].itertuples()
     colors = itertools.cycle(sns.color_palette())
 
     for tup, color in zip(pos_samples, colors):
