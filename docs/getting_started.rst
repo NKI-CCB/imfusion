@@ -50,10 +50,10 @@ more sensitivity in the results.
 
 For building a reference, the following files are required:
 
-    - The reference genome sequence, (fasta file).
-    - The reference gene features. (GTF file, adhering to Ensembl's GTF format).
-    - The transposon sequence (fasta file).
-    - The transposon features file (tab-separated file).
+    - The reference genome sequence (fasta file)
+    - The reference gene features (GTF file, adhering to Ensembl's GTF format)
+    - The transposon sequence (fasta file)
+    - The transposon features file (tab-separated file)
 
 The transposon feature file describes the locations of the splice-donor and
 splice-acceptor sites that are present in the transposon. The file should
