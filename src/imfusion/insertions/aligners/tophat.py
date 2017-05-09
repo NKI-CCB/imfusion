@@ -325,7 +325,7 @@ def extract_transposon_fusions(fusion_data, transposon_name):
                  any(fusion_data['supp_spanning_mates'] > 0))
 
     # Select fusions where one seqname is the transposon and the other isn't.
-    fusion_data = fusion_data.ix[(
+    fusion_data = fusion_data.loc[(
         (fusion_data['seqname_a'] == transposon_name) ^
         (fusion_data['seqname_b'] == transposon_name))]
 

@@ -152,78 +152,53 @@ def _read_feature_count_output(file_path, names=None):
     return counts
 
 
-def read_exon_counts(file_path, gene_id=None):
-    # type: (pathlib.Path, str) -> pd.DataFrame
-    """Reads exon counts from file, optionally filtering for given prefix.
+def read_exon_counts(file_path):
+    # type: (pathlib.Path) -> pd.DataFrame
+    """Reads exon counts from an IM-Fusion expression file.
 
     Parameters
     ----------
     file_path : pathlib.Path
         Path to the exon count file.
     gene_id : Optional[str]
-        ID of the gene to filter for.
+        Optional gene_id.
 
     Returns
     -------
-    pandas.DataFrame
-        DataFrame containing exon counts. The rows correspond to the
+    pd.DataFrame
+        Matrix of exon counts. The rows correspond to the
         counted features, the columns correspond to the index values
         (chomosome, position etc.) and the samples.
 
     """
 
-    return _read_counts(
-        file_path,
-        prefix=gene_id,
+    return pd.read_csv(
+        str(file_path),
+        sep='\t',
+        dtype={'chr': 'str'},
+        comment='#',
         index_col=['gene_id', 'chr', 'start', 'end', 'strand'])
-
-
-def _read_counts(file_path, prefix=None, **kwargs):
-    # type: (pathlib.Path, str, **Any) -> pd.DataFrame
-    """Reads counts from file, optionally filtering for given prefix."""
-
-    # Read counts, optionally filtering for given prefix.
-    default_kws = dict(sep='\t', dtype={'chr': 'str'}, comment='#')
-    read_csv_kws = toolz.merge(default_kws, kwargs)
-
-    if prefix is None:
-        counts = pd.read_csv(str(file_path),
-                             **read_csv_kws)  # type: pd.DataFrame
-    else:
-        counts = _read_csv_startswith(file_path, prefix=prefix, **read_csv_kws)
-
-    return counts
-
-
-def _read_csv_startswith(file_path, prefix, **kwargs):
-    # type: (pathlib.Path, str, **Any) -> pd.DataFrame
-    """Reads sorted csv file using only lines that start with given prefix."""
-
-    with open(str(file_path), 'rt') as file_:
-        lines = iter(file_)
-
-        # Grab our header and column description.
-        header = next(file_)
-
-        sep = kwargs.get('sep', ',')
-        columns = [c.strip() for c in header.split(sep)]
-
-        # Drop everything until we find prefix.
-        lines = itertools.dropwhile(lambda l: not l.startswith(prefix), lines)
-
-        # Take everything while it still has prefix.
-        lines = itertools.takewhile(lambda l: l.startswith(prefix), lines)
-
-        # Read grabbed lines using pandas.
-        lines_file = StringIO(u''.join(list(lines)))
-        data = pd.read_csv(lines_file, names=columns, **kwargs)
-
-    return data
 
 
 def normalize_counts(counts):
     # type: (pd.DataFrame) -> pd.DataFrame
-    """Normalizes counts for sequencing depth using the median-of-ratios."""
+    """Normalizes counts for sequencing depth using median-of-ratios.
+
+    Normalizes gene expression counts for differences in sequencing depth
+    between samples using the median-of-ratios approach described in DESeq2.
+
+    Parameters
+    ----------
+    counts : pd.DataFrame
+        Matrix of gene counts, with genes along the rows and samples
+        along the columns.
+
+    Returns
+    -------
+    pd.DataFrame
+        Matrix of normalized expression counts.
+
+    """
 
     with np.errstate(divide='ignore'):
         size_factors = estimate_size_factors(counts)
@@ -232,7 +207,30 @@ def normalize_counts(counts):
 
 def estimate_size_factors(counts):
     # type: (pd.DataFrame) -> np.Array
-    """Calculates size factors using the median-of-ratios approach."""
+    """Calculates size factors using median-of-ratios.
+
+    Calculates normalization factors for the median-of-ratios approach for
+    normalizing expression counts for differences in sequencing depths between
+    samples.
+
+    Parameters
+    ----------
+    counts : pd.DataFrame
+        Matrix of gene counts, with genes along the rows and samples
+        along the columns.
+
+    Returns
+    -------
+    np.Array
+        Array of normalization factors, with one entry per sample.
+
+    """
+
+    def _estimate_size_factors_col(counts, log_geo_means):
+        # type: (pd.DataFrame, np.Array) -> np.Array
+        log_counts = np.log(counts)
+        mask = np.isfinite(log_geo_means) & (counts > 0)
+        return np.exp(np.median((log_counts - log_geo_means)[mask]))
 
     # Convert to float.
     counts = counts.astype(float)
@@ -246,68 +244,3 @@ def estimate_size_factors(counts):
         log_geo_means=log_geo_means)
 
     return size_factors
-
-
-def _estimate_size_factors_col(counts, log_geo_means):
-    # type: (pd.DataFrame, np.Array) -> np.Array
-    log_counts = np.log(counts)
-    mask = np.isfinite(log_geo_means) & (counts > 0)
-    return np.exp(np.median((log_counts - log_geo_means)[mask]))
-
-
-# def gene_counts(bam_files, gff_path, names=None, extra_kws=None, **kwargs):
-#     """Generates gene counts for given bam files using featureCounts.
-
-#     This function is used to generate a m-by-n matrix (m = number of samples,
-#     n = number of genes) of gene expression counts. This matrix is generated
-#     using featureCounts, whose results are then parsed and returned.
-
-#     Parameters
-#     ----------
-#     bam_files : list[pathlib.Path]
-#         List of paths to the bam files for which counts should be generated.
-#     gff_path : pathlib.Path
-#         Path to the gene feature file containing gene features.
-#     names : dict[str, str]
-#         Alternative names to use for the given bam
-#         files. Keys of the dict should correspond to bam file paths, values
-#         should reflect the sample names that should be used in the
-#         resulting count matrix.
-#     extra_kws : dict[str, tuple]:
-#         Dictionary of extra arguments that should be passed to feature counts.
-#         Keys should correspond to argument names (including dashes),
-#         values should be tuples containing the argument values.
-#     **kwargs
-#         Any kwargs are passed to `feature_counts`.
-
-#     Returns
-#     -------
-#     pandas.DataFrame
-#         DataFrame containing counts. The index of the DataFrame contains gene
-#         ids corresponding to genes in the gff file, the columns correspond to
-#         samples/bam files. Column names are either the bam file paths, or the
-#         alternative sample names if given.
-
-#     """
-
-#     extra_kws = extra_kws or {}
-
-#     # Check keyword arguments.
-#     if '-f' in extra_kws:
-#         raise ValueError('Option -f can\'t be used when '
-#                          'counting at gene level')
-
-#     # Run feature counts.
-#     counts = feature_counts(
-#         bam_files, gff_path, names=names,
-#         extra_kws=extra_kws, **kwargs)
-
-#     # Drop extra columns.
-#     counts.drop(['Chr', 'Start', 'End',
-#                  'Strand', 'Length'], axis=1, inplace=True)
-
-#     # Set and rename index.
-#     counts.set_index('Geneid', inplace=True)
-#     counts.index.name = 'gene_id'
-
-#     return counts

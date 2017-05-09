@@ -77,14 +77,9 @@ gh-pages:
 	git add -A
 	git commit -m "Generated gh-pages for `git log develop -1 --pretty=short --abbrev-commit`" && git push origin gh-pages ; git checkout develop
 
-release: clean ## package and upload a release
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
-
 dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
-	ls -l dist
+	rm -rf build
+	python setup.py sdist bdist_wheel
 
 conda: clean-pyc ## build a conda release
 	conda build --python 3.5 -c bioconda -c r -c jrderuiter conda

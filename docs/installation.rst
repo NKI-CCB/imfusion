@@ -4,9 +4,6 @@ Installation
 Using bioconda (recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**IM-Fusion is currently not yet available in bioconda, but will be made
-available soon. In the meantime, please use pip to install.**
-
 The recommended way to install IM-Fusion is using bioconda, as this installs
 IM-Fusion together with its external dependencies into an isolated environment
 using a single command:
@@ -46,7 +43,7 @@ IM-Fusion can also be installed using pip:
 
 .. code:: bash
 
-    pip install git+https://github.com/jrderuiter/imfusion.git
+    pip install imfusion
 
 Note that this does not install any of the required external dependencies,
 which must therefore be installed manually (see below for more details).

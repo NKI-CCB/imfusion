@@ -21,7 +21,8 @@ from imfusion.expression.test import test_de
 from imfusion.model import Insertion
 
 FORMAT = "[%(asctime)-15s] %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.INFO)
+logging.basicConfig(
+    format=FORMAT, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
 
 
 # pylint: disable=E1101
@@ -73,11 +74,14 @@ def main():
             'p_value': 'de_pvalue',
             'test_type': 'de_test'
         })
-        ctgs = pd.merge(ctgs, de_results, on='gene_id', how='left')
+
+        col_order = (
+            list(ctgs.columns) + ['de_test', 'de_direction', 'de_pvalue'])
+        ctgs = pd.merge(ctgs, de_results, on='gene_id', how='left')[col_order]
 
         if args.de_threshold is not None:
             # Filter for non-significant genes, keeping nans.
-            ctgs = ctgs.ix[~(ctgs['de_pvalue'] > args.de_threshold)]
+            ctgs = ctgs.loc[~(ctgs['de_pvalue'] > args.de_threshold)]
 
     # Write outputs.
     logger.info('Writing outputs')

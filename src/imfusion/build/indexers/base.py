@@ -17,6 +17,7 @@ import pathlib2 as pathlib
 
 import pyfaidx
 
+from imfusion.compat import FileExistsError
 from imfusion.external.util import check_dependencies
 from imfusion.util import tabix
 

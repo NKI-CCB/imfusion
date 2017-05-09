@@ -27,7 +27,7 @@ EXTRAS_REQUIRE = {
 
 setuptools.setup(
     name='imfusion',
-    version='0.3.0',
+    version='0.3.1',
     description=('Tool for identifying transposon insertions in '
                  'Insertional Mutagenesis screens from gene-transposon '
                  'fusions using single- and paired-end RNA-sequencing data.'),

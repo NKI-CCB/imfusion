@@ -473,8 +473,9 @@ def normalize_chimeric_junctions(chimeric_data, seqname=None):
         norm_mask = (seq_ordered | (same_seq & loc_ordered))
     else:
         # Subset to samples that have at least one end on seqname.
-        chimeric_data = chimeric_data.ix[(chimeric_data.seqname_a == seqname) |
-                                         (chimeric_data.seqname_b == seqname)]
+        chimeric_data = chimeric_data.loc[(chimeric_data.seqname_a == seqname)
+                                          | (chimeric_data.seqname_b == seqname
+                                             )]
 
         # Chimeric reads are 'normal' if first side is on seqname and
         # and if locations are ordered in the case that seq_a == seq_b.
@@ -483,8 +484,8 @@ def normalize_chimeric_junctions(chimeric_data, seqname=None):
 
     normed = pd.concat(
         [
-            chimeric_data.ix[norm_mask],
-            _reverse_chimeric(chimeric_data.ix[~norm_mask])
+            chimeric_data.loc[norm_mask],
+            _reverse_chimeric(chimeric_data.loc[~norm_mask])
         ],
         axis=0)
 
@@ -514,7 +515,7 @@ def extract_transposon_fusions(chimeric_data,
     """Extracts transposon fusions from a STAR chimeric read dataframe."""
 
     # Subset and normalize chimeric reads for transposon.
-    chimeric_data = chimeric_data.ix[
+    chimeric_data = chimeric_data.loc[
         (chimeric_data['seqname_a'] == transposon_name) ^
         (chimeric_data['seqname_b'] == transposon_name)] # yapf: disable
 
@@ -638,7 +639,7 @@ def assign_spanning_reads(junctions, chimeric_data, max_dist_left,
     ]
 
     # Select unassigned reads.
-    unassigned = chimeric_data.ix[unassigned_idx]
+    unassigned = chimeric_data.loc[unassigned_idx]
 
     return new_juncs, unassigned
 
@@ -768,4 +769,4 @@ def _cluster_positions(df, col, max_dist):
     diff = np.diff(np.insert(locs.values, 0, 0))
     groups = pd.Series(np.cumsum(diff > max_dist), index=locs.index)
 
-    return groups.ix[df.index]
+    return groups.loc[df.index]

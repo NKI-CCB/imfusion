@@ -2,6 +2,15 @@
 History
 =======
 
+0.3.1 (2017-05-09)
+------------------
+
+* Several small fixes for Python 2.7 compatibility.
+* Fixed issue in CTG test that occurs when no insertions are within the
+  gene windows.
+* Replaced usage of deprecated .ix indexer for pandas DataFrames.
+* Updated documentation.
+
 0.3.0 (2017-05-04)
 ------------------
 

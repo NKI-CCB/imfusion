@@ -12,17 +12,7 @@ from typing import Any, Iterable, Optional
 
 import pyparsing as pp
 
-# Define FileNotFoundError for Python 2.7.
-try:
-    FileNotFoundError
-except NameError:
-    FileNotFoundError = OSError
-
-# Define DEVNULL.
-try:
-    DEVNULL = subprocess.DEVNULL  # Python 3
-except AttributeError:
-    DEVNULL = open(os.devnull, 'wb')  # Python 2
+from imfusion.compat import FileNotFoundError, DEVNULL
 
 
 def run_command(args, log_path=None, **kwargs):
@@ -35,7 +25,7 @@ def run_command(args, log_path=None, **kwargs):
 
         if log_path is not None:
             with log_path.open('w') as log_file:
-                print(log_file, file=log_file)
+                print(str(log_file), file=log_file)
 
         if process.returncode != 0:
             raise CalledProcessError(
