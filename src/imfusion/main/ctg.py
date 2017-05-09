@@ -21,7 +21,8 @@ from imfusion.expression.test import test_de
 from imfusion.model import Insertion
 
 FORMAT = "[%(asctime)-15s] %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.INFO)
+logging.basicConfig(
+    format=FORMAT, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
 
 
 # pylint: disable=E1101

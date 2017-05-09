@@ -16,7 +16,8 @@ from imfusion.build.indexers import Reference
 from imfusion.expression.counts import generate_exon_counts
 
 FORMAT = "[%(asctime)-15s] %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.INFO)
+logging.basicConfig(
+    format=FORMAT, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
 
 # Map for translating strand options to numeric values used by featureCounts.
 STRANDED_MAP = {'unstranded': 0, 'stranded': 1, 'reverse': 2}

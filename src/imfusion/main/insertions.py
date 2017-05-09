@@ -16,7 +16,8 @@ from imfusion.insertions.aligners import get_aligners
 from imfusion.model import Insertion
 
 FORMAT = "[%(asctime)-15s] %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.INFO)
+logging.basicConfig(
+    format=FORMAT, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
 
 
 def main():
