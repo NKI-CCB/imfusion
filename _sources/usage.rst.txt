@@ -54,7 +54,7 @@ The command for building a Tophat-Fusion reference is nearly identical:
         --transposon_seq transposon.fa \
         --transposon_features transposon.features.txt \
         --output_dir references/GRCm38.76.t2onc.tophat \
-        --blacklist_genes ENSMUSG00000039095 ENSMUSG00000038402 \
+        --blacklist_genes ENSMUSG00000039095 ENSMUSG00000038402
 
 However, both aligners do have some aligner-specific arguments for building
 their references. See the help of the respective sub-commands for more details.
@@ -76,10 +76,11 @@ The basic command for ``imfusion-insertions`` using the STAR aligner is:
 
 .. code:: bash
 
-    imfusion-insertions star
+    imfusion-insertions star \
         --fastq sample_s1.R1.fastq.gz \
         --reference references/GRCm38.76.t2onc.star \
-        --output_dir output/sample_s1
+        --output_dir output/sample_s1 \
+        --star_threads 4
 
 In this command, the ``--fastq`` argument specifies a path to the fastq
 file containing RNA-seq reads for the given sample. For paired-end samples, the
@@ -98,10 +99,11 @@ The command for using Tophat-Fusion is nearly identical:
 
 .. code:: bash
 
-    imfusion-insertions tophat
+    imfusion-insertions tophat \
         --fastq sample_s1.R1.fastq.gz \
         --reference references/GRCm38.76.t2onc.tophat \
-        --output_dir output/sample_s1
+        --output_dir output/sample_s1 \
+        --tophat_threads 4
 
 However, both aligners do have some aligner-specific arguments concerning the
 alignment. See the help of the respective sub-commands for more details. For

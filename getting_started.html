@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Getting started &mdash; IM-Fusion 0.3.0 documentation</title>
+  <title>Getting started &mdash; IM-Fusion 0.3.1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="IM-Fusion 0.3.0 documentation" href="index.html"/>
+    <link rel="top" title="IM-Fusion 0.3.1 documentation" href="index.html"/>
         <link rel="next" title="Usage" href="usage.html"/>
         <link rel="prev" title="Installation" href="installation.html"/> 
 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.3.0
+                0.3.1
               </div>
             
           
@@ -96,6 +96,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#required-files">Required files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-reference-files">Example reference files</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
@@ -217,10 +218,10 @@ more sensitivity in the results.</p>
 <p>For building a reference, the following files are required:</p>
 <blockquote>
 <div><ul class="simple">
-<li>The reference genome sequence, (Fasta file).</li>
-<li>The reference gene features. (GTF file, adhering to Ensembl&#8217;s GTF format).</li>
-<li>The transposon sequence (Fasta file).</li>
-<li>The transposon features file (tab-separated file).</li>
+<li>The reference genome sequence (fasta file)</li>
+<li>The reference gene features (GTF file, adhering to Ensembl&#8217;s GTF format)</li>
+<li>The transposon sequence (fasta file)</li>
+<li>The transposon features file (tab-separated file)</li>
 </ul>
 </div></blockquote>
 <p>The transposon feature file describes the locations of the splice-donor and
@@ -232,8 +233,20 @@ respectively. The last column specifies the type of the feature, which should
 be either ‘SD’ or ‘SA’ for splice-donor or splice-acceptor sites respectively.
 The field may also be left empty for other types of features, however these
 features will not be used by IM-Fusion.</p>
+</div>
+<div class="section" id="example-reference-files">
+<h2>Example reference files<a class="headerlink" href="#example-reference-files" title="Permalink to this headline">¶</a></h2>
+<p>Reference files for various genomes can be downloaded here:</p>
+<blockquote>
+<div><ul class="simple">
+<li>mm10 (Ensembl, current): <a class="reference external" href="ftp://ftp.ensembl.org//pub/release-88/fasta/mus_musculus/dna/Mus_musculus.GRCm38.dna.primary_assembly.fa.gz">Fasta</a>, <a class="reference external" href="ftp://ftp.ensembl.org//pub/release-88/gtf/mus_musculus/Mus_musculus.GRCm38.88.gtf.gz">GTF</a></li>
+<li>mm9 (Ensembl, archive): <a class="reference external" href="ftp://ftp.ensembl.org//pub/release-67/fasta/mus_musculus/dna/Mus_musculus.NCBIM37.67.dna.toplevel.fa.gz">Fasta</a>, <a class="reference external" href="ftp://ftp.ensembl.org//pub/release-67/gtf/mus_musculus/Mus_musculus.NCBIM37.67.gtf.gz">GTF</a></li>
+</ul>
+</div></blockquote>
 <p>Example sequence and feature files for the Sleeping Beauty
-<em>T2/Onc2</em> and Piggybac transposons are available in the GitHub <a class="reference external" href="https://github.com/jrderuiter/imfusion/tree/develop/data">respository</a>.</p>
+<em>T2/Onc</em> and Piggybac transposons are available in our GitHub <a class="reference external" href="https://github.com/jrderuiter/imfusion/tree/develop/data">respository</a>. For other
+transposon,s these files need to be created manually using knowledge of the
+transposon sequence and the locations of its splice acceptor/donor sites.</p>
 </div>
 </div>
 
@@ -281,7 +294,7 @@ features will not be used by IM-Fusion.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.0',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

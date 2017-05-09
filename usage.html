@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Usage &mdash; IM-Fusion 0.3.0 documentation</title>
+  <title>Usage &mdash; IM-Fusion 0.3.1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="IM-Fusion 0.3.0 documentation" href="index.html"/>
+    <link rel="top" title="IM-Fusion 0.3.1 documentation" href="index.html"/>
         <link rel="next" title="API" href="api.html"/>
         <link rel="prev" title="Getting started" href="getting_started.html"/> 
 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.3.0
+                0.3.1
               </div>
             
           
@@ -214,7 +214,7 @@ prevent proper identification of transposon insertions.</strong></p>
     <span class="o">--</span><span class="n">transposon_seq</span> <span class="n">transposon</span><span class="o">.</span><span class="n">fa</span> \
     <span class="o">--</span><span class="n">transposon_features</span> <span class="n">transposon</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">txt</span> \
     <span class="o">--</span><span class="n">output_dir</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">tophat</span> \
-    <span class="o">--</span><span class="n">blacklist_genes</span> <span class="n">ENSMUSG00000039095</span> <span class="n">ENSMUSG00000038402</span> \
+    <span class="o">--</span><span class="n">blacklist_genes</span> <span class="n">ENSMUSG00000039095</span> <span class="n">ENSMUSG00000038402</span>
 </pre></div>
 </div>
 <p>However, both aligners do have some aligner-specific arguments for building
@@ -232,10 +232,11 @@ identify gene fusions, extracts gene-transposon fusions from the results and
 derives the corresponding insertion sites. The insertions are written as the
 tab-separated file <code class="docutils literal"><span class="pre">insertions.txt</span></code> in the output directory.</p>
 <p>The basic command for <code class="docutils literal"><span class="pre">imfusion-insertions</span></code> using the STAR aligner is:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">insertions</span> <span class="n">star</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">insertions</span> <span class="n">star</span> \
     <span class="o">--</span><span class="n">fastq</span> <span class="n">sample_s1</span><span class="o">.</span><span class="n">R1</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
     <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">star</span> \
-    <span class="o">--</span><span class="n">output_dir</span> <span class="n">output</span><span class="o">/</span><span class="n">sample_s1</span>
+    <span class="o">--</span><span class="n">output_dir</span> <span class="n">output</span><span class="o">/</span><span class="n">sample_s1</span> \
+    <span class="o">--</span><span class="n">star_threads</span> <span class="mi">4</span>
 </pre></div>
 </div>
 <p>In this command, the <code class="docutils literal"><span class="pre">--fastq</span></code> argument specifies a path to the fastq
@@ -250,10 +251,11 @@ after the RNA-seq alignment to detect novel gene transcripts based on the
 RNA-seq alignment. The results of this assembly are subsequently used in the
 insertion detection step to annotate insertions that involve novel transcripts.</p>
 <p>The command for using Tophat-Fusion is nearly identical:</p>
-<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">insertions</span> <span class="n">tophat</span>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">imfusion</span><span class="o">-</span><span class="n">insertions</span> <span class="n">tophat</span> \
     <span class="o">--</span><span class="n">fastq</span> <span class="n">sample_s1</span><span class="o">.</span><span class="n">R1</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span> \
     <span class="o">--</span><span class="n">reference</span> <span class="n">references</span><span class="o">/</span><span class="n">GRCm38</span><span class="o">.</span><span class="mf">76.</span><span class="n">t2onc</span><span class="o">.</span><span class="n">tophat</span> \
-    <span class="o">--</span><span class="n">output_dir</span> <span class="n">output</span><span class="o">/</span><span class="n">sample_s1</span>
+    <span class="o">--</span><span class="n">output_dir</span> <span class="n">output</span><span class="o">/</span><span class="n">sample_s1</span> \
+    <span class="o">--</span><span class="n">tophat_threads</span> <span class="mi">4</span>
 </pre></div>
 </div>
 <p>However, both aligners do have some aligner-specific arguments concerning the
@@ -397,7 +399,7 @@ the expression data. In this case, only the CTG test is performed:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.0',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
