@@ -50,9 +50,9 @@ more sensitivity in the results.
 
 For building a reference, the following files are required:
 
-    - The reference genome sequence, (Fasta file).
+    - The reference genome sequence, (fasta file).
     - The reference gene features. (GTF file, adhering to Ensembl's GTF format).
-    - The transposon sequence (Fasta file).
+    - The transposon sequence (fasta file).
     - The transposon features file (tab-separated file).
 
 The transposon feature file describes the locations of the splice-donor and
@@ -65,6 +65,16 @@ be either ‘SD’ or ‘SA’ for splice-donor or splice-acceptor sites respect
 The field may also be left empty for other types of features, however these
 features will not be used by IM-Fusion.
 
+Example reference files
+-----------------------
+
+Reference files for various genomes can be downloaded here:
+
+    - mm10 (Ensembl, current): `Fasta <ftp://ftp.ensembl.org//pub/release-88/fasta/mus_musculus/dna/Mus_musculus.GRCm38.dna.primary_assembly.fa.gz>`_, `GTF <ftp://ftp.ensembl.org//pub/release-88/gtf/mus_musculus/Mus_musculus.GRCm38.88.gtf.gz>`_
+    - mm9 (Ensembl, archive): `Fasta <ftp://ftp.ensembl.org//pub/release-67/fasta/mus_musculus/dna/Mus_musculus.NCBIM37.67.dna.toplevel.fa.gz>`_, `GTF <ftp://ftp.ensembl.org//pub/release-67/gtf/mus_musculus/Mus_musculus.NCBIM37.67.gtf.gz>`_
+
 Example sequence and feature files for the Sleeping Beauty
-*T2/Onc2* and Piggybac transposons are available in the GitHub `respository
-<https://github.com/jrderuiter/imfusion/tree/develop/data>`_.
+*T2/Onc* and Piggybac transposons are available in our GitHub `respository
+<https://github.com/jrderuiter/imfusion/tree/develop/data>`_. For other
+transposon,s these files need to be created manually using knowledge of the
+transposon sequence and the locations of its splice acceptor/donor sites.
