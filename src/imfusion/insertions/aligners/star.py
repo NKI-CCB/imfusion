@@ -13,13 +13,17 @@ import sys
 from typing import Any
 import re
 
+from future.utils import native_str
 from intervaltree import IntervalTree
 import numpy as np
 import pandas as pd
+from pathlib2 import Path
+import pysam
 import toolz
 
 from imfusion.build.indexers.star import StarReference
 from imfusion.external.star import star_align
+from imfusion.external.star_fusion import star_fusion
 from imfusion.external.stringtie import stringtie_assemble
 from imfusion.external.compound import sort_bam
 from imfusion.external.util import which, parse_arguments
@@ -118,6 +122,13 @@ class StarAligner(Aligner):
         to a junction fusion (which is supported by split reads, so that its
         exact position is known). Groups that cannot be assigned to a junction
         fusion are considered to arise from a separate insertion.
+    star_fusion_ref_path : Path
+        Path to a STAR-Fusion reference. If given, STAR-Fusion is used to
+        identify endogenous gene fusions from IM-Fusions alignment. Identified
+        gene fusions are written to a gene_fusions.txt file in the output
+        directory. Note that the STAR-Fusion reference should use the same
+        reference genome as IM-Fusions reference to avoid compatability issues.
+        Requires STAR-Fusion to be installed.
 
     """
 
@@ -136,7 +147,8 @@ class StarAligner(Aligner):
             external_sort=False,  # type: bool
             merge_junction_dist=10,  # type: int
             max_spanning_dist=300,  # type: int
-            max_junction_dist=10000  # type: int
+            max_junction_dist=10000,  # type: int
+            star_fusion_ref_path=None  # type: Path
     ):  # type: (...) -> None
 
         super().__init__(reference=reference, logger=logger)
@@ -156,6 +168,8 @@ class StarAligner(Aligner):
         self._filter_orientation = filter_orientation
         self._filter_blacklist = filter_blacklist
 
+        self._star_fusion_ref_path = star_fusion_ref_path
+
     @property
     def dependencies(self):
         """External dependencies required by aligner."""
@@ -164,6 +178,9 @@ class StarAligner(Aligner):
 
         if self._assemble:
             programs += ['stringtie']
+
+        if self._star_fusion_ref_path is not None:
+            programs += ['STAR-Fusion']
 
         return programs
 
@@ -195,9 +212,21 @@ class StarAligner(Aligner):
 
         # Perform alignment using STAR.
         alignment_path = output_dir / 'alignment.bam'
+        star_dir = output_dir / '_star'
+
         if not alignment_path.exists():
             self._logger.info('Performing alignment using STAR')
-            self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
+
+            self._align(
+                fastq_path=fastq_path,
+                output_dir=star_dir,
+                fastq2_path=fastq2_path)
+
+            path.symlink_relative(
+                src_path=star_dir / 'Aligned.sortedByCoord.out.bam',
+                dest_path=alignment_path)
+
+            pysam.index(native_str(alignment_path))
         else:
             self._logger.info('Using existing STAR alignment')
 
@@ -222,12 +251,11 @@ class StarAligner(Aligner):
         else:
             assembled_path = None
 
-        # Extract identified fusions.
+        # Extract identified fusions and corresponding insertions.
         self._logger.info('Extracting gene-transposon fusions')
-        fusion_path = output_dir / 'fusions.out'
-        fusions = list(self._extract_fusions(fusion_path))
+        junction_path = star_dir / 'Chimeric.out.junction'
+        fusions = list(self._extract_fusions(junction_path))
 
-        # Extract insertions.
         self._logger.info('Summarizing insertions')
         insertions = list(
             util.extract_insertions(
@@ -238,21 +266,30 @@ class StarAligner(Aligner):
                 ffpm_fastq_path=fastq_path,
                 chromosomes=None))
 
-        # self._logger.info('Filtering insertions')
         insertions = util.filter_insertions(
             insertions,
             features=self._filter_features,
             orientation=self._filter_orientation,
             blacklist=self._filter_blacklist)
 
+        # Identify endogenous fusions with STAR if requested.
+        if self._star_fusion_ref_path is not None:
+            self._logger.info('Identifying gene fusions using STAR-Fusion')
+            star_fusion_dir = output_dir / '_star_fusion'
+            star_fusion(
+                junction_path,
+                self._star_fusion_ref_path,
+                output_dir=star_fusion_dir)
+
+            path.symlink_relative(
+                src_path=star_fusion_dir /
+                'star-fusion.fusion_candidates.final.abridged',
+                dest_path=output_dir / 'gene_fusions.txt')
+
         for insertion in insertions:
             yield insertion
 
     def _align(self, fastq_path, output_dir, fastq2_path=None):
-        # Put output into subdirectory, we will symlink the
-        # expected outputs from STAR later.
-        star_dir = output_dir / '_star'
-
         # Gather default arguments.
         sort_type = 'Unsorted' if self._external_sort else 'SortedByCoordinate'
 
@@ -269,25 +306,16 @@ class StarAligner(Aligner):
             fastq_path=fastq_path,
             fastq2_path=fastq2_path,
             index_path=self._reference.index_path,
-            output_dir=star_dir,
+            output_dir=output_dir,
             extra_args=toolz.merge(args, self._extra_args))
 
         # If not yet sorted, sort bam file using samtools/sambamba.
-        sorted_bam_path = star_dir / 'Aligned.sortedByCoord.out.bam'
+        sorted_bam_path = output_dir / 'Aligned.sortedByCoord.out.bam'
 
         if sort_type == 'Unsorted':
-            unsorted_bam_path = star_dir / 'Aligned.out.bam'
+            unsorted_bam_path = output_dir / 'Aligned.out.bam'
             sort_bam(unsorted_bam_path, sorted_bam_path, threads=self._threads)
             unsorted_bam_path.unlink()
-
-        # Symlink fusions and alignment into expected location.
-        dest_bam_path = output_dir / 'alignment.bam'
-        path.symlink_relative(
-            src_path=sorted_bam_path, dest_path=dest_bam_path)
-
-        path.symlink_relative(
-            src_path=star_dir / 'Chimeric.out.junction',
-            dest_path=output_dir / 'fusions.out')
 
     def _extract_fusions(self, fusion_path):
         # Read chimeric junction data.
@@ -349,6 +377,20 @@ class StarAligner(Aligner):
             action='store_false')
         filt_group.add_argument('--blacklisted_genes', nargs='+')
 
+        sf_group = parser.add_argument_group('STAR-Fusion')
+        sf_group.add_argument(
+            '--star_fusion_reference',
+            type=Path,
+            default=None,
+            help=(
+                'Path to a STAR-Fusion reference. If given, STAR-Fusion is '
+                'used to identify endogenous gene fusions from IM-Fusions '
+                'alignment. Identified gene fusions are written to a '
+                'gene_fusions.txt file in the output directory. Note that the '
+                'STAR-Fusion reference should use the same reference genome as '
+                'IM-Fusions reference to avoid compatability issues.'
+                'Requires STAR-Fusion to be installed.'))
+
     @classmethod
     def _parse_args(cls, args):
         kws = dict(
@@ -363,7 +405,8 @@ class StarAligner(Aligner):
             max_junction_dist=args.max_junction_dist,
             filter_features=args.filter_features,
             filter_orientation=args.filter_orientation,
-            filter_blacklist=args.blacklisted_genes)
+            filter_blacklist=args.blacklisted_genes,
+            star_fusion_ref_path=args.star_fusion_reference)
 
         return toolz.merge(super()._parse_args(args), kws)
 

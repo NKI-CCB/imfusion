@@ -6,9 +6,10 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
-from pathlib2 import Path
-
+from future.utils import native_str
 import pandas as pd
+from pathlib2 import Path
+import pysam
 import toolz
 
 from imfusion.build.indexers.tophat import TophatReference
@@ -104,6 +105,7 @@ class TophatAligner(Aligner):
         if not alignment_path.exists():
             self._logger.info('Performing alignment using Tophat2')
             self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
+            pysam.index(native_str(alignment_path))
         else:
             self._logger.info('Using existing Tophat2 alignment')
 
