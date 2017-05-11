@@ -1,9 +1,3 @@
-.. image:: https://img.shields.io/travis/jrderuiter/imfusion/develop.svg
-    :target: https://travis-ci.org/jrderuiter/imfusion
-
-.. image:: https://img.shields.io/coveralls/jrderuiter/imfusion/develop.svg
-    :target: https://coveralls.io/github/jrderuiter/imfusion
-
 IM-Fusion
 =========
 
@@ -42,12 +36,14 @@ Documentation
 =============
 
 IM-Fusion's documentation is available at
-`jrderuiter.github.io/imfusion <http://jrderuiter.github.io/imfusion/>`_.
+`nki-ccb.github.io/imfusion <http://nki-ccb.github.io/imfusion>`_.
 
 References
 ==========
-de Ruiter, JR. *et al.*, 2017. **"Identifying transposon insertions and
-their effects from RNA-sequencing data"** (*Under revision*).
+
+de Ruiter J.R., Kas S.M. *et al.* **"Identifying transposon insertions and their
+effects from RNA-sequencing data"** Nucleic Acids Research 2017, *in press*.
+
 
 License
 =======

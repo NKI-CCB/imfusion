@@ -2,6 +2,13 @@
 History
 =======
 
+0.3.2 (2017-05-11)
+------------------
+
+* Properly added star-fusion support to star aligner (was previously not
+  fully merged).
+* Changed documentation URLs to new repository.
+
 0.3.1 (2017-05-09)
 ------------------
 

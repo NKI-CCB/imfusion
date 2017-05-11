@@ -255,8 +255,7 @@ latex_documents = [(master_doc, 'IM-Fusion.tex', u'IM-Fusion Documentation',
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, 'im-fusion', u'IM-Fusion Documentation', [author],
-              1)]
+man_pages = [(master_doc, 'imfusion', u'IM-Fusion Documentation', [author], 1)]
 
 # If true, show URL addresses after external links.
 #man_show_urls = False

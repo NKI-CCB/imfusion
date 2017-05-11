@@ -71,7 +71,7 @@ test:
     - featureCounts -v
 
 about:
-  home: https://github.com/jrderuiter/imfusion
+  home: https://github.com/nki-ccb/imfusion
   license: MIT
   summary: "IM-Fusion - Tool for identifying transposon insertions
     and their effects from RNA-sequencing data"

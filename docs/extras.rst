@@ -72,7 +72,7 @@ that this script does expect the required dependencies to be installed
 (FusionFilter, Repeatmasker and Blast).
 
 .. _FusionFilter wiki: https://github.com/FusionFilter/FusionFilter/wiki/Building-a-Custom-FusionFilter-Dataset
-.. _Python script: https://github.com/jrderuiter/imfusion/blob/develop/scripts/starfusion_build_reference.py
+.. _Python script: https://github.com/nki-ccb/imfusion/blob/develop/scripts/starfusion_build_reference.py
 
 Identifying fusions
 ~~~~~~~~~~~~~~~~~~~

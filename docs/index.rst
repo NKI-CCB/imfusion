@@ -40,7 +40,8 @@ approaches.
 
 For more details on the approach and a comparison with existing DNA-sequencing
 approaches, please see our paper **"Identifying transposon insertions and
-their effects from RNA-sequencing data"** (*Currently under revision*).
+their effects from RNA-sequencing data"** (Nucleic Acids Research 2017,
+*in press*).
 
 .. toctree::
    :maxdepth: 2

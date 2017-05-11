@@ -105,7 +105,7 @@ def parse_args():
         required=True,
         type=Path,
         help='Path to the merged insertions file from '
-        'im-fusion merge.')
+        'imfusion-merge.')
 
     base_group.add_argument(
         '--reference',
@@ -179,7 +179,7 @@ def parse_args():
         default=None,
         type=Path,
         help='Path to the merged expression file from '
-        'im-fusion merge.')
+        'imfusion-merge.')
 
     de_group.add_argument(
         '--de_threshold',

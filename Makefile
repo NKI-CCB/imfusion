@@ -82,7 +82,7 @@ dist: clean ## builds source and wheel package
 	python setup.py sdist bdist_wheel
 
 conda: clean-pyc ## build a conda release
-	conda build --python 3.5 -c bioconda -c r -c jrderuiter conda
+	conda build --python 3.5 -c bioconda conda
 
 conda-docker: clean-pyc
 	docker run -v `pwd`:/imfusion -t -i condaforge/linux-anvil /bin/sh -c 'cd /imfusion && ./scripts/conda_build_docker.sh'
