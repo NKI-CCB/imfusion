@@ -118,7 +118,7 @@ class StarAligner(Aligner):
         distance of each other to be merged. The value should be chosen to
         reflect the expected or emprical insert size.
     max_junction_dist : int
-        Maxixmum distance within which groups of spanning mates are assigned
+        Maximum distance within which groups of spanning mates are assigned
         to a junction fusion (which is supported by split reads, so that its
         exact position is known). Groups that cannot be assigned to a junction
         fusion are considered to arise from a separate insertion.
@@ -350,32 +350,89 @@ class StarAligner(Aligner):
         super().configure_args(parser)
 
         star_group = parser.add_argument_group('STAR arguments')
-        star_group.add_argument('--star_threads', type=int, default=1)
-        star_group.add_argument('--star_min_flank', type=int, default=12)
         star_group.add_argument(
-            '--star_external_sort', default=False, action='store_true')
-        star_group.add_argument('--star_args', default='')
+            '--star_threads',
+            type=int,
+            default=1,
+            help='Number of threads to use when running STAR.')
 
-        star_group.add_argument('--merge_junction_dist', default=10, type=int)
-        star_group.add_argument('--max_spanning_dist', default=300, type=int)
-        star_group.add_argument('--max_junction_dist', default=10000, type=int)
+        star_group.add_argument(
+            '--star_min_flank',
+            type=int,
+            default=12,
+            help=('Minimum mapped length of the two segments '
+                  'on each side of the fusion.'))
+
+        star_group.add_argument(
+            '--star_external_sort',
+            default=False,
+            action='store_true',
+            help=('Use samtools/sambamba for sorting, rather than STAR. '
+                  'Takes longer, but results in lower memory usage for '
+                  'large bam files.'))
+
+        star_group.add_argument(
+            '--star_args', default='', help='Additional args to pass to STAR.')
+
+        star_group.add_argument(
+            '--merge_junction_dist',
+            default=10,
+            type=int,
+            help=('Maximum distance within which fusions supported by split '
+                  'reads (overlapping the junction, so that the exact '
+                  'breakpoint is known) are merged. This merging avoids '
+                  'calling multiple fusions due to slight variations in the '
+                  'alignment, although this value should not be chosen '
+                  'too large to avoid merging distinct insertions.'))
+
+        star_group.add_argument(
+            '--max_spanning_dist',
+            default=300,
+            type=int,
+            help=(
+                'Maximum distance within which spanning mate pairs (mates '
+                'that do not overlap the fusion junction) are grouped when '
+                'summarizing spanning chimeric reads. Both mates from two pairs'
+                ' need to be within this distance of each other to be merged. '
+                'The value should be chosen to reflect the expected or '
+                'emprical insert size.'))
+        star_group.add_argument(
+            '--max_junction_dist',
+            default=10000,
+            type=int,
+            help=('Maximum distance within which groups of spanning mates are '
+                  'assigned to a junction fusion (which is supported by split '
+                  'reads, so that its exact position is known). Groups that '
+                  'cannot be assigned to a junction fusion are considered to '
+                  'arise from a separate insertion.'))
 
         assemble_group = parser.add_argument_group('Assembly')
         assemble_group.add_argument(
-            '--assemble', default=False, action='store_true')
+            '--assemble',
+            default=False,
+            action='store_true',
+            help='Perform de-novo transcript assembly using StringTie.')
 
         filt_group = parser.add_argument_group('Filtering')
         filt_group.add_argument(
             '--no_filter_orientation',
             dest='filter_orientation',
             default=True,
-            action='store_false')
+            action='store_false',
+            help=('Don\'t filter fusions with transposon features and genes '
+                  'in opposite (incompatible) orientations.'))
+
         filt_group.add_argument(
             '--no_filter_feature',
             dest='filter_features',
             default=True,
-            action='store_false')
-        filt_group.add_argument('--blacklisted_genes', nargs='+')
+            action='store_false',
+            help=('Don\'t filter fusions with non-SA/SD features.'))
+
+        filt_group.add_argument(
+            '--blacklisted_genes',
+            nargs='+',
+            help='Blacklisted genes to filter.')
 
         sf_group = parser.add_argument_group('STAR-Fusion')
         sf_group.add_argument(
