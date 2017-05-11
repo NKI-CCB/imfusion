@@ -6,9 +6,10 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
-from pathlib2 import Path
-
+from future.utils import native_str
 import pandas as pd
+from pathlib2 import Path
+import pysam
 import toolz
 
 from imfusion.build.indexers.tophat import TophatReference
@@ -104,6 +105,7 @@ class TophatAligner(Aligner):
         if not alignment_path.exists():
             self._logger.info('Performing alignment using Tophat2')
             self._align(fastq_path, output_dir, fastq2_path=fastq2_path)
+            pysam.index(native_str(alignment_path))
         else:
             self._logger.info('Using existing Tophat2 alignment')
 
@@ -200,26 +202,52 @@ class TophatAligner(Aligner):
         super().configure_args(parser)
 
         group = parser.add_argument_group('Tophat2 arguments')
-        group.add_argument('--tophat_threads', type=int, default=1)
-        group.add_argument('--tophat_min_flank', type=int, default=12)
-        group.add_argument('--tophat_args', type=parse_arguments, default='')
+        group.add_argument(
+            '--tophat_threads',
+            type=int,
+            default=1,
+            help='Number of threads to use when running Tophat2.')
+
+        group.add_argument(
+            '--tophat_min_flank',
+            type=int,
+            default=12,
+            help=('Minimum mapped length of the two segments '
+                  'on each side of the fusion.'))
+
+        group.add_argument(
+            '--tophat_args',
+            type=parse_arguments,
+            default='',
+            help='Additional args to pass to Tophat2.')
 
         assemble_group = parser.add_argument_group('Assembly')
         assemble_group.add_argument(
-            '--assemble', default=False, action='store_true')
+            '--assemble',
+            default=False,
+            action='store_true',
+            help='Perform de-novo transcript assembly using StringTie.')
 
         filt_group = parser.add_argument_group('Filtering')
         filt_group.add_argument(
             '--no_filter_orientation',
             dest='filter_orientation',
             default=True,
-            action='store_false')
+            action='store_false',
+            help=('Don\'t filter fusions with transposon features and genes '
+                  'in opposite (incompatible) orientations.'))
+
         filt_group.add_argument(
             '--no_filter_feature',
             dest='filter_features',
             default=True,
-            action='store_false')
-        filt_group.add_argument('--blacklisted_genes', nargs='+')
+            action='store_false',
+            help=('Don\'t filter fusions with non-SA/SD features.'))
+
+        filt_group.add_argument(
+            '--blacklisted_genes',
+            nargs='+',
+            help='Blacklisted genes to filter.')
 
     @classmethod
     def _parse_args(cls, args):

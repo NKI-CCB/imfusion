@@ -1,7 +1,6 @@
 Getting started
 ===============
 
-
 Overview
 --------
 
@@ -39,6 +38,10 @@ supporting code is provided for interactive analyses (such as plotting
 differential expression) and manually running certain steps of the pipeline.
 For more details, see :doc:`api`.
 
+For the STAR aligner, we also support identifying endogenous gene fusions
+using STAR-Fusion. See :doc:`extras` for more details about this type of
+analysis.
+
 Required files
 --------------
 
@@ -65,6 +68,8 @@ be either ‘SD’ or ‘SA’ for splice-donor or splice-acceptor sites respect
 The field may also be left empty for other types of features, however these
 features will not be used by IM-Fusion.
 
+For generating the exon-level expression counts, IM-Fusion needs a
+flattened exon representation of the reference gene features (in GTF format).
 Example reference files
 -----------------------
 

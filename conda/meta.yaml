@@ -1,6 +1,6 @@
 package:
   name: imfusion
-  version: 0.3.1
+  version: 0.3.2
 
 build:
   number: 0
@@ -71,7 +71,7 @@ test:
     - featureCounts -v
 
 about:
-  home: https://github.com/jrderuiter/imfusion
+  home: https://github.com/nki-ccb/imfusion
   license: MIT
   summary: "IM-Fusion - Tool for identifying transposon insertions
     and their effects from RNA-sequencing data"

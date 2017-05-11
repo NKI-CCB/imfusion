@@ -248,6 +248,8 @@ class TestStarAligner(object):
         star_mock = mocker.patch.object(star, 'star_align')
         mocker.patch.object(star.util, 'count_lines', return_value=8e6)
 
+        mocker.patch.object(star.pysam, 'index')
+
         # Call identify insertions.
         fastq, fastq2 = read_paths
 

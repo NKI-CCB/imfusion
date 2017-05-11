@@ -27,12 +27,12 @@ EXTRAS_REQUIRE = {
 
 setuptools.setup(
     name='imfusion',
-    version='0.3.1',
+    version='0.3.2',
     description=('Tool for identifying transposon insertions in '
                  'Insertional Mutagenesis screens from gene-transposon '
                  'fusions using single- and paired-end RNA-sequencing data.'),
     long_description=README + '\n\n' + HISTORY,
-    url='https://github.com/jrderuiter/im-fusion',
+    url='https://github.com/nki-ccb/imfusion',
     author='Julian de Ruiter',
     author_email='julianderuiter@gmail.com',
     license='MIT license',

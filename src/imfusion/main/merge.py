@@ -16,7 +16,7 @@ from imfusion.model import Insertion
 
 
 def main():
-    """Main function of im-fusion-merge."""
+    """Main function of imfusion-merge."""
 
     args = _parse_args()
 
@@ -37,7 +37,7 @@ def main():
 
 
 def _parse_args():
-    """Parses command-line arguments for im-fusion-merge."""
+    """Parses command-line arguments for imfusion-merge."""
 
     parser = argparse.ArgumentParser()
 

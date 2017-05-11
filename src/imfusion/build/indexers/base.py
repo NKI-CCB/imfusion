@@ -249,7 +249,10 @@ class Indexer(object):
             help='Path to the transposon features (tsv).')
 
         base_group.add_argument(
-            '--output_dir', type=pathlib.Path, required=True)
+            '--output_dir',
+            type=pathlib.Path,
+            required=True,
+            help='Path to write the built reference.')
 
         # Optional blacklist arguments.
         blacklist_group = parser.add_argument_group('Blacklist arguments')

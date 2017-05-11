@@ -92,6 +92,8 @@ class TestTophatAligner(object):
         tophat_mock = mocker.patch.object(tophat, 'tophat2_align')
         mocker.patch.object(tophat.util, 'count_lines', return_value=8e6)
 
+        mocker.patch.object(tophat.pysam, 'index')
+
         # Call identify insertions.
         fastq, fastq2 = read_paths
 
