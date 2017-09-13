@@ -33,12 +33,16 @@ class Aligner(object):
         Reference class describing the reference paths.
     logger : logging.Logger
         Logger to be used for logging messages.
+    threads : int
+        Number of threads to use. Only used if aligner actually supports
+        using multiple threads.
 
     """
 
-    def __init__(self, reference, logger=None):
+    def __init__(self, reference, logger=None, threads=1):
         self._reference = reference
         self._logger = logger or logging.getLogger()
+        self._threads = threads
 
     @property
     def dependencies(self):
@@ -120,6 +124,13 @@ class AlignerCommand(Command):
 
         base_group.add_argument(
             '--name', required=True, help='Name to use for given sample.')
+
+        base_group.add_argument(
+            '--threads',
+            required=True,
+            type=int,
+            help=('Number of threads to use. Only used if'
+                  ' aligner supports multithreading.'))
 
     def run(self, args):
         aligner = self._build_aligner(args)

@@ -135,10 +135,10 @@ class StarAligner(Aligner):
     def __init__(
             self,
             reference,  # type: StarReference
+            threads=1,  # type: int
             assemble=False,  # type: bool
             assemble_args=None,  # type: Dict[str, Any]
             min_flank=12,  # type: int
-            threads=1,  # type: int
             extra_args=None,  # type: Dict[str, Any]
             logger=None,  # type: Any
             filter_features=True,  # type: bool
@@ -151,12 +151,11 @@ class StarAligner(Aligner):
             star_fusion_ref_path=None  # type: Path
     ):  # type: (...) -> None
 
-        super().__init__(reference=reference, logger=logger)
+        super().__init__(reference=reference, logger=logger, threads=threads)
 
         self._assemble = assemble
         self._assemble_args = assemble_args or {}
         self._min_flank = min_flank
-        self._threads = threads
         self._external_sort = external_sort
         self._extra_args = extra_args or {}
 
@@ -361,11 +360,6 @@ class StarCommand(AlignerCommand):
         super().configure(parser)
 
         star_group = parser.add_argument_group('STAR arguments')
-        star_group.add_argument(
-            '--threads',
-            type=int,
-            default=1,
-            help='Number of threads to use when running STAR.')
 
         star_group.add_argument(
             '--star_min_flank',
@@ -468,7 +462,7 @@ class StarCommand(AlignerCommand):
         return StarAligner(
             reference=StarReference(args.reference),
             min_flank=args.star_min_flank,
-            threads=args.star_threads,
+            threads=args.threads,
             extra_args=parse_arguments(args.star_args),
             external_sort=args.star_external_sort,
             assemble=args.assemble,

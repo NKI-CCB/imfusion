@@ -66,17 +66,17 @@ class TophatAligner(Aligner):
 
     def __init__(self,
                  reference,
+                 threads=1,
                  assemble=False,
                  assemble_args=None,
                  min_flank=12,
-                 threads=1,
                  extra_args=None,
                  logger=None,
                  filter_features=True,
                  filter_orientation=True,
                  filter_blacklist=None):
 
-        super().__init__(reference=reference, logger=logger)
+        super().__init__(reference=reference, logger=logger, threads=threads)
 
         self._assemble = assemble
         self._assemble_args = assemble_args or {}
@@ -211,11 +211,6 @@ class TophatCommand(AlignerCommand):
         super().configure(parser)
 
         group = parser.add_argument_group('Tophat2 arguments')
-        group.add_argument(
-            '--threads',
-            type=int,
-            default=1,
-            help='Number of threads to use when running Tophat2.')
 
         group.add_argument(
             '--tophat_min_flank',
@@ -262,8 +257,8 @@ class TophatCommand(AlignerCommand):
     def _build_aligner(cls, args):
         return TophatAligner(
             reference=TophatReference(args.reference),
+            threads=args.threads,
             min_flank=args.tophat_min_flank,
-            threads=args.tophat_threads,
             extra_args=args.tophat_args,
             assemble=args.assemble,
             filter_features=args.filter_features,
