@@ -179,8 +179,8 @@ class Fusion(FrameMixin, _Fusion):
     def distance(self, other):
         """Determine distance to other fusion."""
 
-        if (self.seqname_a != other.seqname_a or
-                self.seqname_b != other.seqname_b):
+        if (self.seqname_a != other.seqname_a
+                or self.seqname_b != other.seqname_b):
             raise ValueError('Fusions are on different reference sequences')
 
         return (abs(self.location_a - other.location_a) +
@@ -281,11 +281,11 @@ class TransposonFusion(MetadataFrameMixin, _TransposonFusion):
     def from_fusion(cls, fusion, transposon_name, metadata=None):
         """Converts the fusion to a transposon fusion object."""
 
-        if (fusion.seqname_a == transposon_name and
-                fusion.seqname_b == transposon_name):
+        if (fusion.seqname_a == transposon_name
+                and fusion.seqname_b == transposon_name):
             raise ValueError('Fusion does not involve genomic sequence')
-        elif (fusion.seqname_a != transposon_name and
-              fusion.seqname_b != transposon_name):
+        elif (fusion.seqname_a != transposon_name
+              and fusion.seqname_b != transposon_name):
             raise ValueError('Fusion does not involve transposon')
         elif fusion.seqname_a == transposon_name:
             tr_key, gen_key = 'a', 'b'
@@ -311,7 +311,7 @@ class TransposonFusion(MetadataFrameMixin, _TransposonFusion):
 
 _Insertion = collections.namedtuple('Insertion', [
     'id', 'seqname', 'position', 'strand', 'support_junction',
-    'support_spanning', 'support', 'metadata'
+    'support_spanning', 'support', 'sample', 'metadata'
 ])
 
 
@@ -321,7 +321,11 @@ class Insertion(MetadataFrameMixin, _Insertion):
     __slots__ = ()
 
     @classmethod
-    def from_transposon_fusion(cls, fusion, id_=None, drop_metadata=None):
+    def from_transposon_fusion(cls,
+                               fusion,
+                               id_=None,
+                               sample=None,
+                               drop_metadata=None):
         """Converts (annotated) transposon fusion to an insertion.
 
         Requires
@@ -369,24 +373,28 @@ class Insertion(MetadataFrameMixin, _Insertion):
             support_junction=fusion.support_junction,
             support_spanning=fusion.support_spanning,
             support=fusion.support,
+            sample=sample,
             metadata=frozendict(ins_metadata))
 
     @classmethod
     def from_transposon_fusions(cls,
                                 fusions,
                                 id_fmt_str=None,
+                                sample=None,
                                 drop_metadata=None):
         """Converts annotated transposon fusions to insertions."""
 
-        if id_fmt_str is not None:
-            insertions = (cls.from_transposon_fusion(
-                fusion,
-                id_=id_fmt_str.format(i + 1),
-                drop_metadata=drop_metadata)
-                          for i, fusion in enumerate(fusions))
-        else:
-            insertions = (cls.from_transposon_fusion(
-                fusion, drop_metadata=drop_metadata) for fusion in fusions)
+        if sample is not None:
+            id_fmt_str = sample + '.' + id_fmt_str
 
-        for insertion in insertions:
-            yield insertion
+        if id_fmt_str is not None:
+            for i, fusion in enumerate(fusions):
+                yield cls.from_transposon_fusion(
+                    fusion,
+                    id_=id_fmt_str.format(i + 1),
+                    sample=sample,
+                    drop_metadata=drop_metadata)
+        else:
+            for fusion in fusions:
+                yield cls.from_transposon_fusion(
+                    fusion, sample=sample, drop_metadata=drop_metadata)

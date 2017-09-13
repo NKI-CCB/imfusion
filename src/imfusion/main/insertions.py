@@ -9,10 +9,8 @@ from builtins import *
 import argparse
 import logging
 
-from pathlib2 import Path
-
 import imfusion
-from imfusion.insertions.aligners import get_aligners
+from imfusion.insertions.aligners import AlignerCommand
 from imfusion.model import Insertion
 
 FORMAT = "[%(asctime)-15s] %(message)s"
@@ -24,23 +22,7 @@ def main():
     """Main function for imfusion-insertions."""
 
     args = parse_args()
-
-    # Construct aligner and identify insertions.
-    aligner = args.aligner.from_args(args)
-    aligner.check_dependencies()
-
-    insertions = aligner.identify_insertions(
-        fastq_path=args.fastq,
-        output_dir=args.output_dir,
-        fastq2_path=args.fastq2)
-
-    # Convert to dataframe.
-    insertion_frame = Insertion.to_frame(insertions)
-    insertion_frame = insertion_frame.sort_values('support', ascending=False)
-
-    # Write output.
-    output_path = args.output_dir / 'insertions.txt'
-    insertion_frame.to_csv(str(output_path), sep='\t', index=False)
+    args.command.run(args)
 
 
 def parse_args():
@@ -48,18 +30,15 @@ def parse_args():
 
     # Setup main parser.
     parser = argparse.ArgumentParser(prog='imfusion-insertions')
-    parser.add_argument(
-        '--version',
-        action='version',
-        version='IM-Fusion ' + imfusion.__version__)
-
     subparsers = parser.add_subparsers(dest='aligner')
     subparsers.required = True
 
     # Register pipelines.
-    for aligner_name, aligner_class in sorted(get_aligners().items()):
-        aligner_parser = subparsers.add_parser(aligner_name)
-        aligner_class.configure_args(aligner_parser)
-        aligner_parser.set_defaults(aligner=aligner_class)
+    commands = AlignerCommand.available_commands()
+
+    for name, command in commands.items():
+        cmd_parser = subparsers.add_parser(name)
+        command.configure(cmd_parser)
+        cmd_parser.set_defaults(command=command)
 
     return parser.parse_args()

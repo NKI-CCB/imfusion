@@ -7,36 +7,55 @@ from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import argparse
+from collections import Counter
+from itertools import chain
 
+import pandas as pd
 from pathlib2 import Path
 
 import imfusion
-from imfusion.merge import merge_samples
+from imfusion.expression import read_exon_counts
 from imfusion.model import Insertion
 
 
 def main():
-    """Main function of imfusion-merge."""
+    """Main function for imfusion-merge."""
 
-    args = _parse_args()
+    args = parse_args()
 
     # Use directory names to name samples if no names given.
-    names = args.names or [fp.name for fp in args.sample_dirs]
+    ins_frames = [pd.read_csv(fp, sep='\t') for fp in args.insertions]
 
-    # Merge samples into single dataset.
-    merged_ins, merged_expr = merge_samples(
-        args.sample_dirs,
-        sample_names=names,
-        with_expression=args.output_expression is not None)
+    # Check for overlapping samples between sets.
+    seen = set()
+    for ins_frame in ins_frames:
+        if len(set(ins_frame['sample']) & seen) > 0:
+            raise ValueError('Overlapping samples between inputs')
+        seen |= set(ins_frame['sample'])
 
-    # Write output(s).
-    Insertion.to_csv(str(args.output), merged_ins, sep='\t', index=False)
+    # Merge insertions
+    ins_merged = pd.concat(ins_frames, axis=0)
+    ins_merged.to_csv(str(args.output), sep='\t', index=True)
 
-    if args.output_expression is not None:
-        merged_expr.to_csv(str(args.output_expression), sep='\t', index=True)
+    if args.expression and args.output_expression:
+        if len(args.expression) != len(ins_frames):
+            raise ValueError('Differing number of insertion/expression paths')
+
+        # Read expression.
+        expr_frames = [read_exon_counts(fp) for fp in args.expression]
+
+        # Check insertion/expression frames have same samples.
+        for ins_frame, expr_frame in zip(ins_frames, expr_frames):
+            if not set(ins_frame['sample']) == set(expr_frame.columns):
+                raise ValueError('Insertion and expression inputs do '
+                                 'not have matching samples')
+
+        # Merge expression.
+        expr_merged = pd.concat(expr_frames, axis=1)
+        expr_merged.to_csv(str(args.output_expression), sep='\t', index=True)
 
 
-def _parse_args():
+def parse_args():
     """Parses command-line arguments for imfusion-merge."""
 
     parser = argparse.ArgumentParser()
@@ -47,7 +66,7 @@ def _parse_args():
         version='IM-Fusion ' + imfusion.__version__)
 
     parser.add_argument(
-        '--sample_dirs',
+        '--insertions',
         type=Path,
         nargs='+',
         required=True,
@@ -60,11 +79,12 @@ def _parse_args():
         help='Output path for merged insertion file.')
 
     parser.add_argument(
-        '--names',
+        '--expression',
+        type=Path,
         nargs='+',
         required=False,
         default=None,
-        help='Alternative sample names to use for samples in merged dataset.')
+        help='Path to sample directories.')
 
     parser.add_argument(
         '--output_expression',

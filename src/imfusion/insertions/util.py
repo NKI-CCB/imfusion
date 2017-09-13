@@ -32,7 +32,8 @@ def extract_insertions(
         features_path,  # type: pathlib.Path
         chromosomes=None,  # type: List[str]
         assembled_gtf_path=None,  # type: pathlib.Path
-        ffpm_fastq_path=None  # type: pathlib.Path
+        ffpm_fastq_path=None,  # type: pathlib.Path
+        sample=None  # type: str
 ):  # type: (...) -> Iterable[Insertion]
     """Extract insertions from gene-transposon fusions."""
 
@@ -63,7 +64,7 @@ def extract_insertions(
 
     # Convert to insertions.
     insertions = Insertion.from_transposon_fusions(
-        annotated, id_fmt_str='INS_{}')
+        annotated, id_fmt_str='INS_{}', sample=sample)
 
     for insertion in insertions:
         yield insertion
@@ -195,8 +196,8 @@ def annotate_fusions_for_assembly(
                             'gene_strand': transcript.strand,
                             'novel_transcript': transcript.id
                         }
-                        yield fusion._replace(
-                            metadata=toolz.merge(fusion.metadata, new_meta))
+                        yield fusion._replace(metadata=toolz.merge(
+                            fusion.metadata, new_meta))
             else:
                 # No overlap.
                 yield fusion
@@ -256,8 +257,9 @@ class TranscriptReference(object):
             grouped = itertools.groupby(exons, key=keyfunc)
 
             for tr_id, grp in grouped:
-                exon_trees[tr_id] = IntervalTree.from_tuples(
-                    (exon.start, exon.end, exon) for exon in grp)
+                exon_trees[tr_id] = IntervalTree.from_tuples((exon.start,
+                                                              exon.end, exon)
+                                                             for exon in grp)
 
         return cls(transcript_trees, exon_trees)
 
@@ -344,9 +346,9 @@ class Exon(_Exon):
     __slots__ = ()
 
 
-_Transcript = namedtuple(
-    'Transcript',
-    ['id', 'chromosome', 'start', 'end', 'strand', 'gene_name', 'gene_id'])
+_Transcript = namedtuple('Transcript', [
+    'id', 'chromosome', 'start', 'end', 'strand', 'gene_name', 'gene_id'
+])
 
 
 class Transcript(_Transcript):
@@ -372,17 +374,18 @@ class Gene(_Gene):
         start = min(transcript.start for transcript in transcripts)
         end = max(transcript.end for transcript in transcripts)
 
-        return cls(chromosome=first.chromosome,
-                   start=start,
-                   end=end,
-                   strand=first.strand,
-                   name=first.gene_name,
-                   id=first.gene_id)
+        return cls(
+            chromosome=first.chromosome,
+            start=start,
+            end=end,
+            strand=first.strand,
+            name=first.gene_name,
+            id=first.gene_id)
 
 
-_TransposonFeature = namedtuple(
-    'TransposonFeature',
-    ['name', 'start', 'end', 'strand', 'type', 'metadata'])
+_TransposonFeature = namedtuple('TransposonFeature', [
+    'name', 'start', 'end', 'strand', 'type', 'metadata'
+])
 
 
 class TransposonFeature(_TransposonFeature, MetadataFrameMixin):

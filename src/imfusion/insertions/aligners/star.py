@@ -30,7 +30,7 @@ from imfusion.external.util import which, parse_arguments
 from imfusion.model import Fusion, TransposonFusion
 from imfusion.util import tabix, path
 
-from .base import Aligner, register_aligner
+from .base import Aligner, AlignerCommand
 from .. import util
 
 CIGAR_MATCH_REGEX = re.compile(r'(\d+)M')
@@ -184,7 +184,11 @@ class StarAligner(Aligner):
 
         return programs
 
-    def identify_insertions(self, fastq_path, output_dir, fastq2_path=None):
+    def identify_insertions(self,
+                            fastq_path,
+                            output_dir,
+                            fastq2_path=None,
+                            sample=None):
         """Identifies insertions from given reads.
 
         Aligns RNA-seq reads to the reference genome and uses this alignment
@@ -201,6 +205,8 @@ class StarAligner(Aligner):
         fastq2_path : Path
             For paired-end sequencing data, path to fastq file containing
             the second read of the pair.
+        sample : str
+            Name to use for given sample.
 
         Yields
         ------
@@ -264,7 +270,8 @@ class StarAligner(Aligner):
                 features_path=self._reference.features_path,
                 assembled_gtf_path=assembled_path,
                 ffpm_fastq_path=fastq_path,
-                chromosomes=None))
+                chromosomes=None,
+                sample=sample))
 
         insertions = util.filter_insertions(
             insertions,
@@ -332,8 +339,12 @@ class StarAligner(Aligner):
         for fusion in fusions:
             yield fusion
 
-    @classmethod
-    def configure_args(cls, parser):
+
+class StarCommand(AlignerCommand):
+
+    name = 'star'
+
+    def configure(self, parser):
         """Configures an argument parser for the Indexer.
 
         Used by ``imfusion-build`` to configure the sub-command for
@@ -347,11 +358,11 @@ class StarAligner(Aligner):
 
         """
 
-        super().configure_args(parser)
+        super().configure(parser)
 
         star_group = parser.add_argument_group('STAR arguments')
         star_group.add_argument(
-            '--star_threads',
+            '--threads',
             type=int,
             default=1,
             help='Number of threads to use when running STAR.')
@@ -396,6 +407,7 @@ class StarAligner(Aligner):
                 ' need to be within this distance of each other to be merged. '
                 'The value should be chosen to reflect the expected or '
                 'emprical insert size.'))
+
         star_group.add_argument(
             '--max_junction_dist',
             default=10000,
@@ -407,6 +419,7 @@ class StarAligner(Aligner):
                   'arise from a separate insertion.'))
 
         assemble_group = parser.add_argument_group('Assembly')
+
         assemble_group.add_argument(
             '--assemble',
             default=False,
@@ -414,6 +427,7 @@ class StarAligner(Aligner):
             help='Perform de-novo transcript assembly using StringTie.')
 
         filt_group = parser.add_argument_group('Filtering')
+
         filt_group.add_argument(
             '--no_filter_orientation',
             dest='filter_orientation',
@@ -435,6 +449,7 @@ class StarAligner(Aligner):
             help='Blacklisted genes to filter.')
 
         sf_group = parser.add_argument_group('STAR-Fusion')
+
         sf_group.add_argument(
             '--star_fusion_reference',
             type=Path,
@@ -449,8 +464,8 @@ class StarAligner(Aligner):
                 'Requires STAR-Fusion to be installed.'))
 
     @classmethod
-    def _parse_args(cls, args):
-        kws = dict(
+    def _build_aligner(cls, args):
+        return StarAligner(
             reference=StarReference(args.reference),
             min_flank=args.star_min_flank,
             threads=args.star_threads,
@@ -464,11 +479,6 @@ class StarAligner(Aligner):
             filter_orientation=args.filter_orientation,
             filter_blacklist=args.blacklisted_genes,
             star_fusion_ref_path=args.star_fusion_reference)
-
-        return toolz.merge(super()._parse_args(args), kws)
-
-
-register_aligner('star', StarAligner)
 
 
 def read_chimeric_junctions(chimeric_path):
@@ -574,8 +584,8 @@ def normalize_chimeric_junctions(chimeric_data, seqname=None):
     else:
         # Subset to samples that have at least one end on seqname.
         chimeric_data = chimeric_data.loc[(chimeric_data.seqname_a == seqname)
-                                          | (chimeric_data.seqname_b == seqname
-                                             )]
+                                          |
+                                          (chimeric_data.seqname_b == seqname)]
 
         # Chimeric reads are 'normal' if first side is on seqname and
         # and if locations are ordered in the case that seq_a == seq_b.
@@ -666,8 +676,8 @@ def extract_junction_fusions(chimeric_data, merge_dist=None):
             'flank_a': 'max',
             'flank_b': 'max',
             'read_name': 'nunique'
-        }).reset_index().assign(support_spanning=0)
-                      .rename(columns={'read_name': 'support_junction'}))
+        }).reset_index().assign(support_spanning=0).rename(
+            columns={'read_name': 'support_junction'}))
 
         # Transform to Fusions.
         fusions = (Fusion(**toolz.keyfilter(lambda k: k not in {'Index'},
@@ -760,8 +770,8 @@ def _build_lookup_trees(fusions, side='a'):
 
     trees = {}
     for key, grp in grouped:
-        trees[key] = IntervalTree.from_tuples(
-            (get_loc(fus), get_loc(fus) + 1, fus) for fus in grp)
+        trees[key] = IntervalTree.from_tuples((get_loc(fus), get_loc(fus) + 1,
+                                               fus) for fus in grp)
 
     return trees
 

@@ -20,7 +20,7 @@ from imfusion.model import TransposonFusion
 from imfusion.util import path, tabix
 from imfusion.util.frozendict import frozendict
 
-from .base import Aligner, register_aligner
+from .base import Aligner, AlignerCommand
 from .. import util
 
 
@@ -97,7 +97,11 @@ class TophatAligner(Aligner):
 
         return programs
 
-    def identify_insertions(self, fastq_path, output_dir, fastq2_path=None):
+    def identify_insertions(self,
+                            fastq_path,
+                            output_dir,
+                            fastq2_path=None,
+                            sample=None):
         """Identifies insertions from given reads."""
 
         # Perform alignment using STAR.
@@ -144,7 +148,8 @@ class TophatAligner(Aligner):
                 features_path=self._reference.features_path,
                 assembled_gtf_path=assembled_path,
                 ffpm_fastq_path=fastq_path,
-                chromosomes=None))
+                chromosomes=None,
+                sample=sample))
 
         insertions = util.filter_insertions(
             insertions,
@@ -197,13 +202,17 @@ class TophatAligner(Aligner):
         for fusion in fusions:
             yield fusion
 
-    @classmethod
-    def configure_args(cls, parser):
-        super().configure_args(parser)
+
+class TophatCommand(AlignerCommand):
+
+    name = 'tophat'
+
+    def configure(self, parser):
+        super().configure(parser)
 
         group = parser.add_argument_group('Tophat2 arguments')
         group.add_argument(
-            '--tophat_threads',
+            '--threads',
             type=int,
             default=1,
             help='Number of threads to use when running Tophat2.')
@@ -250,8 +259,8 @@ class TophatAligner(Aligner):
             help='Blacklisted genes to filter.')
 
     @classmethod
-    def _parse_args(cls, args):
-        kws = dict(
+    def _build_aligner(cls, args):
+        return TophatAligner(
             reference=TophatReference(args.reference),
             min_flank=args.tophat_min_flank,
             threads=args.tophat_threads,
@@ -260,10 +269,6 @@ class TophatAligner(Aligner):
             filter_features=args.filter_features,
             filter_orientation=args.filter_orientation,
             filter_blacklist=args.blacklisted_genes)
-        return toolz.merge(super()._parse_args(args), kws)
-
-
-register_aligner('tophat', TophatAligner)
 
 
 def read_fusion_out(fusion_path):
@@ -349,8 +354,8 @@ def extract_transposon_fusions(fusion_data, transposon_name):
 
     """
 
-    is_paired = (any(fusion_data['supp_mates'] > 0) or
-                 any(fusion_data['supp_spanning_mates'] > 0))
+    is_paired = (any(fusion_data['supp_mates'] > 0)
+                 or any(fusion_data['supp_spanning_mates'] > 0))
 
     # Select fusions where one seqname is the transposon and the other isn't.
     fusion_data = fusion_data.loc[(

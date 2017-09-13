@@ -1,3 +1,3 @@
-from .base import Aligner, get_aligners, register_aligner
+from .base import Aligner, AlignerCommand
 from .tophat import TophatAligner
 from .star import StarAligner
