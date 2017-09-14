@@ -24,7 +24,7 @@ def main():
     args = parse_args()
 
     # Use directory names to name samples if no names given.
-    ins_frames = [pd.read_csv(fp, sep='\t') for fp in args.insertions]
+    ins_frames = [pd.read_csv(str(fp), sep='\t') for fp in args.insertions]
 
     # Check for overlapping samples between sets.
     seen = set()
