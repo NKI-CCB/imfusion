@@ -169,7 +169,7 @@ def test_de_exon(
 
     # Define postive/negative sample groups (positive = with insertion).
     if pos_samples is None:
-        pos_samples = set(ins.metadata['sample'] for ins in insertion_objs)
+        pos_samples = set(ins.sample for ins in insertion_objs)
 
     if neg_samples is None:
         neg_samples = set(exon_counts.columns) - pos_samples
@@ -282,7 +282,7 @@ def split_counts(
 
         if idx < min_before or idx > max_after:
             # Add to invalid samples.
-            dropped |= {insertion.metadata['sample']}
+            dropped |= {insertion.sample}
         else:
             if idx > curr_max:
                 curr_max = idx
@@ -549,11 +549,10 @@ def test_de_exon_single(
 
     # Define postive/negative sample groups (positive = with the insertion,
     # negative = all samples without an insertion).
-    pos_sample = selected_ins.metadata['sample']
+    pos_sample = selected_ins.sample
 
     if neg_samples is None:
-        samples_with_ins = set(ins.metadata['sample']
-                               for ins in insertion_objs)
+        samples_with_ins = set(ins.sample for ins in insertion_objs)
         neg_samples = set(exon_counts.columns) - samples_with_ins
 
     if len(neg_samples) == 0:
@@ -680,7 +679,7 @@ def test_de_gene(
             pos_samples = set(insertions.loc[mask]['sample'])
         else:
             pos_samples = set([
-                ins.metadata['sample'] for ins in insertions
+                ins.sample for ins in insertions
                 if ins.metadata['gene_id'] == gene_id
             ])
 

@@ -161,8 +161,8 @@ def test_ctgs(
 
         # Annotate with frequency.
         frequency = (Insertion.to_frame(insertions)
-                     .groupby('gene_id')['sample'].nunique()
-                     .reset_index(name='n_samples'))
+                     .groupby('gene_id')['sample'].nunique().reset_index(
+                         name='n_samples'))
         result = pd.merge(result, frequency, on='gene_id', how='left')
     else:
         result['gene_name'] = np.nan
@@ -239,8 +239,7 @@ def _subset_to_windows(
 def _collapse_per_sample(insertions):
     # Type: (List[Insertion]) -> Generator
     def _keyfunc(insertion):
-        return (insertion.metadata['sample'],
-                str(insertion.metadata['gene_id']))
+        return (insertion.sample, str(insertion.metadata['gene_id']))
 
     grouped = itertools.groupby(sorted(insertions, key=_keyfunc), key=_keyfunc)
 
