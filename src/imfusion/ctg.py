@@ -23,7 +23,7 @@ from intervaltree import IntervalTree
 from scipy.stats import poisson
 
 from imfusion.build import Reference
-from imfusion.model import Insertion
+from imfusion.model import Insertion, InsertionSet
 from imfusion.util.genomic import GenomicIntervalTree
 from imfusion.util.tabix import GtfIterator
 
@@ -124,7 +124,7 @@ def test_ctgs(
     # Calculate p-values for each gene.
     logging.info('Calculating significance for genes')
     insertion_trees = GenomicIntervalTree.from_objects_position(
-        insertions, chrom_attr='seqname')
+        insertions, chrom_attr='chromosome')
 
     p_values = {
         gene_id: test_region(
@@ -160,9 +160,12 @@ def test_ctgs(
             result['gene_name'] = np.nan
 
         # Annotate with frequency.
-        frequency = (Insertion.to_frame(insertions)
-                     .groupby('gene_id')['sample'].nunique().reset_index(
-                         name='n_samples'))
+        ins_set = InsertionSet.from_tuples(insertions)
+
+        frequency = (ins_set.values
+                     .groupby('gene_id')
+                     ['sample'].nunique()
+                     .reset_index(name='n_samples')) # yapf: disable
         result = pd.merge(result, frequency, on='gene_id', how='left')
     else:
         result['gene_name'] = np.nan
@@ -226,7 +229,7 @@ def _subset_to_windows(
     # correspond to genes with known gene window.
     def _in_windows(ins, trees):
         try:
-            return trees[ins.seqname].overlaps(ins.position)
+            return trees[ins.chromosome].overlaps(ins.position)
         except KeyError:
             return False
 
@@ -275,7 +278,7 @@ def test_region(
     # Sub-select insertions for region.
     if insertion_trees is None:
         insertion_trees = GenomicIntervalTree.from_objects_position(
-            insertions, chrom_attr='seqname')
+            insertions, chrom_attr='chromosome')
 
     region_ins = set(interval[2]
                      for interval in insertion_trees.search(*region))

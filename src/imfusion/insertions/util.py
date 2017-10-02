@@ -15,15 +15,17 @@ from typing import Any, Callable, Iterable, Tuple
 import pathlib2 as pathlib
 
 from future.utils import native_str
+from genopandas import GenomicDataFrame
 import numpy as np
+import pandas as pd
 import pysam
 import toolz
 
 from intervaltree import IntervalTree
 
-from imfusion.model import MetadataFrameMixin, Insertion, Fusion
+from imfusion.model import Insertion, Fusion
 from imfusion.util import tabix
-from imfusion.util.frozendict import frozendict
+from imfusion.vendor.frozendict import frozendict
 
 
 def extract_insertions(
@@ -32,8 +34,7 @@ def extract_insertions(
         features_path,  # type: pathlib.Path
         chromosomes=None,  # type: List[str]
         assembled_gtf_path=None,  # type: pathlib.Path
-        ffpm_fastq_path=None,  # type: pathlib.Path
-        sample=None  # type: str
+        ffpm_fastq_path=None  # type: pathlib.Path
 ):  # type: (...) -> Iterable[Insertion]
     """Extract insertions from gene-transposon fusions."""
 
@@ -64,7 +65,7 @@ def extract_insertions(
 
     # Convert to insertions.
     insertions = Insertion.from_transposon_fusions(
-        annotated, id_fmt_str='INS_{}', sample=sample)
+        annotated, id_fmt_str='INS_{}')
 
     for insertion in insertions:
         yield insertion
@@ -122,26 +123,25 @@ def annotate_fusions_for_transposon(fusions, feature_path):
 
     """
 
-    def _lookup_tree(tree, region):
-        start, end = region
-        overlap = tree[start:end]
-        return [tup[2] for tup in overlap]
+    # Build transposon feature frame.
+    features = pd.read_csv(native_str(feature_path), sep='\t')
+    features['chromosome'] = 'transposon'
+    features = features.set_index(['chromosome', 'start', 'end'])
 
-    # Build the feature tree.
-    features = TransposonFeature.from_csv(feature_path, sep='\t')
-    tree = IntervalTree.from_tuples((feat.start, feat.end, feat)
-                                    for feat in features)
+    features = GenomicDataFrame(features)
 
+    # Lookup annotations.
     for fusion in fusions:
-        overlap = _lookup_tree(tree, fusion.transposon_region)
+        overlap = features.gloc.search('transposon', *fusion.transposon_region)
 
         if len(overlap) > 0:
-            for feature in overlap:
+            for feature in overlap.itertuples():
                 new_meta = {
                     'feature_name': feature.name,
                     'feature_type': feature.type,
                     'feature_strand': feature.strand
                 }
+
                 merged_meta = toolz.merge(fusion.metadata, new_meta)
                 yield fusion._replace(metadata=frozendict(merged_meta))
         else:
@@ -381,17 +381,6 @@ class Gene(_Gene):
             strand=first.strand,
             name=first.gene_name,
             id=first.gene_id)
-
-
-_TransposonFeature = namedtuple('TransposonFeature', [
-    'name', 'start', 'end', 'strand', 'type', 'metadata'
-])
-
-
-class TransposonFeature(_TransposonFeature, MetadataFrameMixin):
-    """Transposon feature model class."""
-
-    __slots__ = ()
 
 
 def filter_insertions(

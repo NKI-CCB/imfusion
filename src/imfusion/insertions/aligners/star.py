@@ -259,7 +259,8 @@ class StarAligner(Aligner):
         # Extract identified fusions and corresponding insertions.
         self._logger.info('Extracting gene-transposon fusions')
         junction_path = star_dir / 'Chimeric.out.junction'
-        fusions = list(self._extract_fusions(junction_path))
+        fusions = list(
+            self._extract_fusions(junction_path, sample_name=sample))
 
         self._logger.info('Summarizing insertions')
         insertions = list(
@@ -269,8 +270,7 @@ class StarAligner(Aligner):
                 features_path=self._reference.features_path,
                 assembled_gtf_path=assembled_path,
                 ffpm_fastq_path=fastq_path,
-                chromosomes=None,
-                sample=sample))
+                chromosomes=None))
 
         insertions = util.filter_insertions(
             insertions,
@@ -323,7 +323,7 @@ class StarAligner(Aligner):
             sort_bam(unsorted_bam_path, sorted_bam_path, threads=self._threads)
             unsorted_bam_path.unlink()
 
-    def _extract_fusions(self, fusion_path):
+    def _extract_fusions(self, fusion_path, sample_name):
         # Read chimeric junction data.
         chimeric_data = read_chimeric_junctions(fusion_path)
 
@@ -331,6 +331,7 @@ class StarAligner(Aligner):
         fusions = extract_transposon_fusions(
             chimeric_data,
             self._reference.transposon_name,
+            sample_name=sample_name,
             merge_junction_dist=self._merge_junction_dist,
             max_spanning_dist=self._max_spanning_dist,
             max_junction_dist=self._max_junction_dist)
@@ -519,7 +520,7 @@ def read_chimeric_junctions(chimeric_path):
     #
 
     names = [
-        'seqname_a', 'location_a', 'strand_a', 'seqname_b', 'location_b',
+        'chromosome_a', 'position_a', 'strand_a', 'chromosome_b', 'position_b',
         'strand_b', 'junction_type', 'repeat_length_left',
         'repeat_length_right', 'read_name', 'first_segment_base',
         'first_segment_cigar', 'second_segment_base', 'second_segment_cigar'
@@ -530,8 +531,8 @@ def read_chimeric_junctions(chimeric_path):
         sep='\t',
         header=None,
         names=names,
-        dtype={'seqname_a': 'str',
-               'seqname_b': 'str'})
+        dtype={'chromosome_a': 'str',
+               'chromosome_b': 'str'})
 
     for strand_col in ['strand_a', 'strand_b']:
         junctions[strand_col] = junctions[strand_col].map({'+': 1, '-': -1})
@@ -539,26 +540,26 @@ def read_chimeric_junctions(chimeric_path):
     return junctions
 
 
-def normalize_chimeric_junctions(chimeric_data, seqname=None):
-    """Normalizes chimeric junction data so that seqnames are ordered.
+def normalize_chimeric_junctions(chimeric_data, chromosome=None):
+    """Normalizes chimeric junction data so that chromosomes are ordered.
 
-    This function normalizes a chimeric junction DataFrame so that seqname_a
-    and seqname_b are lexically ordered (i.e., seqname_a < seqname_b).
-    Intra-chromosomal junctions (with seqname_a == seqname_b) are normalized
-    using their location, so that location_a < location_b.
+    This function normalizes a chimeric junction DataFrame so that chromosome_a
+    and seqname_b are lexically ordered (i.e., chromosome_a < chromosome_b).
+    Intra-chromosomal junctions (with chromosome_a == chromosome_b) are
+    normalized using their location, so that position_a < position_b.
 
     Alternatively, if the seqname argument is given, the junctions are
-    normalized so that seqname_a == seqname. Any junctions not including
+    normalized so that chromosome_a == chromosome. Any junctions not including
     the seqname chromosome are dropped.
 
     Parameters
     ----------
     chimeric_data : pd.DataFrame
         DataFrame of chimeric junctions to normalize.
-    seqname : str, optional
+    chromosome : str, optional
         Optional sequence name to normalize for. If given, junctions are
-        normalized so that seqname_a == seqname. Any junctions not including
-        the named sequence are dropped.
+        normalized so that chromosome_a == chromosome. Any junctions not
+        including the named sequence are dropped.
 
     Returns
     -------
@@ -567,24 +568,24 @@ def normalize_chimeric_junctions(chimeric_data, seqname=None):
 
     """
 
-    if seqname is None:
+    if chromosome is None:
         # Reads are 'normal' if seq_a < seq_b or, in the case that
         # seq_a == seq_b, if loc_a < loc_b.
-        same_seq = chimeric_data.seqname_a == chimeric_data.seqname_b
-        seq_ordered = (chimeric_data.seqname_a < chimeric_data.seqname_b)
-        loc_ordered = (chimeric_data.location_a < chimeric_data.location_b)
+        same_seq = chimeric_data.chromosome_a == chimeric_data.chromosome_b
+        seq_ordered = (chimeric_data.chromosome_a < chimeric_data.chromosome_b)
+        loc_ordered = (chimeric_data.position_a < chimeric_data.position_b)
 
         norm_mask = (seq_ordered | (same_seq & loc_ordered))
     else:
         # Subset to samples that have at least one end on seqname.
-        chimeric_data = chimeric_data.loc[(chimeric_data.seqname_a == seqname)
-                                          |
-                                          (chimeric_data.seqname_b == seqname)]
+        chimeric_data = chimeric_data.loc[
+            (chimeric_data.chromosome_a == chromosome)
+            | (chimeric_data.chromosome_b == chromosome)]
 
         # Chimeric reads are 'normal' if first side is on seqname and
         # and if locations are ordered in the case that seq_a == seq_b.
-        loc_ordered = (chimeric_data.location_a < chimeric_data.location_b)
-        norm_mask = (chimeric_data.seqname_a == seqname) & loc_ordered
+        loc_ordered = (chimeric_data.position_a < chimeric_data.position_b)
+        norm_mask = (chimeric_data.chromosome_a == chromosome) & loc_ordered
 
     normed = pd.concat(
         [
@@ -598,11 +599,11 @@ def normalize_chimeric_junctions(chimeric_data, seqname=None):
 
 def _reverse_chimeric(chimeric_data):
     return (chimeric_data.rename(columns={
-        'seqname_a': 'seqname_b',
-        'location_a': 'location_b',
+        'chromosome_a': 'chromosome_b',
+        'position_a': 'position_b',
         'strand_a': 'strand_b',
-        'seqname_b': 'seqname_a',
-        'location_b': 'location_a',
+        'chromosome_b': 'chromosome_a',
+        'position_b': 'position_a',
         'strand_b': 'strand_a',
         'flank_a': 'flank_b',
         'flank_b': 'flank_a'
@@ -613,6 +614,7 @@ def _reverse_chimeric(chimeric_data):
 
 def extract_transposon_fusions(chimeric_data,
                                transposon_name,
+                               sample_name,
                                merge_junction_dist=10,
                                max_spanning_dist=300,
                                max_junction_dist=10000):
@@ -620,16 +622,18 @@ def extract_transposon_fusions(chimeric_data,
 
     # Subset and normalize chimeric reads for transposon.
     chimeric_data = chimeric_data.loc[
-        (chimeric_data['seqname_a'] == transposon_name) ^
-        (chimeric_data['seqname_b'] == transposon_name)] # yapf: disable
+        (chimeric_data['chromosome_a'] == transposon_name) ^
+        (chimeric_data['chromosome_b'] == transposon_name)] # yapf: disable
 
     chimeric_data = normalize_chimeric_junctions(
-        chimeric_data, seqname=transposon_name)
+        chimeric_data, chromosome=transposon_name)
 
     # Extract junction fusions and merge close junctions.
     junctions = list(
         extract_junction_fusions(
-            chimeric_data, merge_dist=merge_junction_dist))
+            chimeric_data,
+            sample_name=sample_name,
+            merge_dist=merge_junction_dist))
 
     # Assign spanning reads to junctions.
     junctions, unassigned = assign_spanning_reads(
@@ -639,7 +643,8 @@ def extract_transposon_fusions(chimeric_data,
         max_dist_right=max_junction_dist)
 
     # Extract spanning fusions from unused reads.
-    spanning = extract_spanning_fusions(unassigned, max_dist=max_spanning_dist)
+    spanning = extract_spanning_fusions(
+        unassigned, sample_name=sample_name, max_dist=max_spanning_dist)
     fusions = itertools.chain.from_iterable([junctions, spanning])
 
     # Convert to transposon fusions.
@@ -647,7 +652,7 @@ def extract_transposon_fusions(chimeric_data,
         yield TransposonFusion.from_fusion(fusion, transposon_name)
 
 
-def extract_junction_fusions(chimeric_data, merge_dist=None):
+def extract_junction_fusions(chimeric_data, sample_name, merge_dist=None):
     """Extracts junction fusions from a STAR chimeric read dataframe."""
 
     # Ensure chimeric data only contains junction reads.
@@ -662,8 +667,8 @@ def extract_junction_fusions(chimeric_data, merge_dist=None):
 
         # Group by position and summarize.
         grouped = chimeric_data.groupby([
-            'seqname_a', 'location_a', 'strand_a', 'seqname_b', 'location_b',
-            'strand_b'
+            'chromosome_a', 'position_a', 'strand_a', 'chromosome_b',
+            'position_b', 'strand_b'
         ])
 
         summarized = (grouped.agg({
@@ -674,8 +679,9 @@ def extract_junction_fusions(chimeric_data, merge_dist=None):
             columns={'read_name': 'support_junction'}))
 
         # Transform to Fusions.
-        fusions = (Fusion(**toolz.keyfilter(lambda k: k not in {'Index'},
-                                            row._asdict()))
+        fusions = (Fusion(
+            sample=sample_name,
+            **toolz.keyfilter(lambda k: k not in {'Index'}, row._asdict()))
                    for row in summarized.itertuples())
 
         # Merge fusions within dist.
@@ -750,8 +756,8 @@ def assign_spanning_reads(junctions, chimeric_data, max_dist_left,
 
 def _build_lookup_trees(fusions, side='a'):
     # Define attr getters.
-    get_seq = operator.attrgetter('seqname_' + side)
-    get_loc = operator.attrgetter('location_' + side)
+    get_seq = operator.attrgetter('chromosome_' + side)
+    get_loc = operator.attrgetter('position_' + side)
     get_strand = operator.attrgetter('strand_' + side)
 
     # Setup keyfunc.
@@ -777,8 +783,8 @@ def _lookup_closest(fusion,
                     max_dist_right,
                     slack=5):
     def _dist(fusion, hit):
-        return (abs(fusion.location_a - hit.location_a) +
-                abs(fusion.location_b - hit.location_b))
+        return (abs(fusion.position_a - hit.position__a) +
+                abs(fusion.position_b - hit.position_b))
 
     # Identify candidate fusions.
     overlap_a = _lookup_tree(
@@ -797,8 +803,8 @@ def _lookup_closest(fusion,
 def _lookup_tree(fusion, trees, side, max_dist=300, slack=5):
 
     # Define attr getters.
-    get_seq = operator.attrgetter('seqname_' + side)
-    get_loc = operator.attrgetter('location_' + side)
+    get_seq = operator.attrgetter('chromosome_' + side)
+    get_loc = operator.attrgetter('position_' + side)
     get_strand = operator.attrgetter('strand_' + side)
 
     # Setup tree, query range.
@@ -823,7 +829,7 @@ def _lookup_tree(fusion, trees, side, max_dist=300, slack=5):
         return set()
 
 
-def extract_spanning_fusions(chimeric_data, max_dist):
+def extract_spanning_fusions(chimeric_data, sample_name, max_dist):
     """Extracts spanning fusions from a STAR chimeric read dataframe."""
 
     # Select spanning fusions.
@@ -837,31 +843,32 @@ def extract_spanning_fusions(chimeric_data, max_dist):
         agg_acc = min if first.strand_b == 1 else max
 
         yield Fusion(
-            seqname_a=first.seqname_a,
-            location_a=agg_donor(grp.location_a),
+            chromosome_a=first.chromosome_a,
+            position_a=agg_donor(grp.position_a),
             strand_a=first.strand_a,
-            seqname_b=first.seqname_b,
-            location_b=agg_acc(grp.location_b),
+            chromosome_b=first.chromosome_b,
+            position_b=agg_acc(grp.position_b),
             strand_b=first.strand_b,
             support_junction=0,
             support_spanning=len(grp),
             flank_a=0,
-            flank_b=0)
+            flank_b=0,
+            sample=sample_name)
 
 
 def _groupby_position(spanning_data, max_dist):
     """Groups reads within given distance at both locations."""
 
-    grp_cols = ['seqname_a', 'seqname_b', 'strand_a', 'strand_b']
+    grp_cols = ['chromosome_a', 'chromosome_b', 'strand_a', 'strand_b']
 
     for _, grp in spanning_data.groupby(grp_cols):
         if len(grp) == 1:
             yield grp
         else:
             clust_a = _cluster_positions(
-                grp, col='location_a', max_dist=max_dist)
+                grp, col='position_a', max_dist=max_dist)
             clust_b = _cluster_positions(
-                grp, col='location_b', max_dist=max_dist)
+                grp, col='position_b', max_dist=max_dist)
 
             for _, loc_grp in grp.groupby([clust_a, clust_b]):
                 yield loc_grp

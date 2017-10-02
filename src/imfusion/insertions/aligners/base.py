@@ -123,11 +123,14 @@ class AlignerCommand(Command):
             help='Path to output directory.')
 
         base_group.add_argument(
-            '--name', required=True, help='Name to use for given sample.')
+            '--sample_name',
+            required=True,
+            help='Name to use for given sample.')
 
         base_group.add_argument(
             '--threads',
-            required=True,
+            required=False,
+            default=1,
             type=int,
             help=('Number of threads to use. Only used if'
                   ' aligner supports multithreading.'))
@@ -143,7 +146,7 @@ class AlignerCommand(Command):
             fastq_path=args.fastq,
             output_dir=args.output_dir,
             fastq2_path=args.fastq2,
-            sample=args.name)
+            sample=args.sample_name)
 
         # Convert to dataframe.
         insertion_frame = Insertion.to_frame(insertions)

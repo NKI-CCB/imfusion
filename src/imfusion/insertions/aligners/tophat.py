@@ -18,7 +18,7 @@ from imfusion.external.tophat import tophat2_align
 from imfusion.external.util import parse_arguments
 from imfusion.model import TransposonFusion
 from imfusion.util import path, tabix
-from imfusion.util.frozendict import frozendict
+from imfusion.vendor.frozendict import frozendict
 
 from .base import Aligner, AlignerCommand
 from .. import util
@@ -137,7 +137,7 @@ class TophatAligner(Aligner):
         # Extract identified fusions.
         self._logger.info('Extracting gene-transposon fusions')
         fusion_path = output_dir / 'fusions.out'
-        fusions = self._extract_fusions(fusion_path)
+        fusions = self._extract_fusions(fusion_path, sample_name=sample)
 
         # Extract insertions.
         self._logger.info('Summarizing insertions')
@@ -148,8 +148,7 @@ class TophatAligner(Aligner):
                 features_path=self._reference.features_path,
                 assembled_gtf_path=assembled_path,
                 ffpm_fastq_path=fastq_path,
-                chromosomes=None,
-                sample=sample))
+                chromosomes=None))
 
         insertions = util.filter_insertions(
             insertions,
@@ -193,11 +192,13 @@ class TophatAligner(Aligner):
             src_path=tophat_dir / 'fusions.out',
             dest_path=output_dir / 'fusions.out')
 
-    def _extract_fusions(self, fusion_path):
+    def _extract_fusions(self, fusion_path, sample_name):
         fusion_data = read_fusion_out(fusion_path)
 
         fusions = extract_transposon_fusions(
-            fusion_data, transposon_name=self._reference.transposon_name)
+            fusion_data,
+            transposon_name=self._reference.transposon_name,
+            sample_name=sample_name)
 
         for fusion in fusions:
             yield fusion
@@ -286,7 +287,7 @@ def read_fusion_out(fusion_path):
 
     # Read fusions using pandas.
     names = [
-        'seqnames', 'location_a', 'location_b', 'orientation', 'supp_reads',
+        'chromosomes', 'position_a', 'position_b', 'orientation', 'supp_reads',
         'supp_mates', 'supp_spanning_mates', 'contradicting_reads', 'flank_a',
         'flank_b'
     ]
@@ -305,10 +306,10 @@ def read_fusion_out(fusion_path):
 
 
 def _split_fields(fusions):
-    """Splits combined seqnames/strand entries in tophat fusion frame."""
+    """Splits combined chromosomes/strand entries in tophat fusion frame."""
 
     columns = [
-        'seqname_a', 'location_a', 'strand_a', 'seqname_b', 'location_b',
+        'chromosome_a', 'position_a', 'strand_a', 'chromosome_b', 'position_b',
         'strand_b', 'supp_reads', 'supp_mates', 'supp_spanning_mates',
         'contradicting_reads', 'flank_a', 'flank_b'
     ]
@@ -318,8 +319,8 @@ def _split_fields(fusions):
         fusions = pd.DataFrame.from_records([], columns=columns)
     else:
         # Split combined entries.
-        fusions['seqname_a'], fusions['seqname_b'] = \
-            zip(*fusions['seqnames'].str.split('-'))
+        fusions['chromosome_a'], fusions['chromosome_b'] = \
+            zip(*fusions['chromosomes'].str.split('-'))
 
         fusions['strand_a'], fusions['strand_b'] = \
             zip(*fusions['orientation'].apply(list))
@@ -330,7 +331,7 @@ def _split_fields(fusions):
     return fusions
 
 
-def extract_transposon_fusions(fusion_data, transposon_name):
+def extract_transposon_fusions(fusion_data, transposon_name, sample_name):
     """
     Extracts gene-transposon fusions from a Tophat fusion.out file.
 
@@ -341,6 +342,8 @@ def extract_transposon_fusions(fusion_data, transposon_name):
     transposon_name : str
         Name of the transposon sequence in the augmented reference
         genome that was used for the alignment.
+    sample_name : str
+        Name of corresponding sample.
 
     Returns
     -------
@@ -352,42 +355,42 @@ def extract_transposon_fusions(fusion_data, transposon_name):
     is_paired = (any(fusion_data['supp_mates'] > 0)
                  or any(fusion_data['supp_spanning_mates'] > 0))
 
-    # Select fusions where one seqname is the transposon and the other isn't.
+    # Select fusions where one chromosome is the transposon and the other isn't.
     fusion_data = fusion_data.loc[(
-        (fusion_data['seqname_a'] == transposon_name) ^
-        (fusion_data['seqname_b'] == transposon_name))]
+        (fusion_data['chromosome_a'] == transposon_name) ^
+        (fusion_data['chromosome_b'] == transposon_name))]
 
     # Build frame with candidate insertions.
-    for _, fusion_row in fusion_data.iterrows():
-        yield _to_fusion_obj(fusion_row, transposon_name, is_paired)
+    for _, row in fusion_data.iterrows():
+        yield _to_tr_fusion(row, transposon_name, sample_name, is_paired)
 
 
-def _to_fusion_obj(fusion, transposon_name, is_paired):
-    if fusion.seqname_a == transposon_name:
+def _to_tr_fusion(row, transposon_name, sample_name, is_paired):
+    if row.chromosome_a == transposon_name:
         gen_id, tr_id = 'b', 'a'
         gen_dir, tr_dir = 1, -1
     else:
         gen_id, tr_id = 'a', 'b'
         gen_dir, tr_dir = -1, 1
 
-    strand_genome = fusion['strand_' + gen_id]
-    strand_transposon = fusion['strand_' + tr_id]
+    strand_genome = row['strand_' + gen_id]
+    strand_transposon = row['strand_' + tr_id]
 
     if is_paired:
-        support_junction = fusion.supp_spanning_mates
-        support_spanning = fusion.supp_mates
+        support_junction = row.supp_spanning_mates
+        support_spanning = row.supp_mates
     else:
-        support_junction = fusion.supp_reads
+        support_junction = row.supp_reads
         support_spanning = 0
 
     return TransposonFusion(
-        seqname=fusion['seqname_' + gen_id],
-        anchor_genome=fusion['location_' + gen_id],
-        anchor_transposon=fusion['location_' + tr_id],
-        flank_genome=fusion['flank_' + gen_id] * strand_genome * gen_dir,
-        flank_transposon=fusion['flank_' + tr_id] * strand_transposon * tr_dir,
+        chromosome=row['chromosome_' + gen_id],
+        anchor_genome=row['position_' + gen_id],
+        anchor_transposon=row['position_' + tr_id],
+        flank_genome=row['flank_' + gen_id] * strand_genome * gen_dir,
+        flank_transposon=row['flank_' + tr_id] * strand_transposon * tr_dir,
         strand_genome=strand_genome,
         strand_transposon=strand_transposon,
         support_junction=support_junction,
         support_spanning=support_spanning,
-        metadata=frozendict())
+        sample=sample_name)

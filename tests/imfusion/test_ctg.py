@@ -14,7 +14,6 @@ import pytest
 from imfusion import ctg
 from imfusion.build import Reference
 from imfusion.model import Insertion
-from imfusion.util.frozendict import frozendict
 
 Sequence = namedtuple('Sequence', ['seq'])
 Gene = namedtuple('Gene', ['contig', 'start', 'end', 'strand'])
@@ -24,22 +23,24 @@ Gene = namedtuple('Gene', ['contig', 'start', 'end', 'strand'])
 
 
 def _insertion(id,
-               seqname,
+               chromosome,
                position,
                strand,
                support_junction=1,
                support_spanning=1,
-               metadata=None):
+               sample='s1',
+               **kwargs):
     """Helper function for building an Insertion instance."""
     return Insertion(
         id=id,
-        seqname=seqname,
+        chromosome=chromosome,
         position=position,
         strand=strand,
+        sample=sample,
         support_junction=support_junction,
         support_spanning=support_spanning,
         support=support_junction + support_spanning,
-        metadata=frozendict(metadata or {}))
+        **kwargs)
 
 
 class TestMergeIntervals(object):
@@ -67,8 +68,8 @@ class TestMergeGenomicIntervals(object):
                      ('3', 25, 40), ('3', 35, 40)]
         merged = list(ctg.merge_genomic_intervals(intervals))
 
-        assert merged == [('1', 10, 20), ('1', 22, 32), ('2', 8, 15),
-                          ('3', 25, 40)]
+        assert merged == [('1', 10, 20), ('1', 22, 32), ('2', 8, 15), ('3', 25,
+                                                                       40)]
 
     def test_merge_genomic_intervals_empty(self):
         """Test empty interval case."""
@@ -129,10 +130,10 @@ def insertions():
     """Example insertion set."""
 
     return [
-        _insertion(id='1', seqname='1', position=9, strand=1,
-                   metadata=frozendict({'gene_id': 'gene_a', 'sample': 'S1'})),
-        _insertion(id='2', seqname='1', position=15, strand=-1,
-                   metadata=frozendict({'gene_id': 'gene_b', 'sample': 'S2'}))
+        _insertion(id='1', chromosome='1', position=9, strand=1, sample='S1',
+                   gene_id='gene_a'),
+        _insertion(id='2', chromosome='1', position=15, strand=-1, sample='S2',
+                   gene_id='gene_b')
     ] # yapf: disable
 
 
@@ -194,7 +195,7 @@ class TestSubsetToWindows(object):
         subset = ctg._subset_to_windows(insertions, windows)
 
         assert len(subset) == 1
-        assert subset[0].seqname == '1'
+        assert subset[0].chromosome == '1'
 
     def test_subset_insertions_no_overlap(self, insertions):
         """Test example with no insertions within windows."""
@@ -215,7 +216,7 @@ class TestSubsetToWindows(object):
         subset = ctg._subset_to_windows(insertions, windows)
 
         assert len(subset) == 1
-        assert subset[0].seqname == '1'
+        assert subset[0].chromosome == '1'
 
 
 class TestCollapsePerSample(object):
@@ -225,8 +226,7 @@ class TestCollapsePerSample(object):
         """Tests example with collapsing."""
 
         insertions[1] = insertions[1]._replace(
-            metadata={'gene_id': 'gene_a',
-                      'sample': 'S1'})
+            sample='S1', metadata={'gene_id': 'gene_a'})
         merged = list(ctg._collapse_per_sample(insertions))
 
         assert len(merged) == 1
@@ -243,18 +243,18 @@ class TestCollapsePerSample(object):
 def ctg_insertions():
     """Insertions for test_ctg test case."""
     return [
-        _insertion(id='1', seqname='1', position=9, strand=1,
-                   metadata={'gene_id': 'gene_a', 'sample': 'S1'}),
-        _insertion(id='2', seqname='1', position=9, strand=1,
-                   metadata={'gene_id': 'gene_a', 'sample': 'S1'}),
-        _insertion(id='3', seqname='1', position=8, strand=-1,
-                   metadata={'gene_id': 'gene_a', 'sample': 'S1'}),
-        _insertion(id='4', seqname='1', position=8, strand=-1,
-                   metadata={'gene_id': 'gene_b', 'sample': 'S2'}),
-        _insertion(id='5', seqname='2', position=12, strand=-1,
-                   metadata={'gene_id': 'gene_c', 'sample': 'S2'}),
-        _insertion(id='6', seqname='1', position=6, strand=-1,
-                   metadata={'gene_id': 'gene_a', 'sample': 'S3'})
+        _insertion(id='1', chromosome='1', position=9, strand=1,
+                   sample='S1', gene_id='gene_a'),
+        _insertion(id='2', chromosome='1', position=9, strand=1,
+                   sample='S1', gene_id='gene_a'),
+        _insertion(id='3', chromosome='1', position=8, strand=-1,
+                   sample='S1', gene_id='gene_a'),
+        _insertion(id='4', chromosome='1', position=8, strand=-1,
+                   sample='S2', gene_id='gene_b'),
+        _insertion(id='5', chromosome='2', position=12, strand=-1,
+                   sample='S2', gene_id='gene_c'),
+        _insertion(id='6', chromosome='1', position=6, strand=-1,
+                   sample='S3', gene_id='gene_a')
     ] # yapf: disable
 
 
@@ -262,8 +262,7 @@ def ctg_insertions():
 def ctg_reference():
     """Reference for test_ctg test case."""
     return Reference(
-        pytest.helpers.data_path(
-            'ctg_reference', relative_to=__file__))
+        pytest.helpers.data_path('ctg_reference', relative_to=__file__))
 
 
 class TestTestCtgs(object):

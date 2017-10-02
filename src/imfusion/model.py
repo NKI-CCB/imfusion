@@ -14,129 +14,163 @@ import numpy as np
 import pandas as pd
 import toolz
 
-from imfusion.util.frozendict import frozendict
+from imfusion.vendor.frozendict import frozendict
 
 
-class FrameMixin(object):
-    @classmethod
-    def _get_columns(cls):
-        return cls._fields
+class RecordSet(object):
+    """Base class that provides functionality for serializing and
+       deserializing namedtuple records into a DataFrame format.
 
-    @classmethod
-    def _to_record(cls, obj):
-        return obj._asdict()
+    Subclasses should override the ``_tuple_class`` method to
+    return the namedtuple class that should be used as a record.
+    """
 
-    @classmethod
-    def _to_obj(cls, record):
-        return cls(**record._asdict())
+    def __init__(self, values: pd.DataFrame) -> None:
+        self._values = self._check_frame(values)
 
     @classmethod
-    def read_csv(cls, file_path, **kwargs):
-        """Reads objects from a csv file into a pandas DataFrame."""
-        df = pd.read_csv(str(file_path), **kwargs)
-        return cls.format_frame(df)
+    def _check_frame(cls, values):
+        fields = cls._tuple_fields()
+
+        for field in fields:
+            if field not in values.columns:
+                raise ValueError('Missing required column {}'.format(field))
+
+        return values.reindex(columns=fields)
 
     @classmethod
-    def to_csv(cls, file_path, objects, index=False, **kwargs):
-        """Writes objects to a csv file."""
-        df = cls.to_frame(objects)
-        df.to_csv(str(file_path), index=index, **kwargs)
+    def _tuple_class(cls):
+        """Returns namedtuple class used to instantiate records."""
+        raise NotImplementedError()
+
+    @classmethod
+    def _tuple_fields(cls):
+        """Returns the fields in the named tuple class."""
+        return cls._tuple_class()._fields
+
+    @property
+    def values(self) -> pd.DataFrame:
+        """Internal DataFrame representation of records."""
+        return self._values
+
+    def __getitem__(self, item):
+        return self._values[item]
+
+    def __setitem__(self, idx, value):
+        self._values[idx] = value
+
+    def __len__(self):
+        return len(self._values)
+
+    @classmethod
+    def from_tuples(cls, tuples):
+        """Builds a record set instance from the given tuples."""
+        records = (tup._asdict() for tup in tuples)
+        return cls(pd.DataFrame.from_records(records))
+
+    def to_tuples(self):
+        """Converts the record set into an iterable of tuples."""
+
+        tuple_class = self._tuple_class()
+
+        for row in self._values.itertuples():
+            row_dict = row._asdict()
+            row_dict.pop('Index', None)
+
+            yield tuple_class(**row_dict)
 
     @classmethod
     def from_csv(cls, file_path, **kwargs):
-        """Reads objects from a csv file."""
+        """Reads a record set from a csv file using pandas.read_csv."""
+        values = pd.read_csv(file_path, **kwargs)
+        return cls(values)
 
-        df = cls.read_csv(file_path, **kwargs)
+    def to_csv(self, file_path, **kwargs):
+        """Writes the record set to a csv file using pandas' to_csv."""
+        self._values.to_csv(file_path, **kwargs)
 
-        for obj in cls.from_frame(df):
-            yield obj
+    def groupby(self, by, **kwargs):
+        """Groups the set by values of the specified columns."""
+        for key, group in self._values.groupby(by, **kwargs):
+            yield key, self.__class__(group)
 
-    @classmethod
-    def from_frame(cls, df):
-        """Converts dataframe into an interable of objects."""
-        for tup in df.itertuples():
-            yield cls._to_obj(tup)
-
-    @classmethod
-    def format_frame(cls, df):
-        """Formats dataframe into a cohorent format."""
-        return cls._reorder_columns(df, order=cls._get_columns())
-
-    @classmethod
-    def to_frame(cls, objects):
-        """Converts list of objects to a dataframe representation."""
-
-        # Check if insertions is empty.
-        is_empty, objects = cls._is_empty(objects)
-
-        if is_empty:
-            df = pd.DataFrame.from_records([], columns=cls._get_columns())
-        else:
-            rows = (cls._to_record(obj) for obj in objects)
-            df = pd.DataFrame.from_records(rows)
-            df = cls.format_frame(df)
-
-        return df
-
-    @staticmethod
-    def _is_empty(iterable):
-        try:
-            _, iterable = toolz.peek(iterable)
-            empty = False
-        except StopIteration:
-            empty = True
-
-        return empty, iterable
+    def query(self, expr, **kwargs):
+        """Queries the columns of the set with a boolean expression."""
+        return self.__class__(self._values.query(expr, **kwargs))
 
     @classmethod
-    def _reorder_columns(cls, df, order):
-        extra_cols = set(df.columns) - set(order)
-        col_order = list(order) + sorted(extra_cols)
-        return df[col_order]
+    def concat(cls, record_sets):
+        """Concatenates multiple records sets into a single set."""
+        return cls(pd.concat((rs.values for rs in record_sets), axis=0))
 
 
-class MetadataFrameMixin(FrameMixin):
-    """Mixin class adding namedtuple/frame conversion support."""
+class MetadataRecordSet(RecordSet):
+    """Base RecordSet that supports record metadata.
+
+    Extension of the RecordSet class, which assumes that records contain
+    a dict 'metadata' field which contains variable metadata. The
+    MetadataRecordSet class ensures that this data is expanded from the
+    original record when converted to the set's DataFrame format, and
+    converted back again when transforming back to tuples.
+    """
+
+    METADATA_FIELD = 'metadata'
+
+    @property
+    def metadata_columns(self):
+        """Available metadata columns."""
+        return set(self._values.columns) - set(self._tuple_fields())
 
     @classmethod
-    def _get_columns(cls):
-        fields = list(cls._fields)
-        del fields[fields.index('metadata')]
-        return fields
-
-    @classmethod
-    def _to_record(cls, obj):
-        obj_data = obj._asdict()
-        metadata = obj_data.pop('metadata')
-        return toolz.merge(metadata, obj_data)
-
-    @classmethod
-    def _to_obj(cls, record):
-        record_dict = record._asdict()
-
-        metadata_fields = [
-            k for k in record_dict.keys() if k not in set(cls._get_columns())
+    def _check_frame(cls, values):
+        fields = [
+            field for field in cls._tuple_fields()
+            if field != cls.METADATA_FIELD
         ]
-        metadata = {k: record_dict.pop(k) for k in metadata_fields}
 
-        metadata.pop('Index', None)
+        for field in fields:
+            if field not in values.columns:
+                raise ValueError('Missing required column {}'.format(field))
 
-        return cls(metadata=frozendict(metadata), **record_dict)
+        extra_cols = set(values.columns) - set(fields)
+        col_order = list(fields) + sorted(extra_cols)
 
-    def __getattr__(self, name):
-        if name in self.metadata:
-            return self.metadata[name]
-        else:
-            raise AttributeError
+        return values.reindex(columns=col_order)
+
+    @classmethod
+    def from_tuples(cls, tuples):
+        """Builds a record set instance from the given tuples."""
+
+        metadata_field = cls.METADATA_FIELD
+
+        def _to_record(tup):
+            record = tup._asdict()
+            record.update(record.pop(metadata_field))
+            return record
+
+        records = (_to_record(tup) for tup in tuples)
+        return cls(pd.DataFrame.from_records(records))
+
+    def to_tuples(self):
+        """Converts the record set into an iterable of tuples."""
+
+        tuple_class = self._tuple_class()
+
+        for row in self._values.itertuples():
+            row_dict = row._asdict()
+            row_dict.pop('Index', None)
+
+            yield tuple_class(**row_dict)
 
 
 _Fusion = collections.namedtuple('Fusion', [
-    'seqname_a', 'location_a', 'strand_a', 'seqname_b', 'location_b',
-    'strand_b', 'flank_a', 'flank_b', 'support_junction', 'support_spanning'
+    'chromosome_a', 'position_a', 'strand_a', 'chromosome_b', 'position_b',
+    'strand_b', 'flank_a', 'flank_b', 'support_junction', 'support_spanning',
+    'sample'
 ])
 
 
-class Fusion(FrameMixin, _Fusion):
+class Fusion(_Fusion):
     """Model Fusion class."""
 
     __slots__ = ()
@@ -146,32 +180,33 @@ class Fusion(FrameMixin, _Fusion):
         """Support score for the fusion."""
         return self.support_junction + self.support_spanning
 
-    def normalize(self, seqname=None):
-        """Normalizes fusions so that the side whose seqname has the
+    def normalize(self, chromosome=None):
+        """Normalizes fusions so that the side whose chromosome has the
            lowest lexical ordering is used as donor.
         """
 
-        if seqname is not None:
-            if self.seqname_a == seqname:
+        if chromosome is not None:
+            if self.chromosome_a == chromosome:
                 is_norm = True
             else:
-                if self.seqname_b != seqname:
-                    raise ValueError('Fusion does not include given seqname')
+                if self.chromosome_b != chromosome:
+                    raise ValueError(
+                        'Fusion does not include given chromosome')
                 is_norm = False
-        elif self.seqname_a != self.seqname_b:
-            is_norm = self.seqname_a < self.seqname_b
+        elif self.chromosome_a != self.chromosome_b:
+            is_norm = self.chromosome_a < self.chromosome_b
         else:
-            is_norm = self.location_a < self.location_b
+            is_norm = self.position_a < self.position_b
 
         if is_norm:
             return self
         else:
             return self._replace(
-                seqname_a=self.seqname_b,
-                location_a=self.location_b,
+                chromosome_a=self.chromosome_b,
+                position_a=self.position_b,
                 strand_a=self.strand_b * -1,
-                seqname_b=self.seqname_a,
-                location_b=self.location_a,
+                chromosome_b=self.chromosome_a,
+                position_b=self.position_a,
                 strand_b=self.strand_a * -1,
                 flank_a=self.flank_b,
                 flank_b=self.flank_a)
@@ -179,12 +214,12 @@ class Fusion(FrameMixin, _Fusion):
     def distance(self, other):
         """Determine distance to other fusion."""
 
-        if (self.seqname_a != other.seqname_a
-                or self.seqname_b != other.seqname_b):
+        if (self.chromosome_a != other.chromosome_a
+                or self.chromosome_b != other.chromosome_b):
             raise ValueError('Fusions are on different reference sequences')
 
-        return (abs(self.location_a - other.location_a) +
-                abs(self.location_b - other.location_b))
+        return (abs(self.position_a - other.position_a) +
+                abs(self.position_b - other.position_b))
 
     @classmethod
     def merge(cls, junctions, max_dist):
@@ -209,7 +244,7 @@ class Fusion(FrameMixin, _Fusion):
 
         # Group junctions by strand and sequence.
         def _keyfunc(fusion):
-            return (fusion.seqname_a, fusion.strand_a, fusion.seqname_b,
+            return (fusion.chromosome_a, fusion.strand_a, fusion.chromosome_b,
                     fusion.strand_b)
 
         sorted_juncs = sorted(junctions, key=_keyfunc)
@@ -222,7 +257,7 @@ class Fusion(FrameMixin, _Fusion):
 
     @staticmethod
     def _groupby_position(junctions, side, max_dist):
-        get_loc = operator.attrgetter('location_' + side)
+        get_loc = operator.attrgetter('position_' + side)
         sorted_juncs = sorted(junctions, key=get_loc)
 
         grp, prev_pos = [], np.nan
@@ -239,16 +274,38 @@ class Fusion(FrameMixin, _Fusion):
 
 
 _TransposonFusion = collections.namedtuple('TransposonFusion', [
-    'seqname', 'anchor_genome', 'anchor_transposon', 'strand_genome',
+    'chromosome', 'anchor_genome', 'anchor_transposon', 'strand_genome',
     'strand_transposon', 'flank_genome', 'flank_transposon',
-    'support_junction', 'support_spanning', 'metadata'
+    'support_junction', 'support_spanning', 'sample', 'metadata'
 ])
 
 
-class TransposonFusion(MetadataFrameMixin, _TransposonFusion):
+class TransposonFusion(_TransposonFusion):
     """Model class representing a gene-transposon fusion."""
 
     __slots__ = ()
+
+    def __new__(cls, chromosome, anchor_genome, anchor_transposon,
+                strand_genome, strand_transposon, flank_genome,
+                flank_transposon, support_junction, support_spanning, sample,
+                **kwargs):
+
+        return super().__new__(
+            cls,
+            chromosome=chromosome,
+            anchor_genome=int(anchor_genome),
+            anchor_transposon=int(anchor_transposon),
+            strand_genome=int(strand_genome),
+            strand_transposon=int(strand_transposon),
+            flank_genome=int(flank_genome),
+            flank_transposon=int(flank_transposon),
+            support_junction=int(support_junction),
+            support_spanning=int(support_spanning),
+            sample=sample,
+            metadata=frozendict(kwargs))
+
+    def __getattr__(self, name):
+        return self.metadata[name]
 
     @property
     def support(self):
@@ -264,7 +321,7 @@ class TransposonFusion(MetadataFrameMixin, _TransposonFusion):
         else:
             start = self.anchor_genome + self.flank_genome
             end = self.anchor_genome
-        return self.seqname, start, end
+        return self.chromosome, start, end
 
     @property
     def transposon_region(self):
@@ -281,13 +338,13 @@ class TransposonFusion(MetadataFrameMixin, _TransposonFusion):
     def from_fusion(cls, fusion, transposon_name, metadata=None):
         """Converts the fusion to a transposon fusion object."""
 
-        if (fusion.seqname_a == transposon_name
-                and fusion.seqname_b == transposon_name):
+        if (fusion.chromosome_a == transposon_name
+                and fusion.chromosome_b == transposon_name):
             raise ValueError('Fusion does not involve genomic sequence')
-        elif (fusion.seqname_a != transposon_name
-              and fusion.seqname_b != transposon_name):
+        elif (fusion.chromosome_a != transposon_name
+              and fusion.chromosome_b != transposon_name):
             raise ValueError('Fusion does not involve transposon')
-        elif fusion.seqname_a == transposon_name:
+        elif fusion.chromosome_a == transposon_name:
             tr_key, gen_key = 'a', 'b'
             tr_flank = fusion.flank_a * -fusion.strand_a
             gen_flank = fusion.flank_b * fusion.strand_b
@@ -296,39 +353,49 @@ class TransposonFusion(MetadataFrameMixin, _TransposonFusion):
             tr_flank = fusion.flank_b * fusion.strand_b
             gen_flank = fusion.flank_a * -fusion.strand_a
 
-        return TransposonFusion(
-            seqname=getattr(fusion, 'seqname_' + gen_key),
-            anchor_genome=getattr(fusion, 'location_' + gen_key),
-            anchor_transposon=getattr(fusion, 'location_' + tr_key),
+        return cls(
+            chromosome=getattr(fusion, 'chromosome_' + gen_key),
+            anchor_genome=getattr(fusion, 'position_' + gen_key),
+            anchor_transposon=getattr(fusion, 'position_' + tr_key),
             strand_genome=getattr(fusion, 'strand_' + gen_key),
             strand_transposon=getattr(fusion, 'strand_' + tr_key),
             flank_genome=gen_flank,
             flank_transposon=tr_flank,
             support_junction=fusion.support_junction,
             support_spanning=fusion.support_spanning,
-            metadata=frozendict(metadata or {}))
+            sample=fusion.sample,
+            **(metadata or {}))
 
 
 _Insertion = collections.namedtuple('Insertion', [
-    'id', 'seqname', 'position', 'strand', 'support_junction',
-    'support_spanning', 'support', 'sample', 'metadata'
+    'id', 'chromosome', 'position', 'strand', 'support', 'sample', 'metadata'
 ])
 
 
-class Insertion(MetadataFrameMixin, _Insertion):
+class Insertion(_Insertion):
     """Model class representing an insertion."""
 
     __slots__ = ()
 
-    @classmethod
-    def from_transposon_fusion(cls,
-                               fusion,
-                               id_=None,
-                               sample=None,
-                               drop_metadata=None):
-        """Converts (annotated) transposon fusion to an insertion.
+    def __new__(cls, id, chromosome, position, strand, support, sample,
+                **kwargs):
 
-        Requires
+        return super().__new__(
+            cls,
+            id=id,
+            chromosome=chromosome,
+            position=int(position),
+            strand=int(strand),
+            support=int(support),
+            sample=sample,
+            metadata=frozendict(kwargs))
+
+    def __getattr__(self, name):
+        return self.metadata[name]
+
+    @classmethod
+    def from_transposon_fusion(cls, fusion, id=None, drop_metadata=None):
+        """Converts (annotated) transposon fusion to an insertion.
 
         Parameters
         ----------
@@ -360,41 +427,48 @@ class Insertion(MetadataFrameMixin, _Insertion):
 
         ins_metadata = toolz.keyfilter(lambda k: k not in drop_metadata,
                                        fusion.metadata)
+
         ins_metadata['transposon_anchor'] = fusion.anchor_transposon
+        ins_metadata['support_junction'] = fusion.support_junction
+        ins_metadata['support_spanning'] = fusion.support_spanning
 
         if orientation is not None:
             ins_metadata['orientation'] = orientation
 
         return Insertion(
-            id=id_,
-            seqname=fusion.seqname,
+            id=id,
+            chromosome=fusion.chromosome,
             position=fusion.anchor_genome,
             strand=strand,
-            support_junction=fusion.support_junction,
-            support_spanning=fusion.support_spanning,
             support=fusion.support,
-            sample=sample,
-            metadata=frozendict(ins_metadata))
+            sample=fusion.sample,
+            **ins_metadata)
 
     @classmethod
     def from_transposon_fusions(cls,
                                 fusions,
                                 id_fmt_str=None,
-                                sample=None,
                                 drop_metadata=None):
         """Converts annotated transposon fusions to insertions."""
-
-        if sample is not None:
-            id_fmt_str = sample + '.' + id_fmt_str
 
         if id_fmt_str is not None:
             for i, fusion in enumerate(fusions):
                 yield cls.from_transposon_fusion(
                     fusion,
-                    id_=id_fmt_str.format(i + 1),
-                    sample=sample,
+                    id=id_fmt_str.format(i + 1, sample=fusion.sample),
                     drop_metadata=drop_metadata)
         else:
             for fusion in fusions:
                 yield cls.from_transposon_fusion(
-                    fusion, sample=sample, drop_metadata=drop_metadata)
+                    fusion, drop_metadata=drop_metadata)
+
+
+class InsertionSet(MetadataRecordSet):
+    """Class that represents an insertion dataset."""
+
+    def __init__(self, values):
+        super().__init__(values)
+
+    @classmethod
+    def _tuple_class(cls):
+        return Insertion

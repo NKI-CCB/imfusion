@@ -13,7 +13,7 @@ import toolz
 
 from imfusion.insertions import util
 from imfusion.model import TransposonFusion, Insertion
-from imfusion.util.frozendict import frozendict
+from imfusion.vendor.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name
 
@@ -22,16 +22,16 @@ from imfusion.util.frozendict import frozendict
 def fusion():
     """Example fusion."""
     return TransposonFusion(
-        seqname='16',
+        chromosome='16',
         anchor_genome=52141095,
         anchor_transposon=1541,
         strand_genome=-1,
         strand_transposon=1,
         flank_genome=-78,
         flank_transposon=-76,
+        sample='S1',
         support_junction=380,
-        support_spanning=118,
-        metadata=frozendict({}))
+        support_spanning=118)
 
 
 @pytest.fixture
@@ -53,12 +53,13 @@ class TestExtractInsertions(object):
         assert isinstance(insertions[0].metadata, frozendict)
 
         assert insertions[0].id == 'INS_1'
-        assert insertions[0].seqname == '16'
+        assert insertions[0].chromosome == '16'
         assert insertions[0].position == 52141095
         assert insertions[0].strand == -1
         assert insertions[0].support_junction == 380
         assert insertions[0].support_spanning == 118
         assert insertions[0].support == 498
+        assert insertions[0].sample == 'S1'
         assert insertions[0].metadata['feature_type'] == 'SA'
         assert insertions[0].metadata['feature_name'] == 'En2SA'
         assert insertions[0].metadata['gene_strand'] == 1
@@ -84,7 +85,7 @@ class TestExtractInsertions(object):
         assert len(insertions) == 1
 
         assert insertions[0].id == 'INS_1'
-        assert insertions[0].seqname == 'X'
+        assert insertions[0].chromosome == 'X'
         assert insertions[0].position == 143093898
         assert insertions[0].strand == 1
         assert insertions[0].support_junction == 10
@@ -162,21 +163,20 @@ class TestAnnotateGenes(object):
 def insertion():
     return Insertion(
         id='INS_1',
-        seqname='16',
+        chromosome='16',
         position=52141095,
         strand=-1,
         support_junction=380,
         support_spanning=118,
         support=498,
-        metadata=frozendict({
-            'feature_type': 'SA',
-            'feature_name': 'En2SA',
-            'gene_strand': 1,
-            'orientation': 'antisense',
-            'feature_strand': -1,
-            'gene_name': 'Cblb',
-            'transposon_anchor': 1541
-        }))
+        sample='S1',
+        feature_type='SA',
+        feature_name='En2SA',
+        gene_strand=1,
+        orientation='antisense',
+        feature_strand=-1,
+        gene_name='Cblb',
+        transposon_anchor=1541)
 
 
 class TestFilterUnexpectedFeatures(object):
@@ -237,8 +237,7 @@ class TestFilterWrongOrientation(object):
             insertion.metadata, {'feature_strand': np.nan}))
 
         filt_ins = list(
-            util.filter_wrong_orientation(
-                [insertion], drop_na=False))
+            util.filter_wrong_orientation([insertion], drop_na=False))
 
         assert len(filt_ins) == 1
 
@@ -249,8 +248,7 @@ class TestFilterWrongOrientation(object):
             insertion.metadata, {'feature_strand': np.nan}))
 
         filt_ins = list(
-            util.filter_wrong_orientation(
-                [insertion], drop_na=True))
+            util.filter_wrong_orientation([insertion], drop_na=True))
 
         assert len(filt_ins) == 0
 
@@ -310,16 +308,16 @@ class TestFilterInsertions(object):
 @pytest.fixture
 def rgag1_fusion():
     return TransposonFusion(
-        seqname='X',
+        chromosome='X',
         anchor_genome=143093898,
         anchor_transposon=1541,
         strand_genome=1,
         strand_transposon=1,
         flank_genome=-78,
         flank_transposon=-76,
+        sample='S1',
         support_junction=10,
-        support_spanning=0,
-        metadata=frozendict({}))
+        support_spanning=0)
 
 
 @pytest.fixture

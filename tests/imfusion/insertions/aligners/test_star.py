@@ -18,7 +18,7 @@ import pandas as pd
 
 from imfusion.insertions.aligners import star
 from imfusion.model import Fusion, TransposonFusion, Insertion
-from imfusion.util.frozendict import frozendict
+from imfusion.vendor.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name
 
@@ -45,11 +45,11 @@ class TestReadChimericJunctions(object):
 
         # Check first row.
         first = df.iloc[0]
-        assert first.seqname_a == 'T2onc'
-        assert first.location_a == 1541
+        assert first.chromosome_a == 'T2onc'
+        assert first.position_a == 1541
         assert first.strand_a == 1
-        assert first.seqname_b == '16'
-        assert first.location_b == 52141095
+        assert first.chromosome_b == '16'
+        assert first.position_b == 52141095
         assert first.strand_b == -1
         assert first.junction_type == 2
         assert first.repeat_length_left == 2
@@ -65,19 +65,26 @@ class TestReadChimericJunctions(object):
 def chimeric_data():
     """Example containing spanning + junction reads from single fusion."""
     return _build_chimeric_data(
-        [('1', 300, 1, 'T2onc', 420, 1, 2, '100M2208p38M62S', '62M38S', 'R1'),
-         ('1', 300, 1, 'T2onc', 420, 1, 1, '100M2208p52M48S', '48M52S', 'R2'),
-         ('1', 301, 1, 'T2onc', 420, 1, 1, '100M2208p52M48S', '48M52S', 'R3'),
-         ('1', 300, 1, 'T2onc', 421, 1, 1, '100M2208p52M48S', '48M52S', 'R4'),
-         ('1', 280, 1, 'T2onc', 435, 1, -1, '100M', '97M3S', 'S1'),
-         ('1', 270, 1, 'T2onc', 445, 1, -1, '100M', '98M2S', 'S2'),
-         ('1', 275, 1, 'T2onc', 435, 1, -1, '100M', '98M2S', 'S3')])
+        [('1', 300, 1, 'T2onc', 420, 1, 2,
+          '100M2208p38M62S', '62M38S', 'R1'),
+         ('1', 300, 1, 'T2onc', 420, 1, 1,
+          '100M2208p52M48S', '48M52S', 'R2'),
+         ('1', 301, 1, 'T2onc', 420, 1, 1,
+          '100M2208p52M48S', '48M52S', 'R3'),
+         ('1', 300, 1, 'T2onc', 421, 1, 1,
+          '100M2208p52M48S', '48M52S', 'R4'),
+         ('1', 280, 1, 'T2onc', 435, 1, -1,
+          '100M', '97M3S', 'S1'),
+         ('1', 270, 1, 'T2onc', 445, 1, -1,
+          '100M', '98M2S', 'S2'),
+         ('1', 275, 1, 'T2onc', 435, 1, -1,
+          '100M', '98M2S', 'S3')])  # yapf: disable
 
 
 def _build_chimeric_data(rows):
     """Helper function to build a fusion dataframe from list of row data."""
-    columns = ['seqname_a', 'location_a', 'strand_a',
-               'seqname_b', 'location_b', 'strand_b',
+    columns = ['chromosome_a', 'position_a', 'strand_a',
+               'chromosome_b', 'position_b', 'strand_b',
                'junction_type', 'first_segment_cigar',
                'second_segment_cigar', 'read_name'] # yapf: disable
     return pd.DataFrame.from_records(rows, columns=columns)
@@ -89,11 +96,13 @@ class TestExtractTransposonFusions(object):
     def test_example(self, chimeric_data):
         """Test simple example."""
 
-        fusions = list(star.extract_transposon_fusions(chimeric_data, 'T2onc'))
+        fusions = list(
+            star.extract_transposon_fusions(
+                chimeric_data, 'T2onc', sample_name='S1'))
 
         assert fusions == [
             TransposonFusion(
-                seqname='1',
+                chromosome='1',
                 anchor_genome=300,
                 anchor_transposon=420,
                 strand_genome=-1,
@@ -102,7 +111,7 @@ class TestExtractTransposonFusions(object):
                 flank_transposon=100,
                 support_junction=4,
                 support_spanning=3,
-                metadata=frozendict({}))
+                sample='S1')
         ]
 
     def test_example_file(self, chimeric_junctions_path):
@@ -110,14 +119,16 @@ class TestExtractTransposonFusions(object):
 
         # Extract fusions.
         chimeric_data = star.read_chimeric_junctions(chimeric_junctions_path)
-        fusions = set(star.extract_transposon_fusions(chimeric_data, 'T2onc'))
+        fusions = set(
+            star.extract_transposon_fusions(
+                chimeric_data, 'T2onc', sample_name='S1'))
 
         # Check number of fusions.
         assert len(fusions) == 7
 
         # Check key example.
         expected = TransposonFusion(
-            seqname='16',
+            chromosome='16',
             anchor_genome=52141095,
             anchor_transposon=1541,
             strand_genome=-1,
@@ -126,7 +137,7 @@ class TestExtractTransposonFusions(object):
             flank_transposon=-76,
             support_junction=380,
             support_spanning=118,
-            metadata=frozendict({}))
+            sample='S1')
         assert expected in fusions
 
 
@@ -138,20 +149,21 @@ class TestExtractJunctionFusions(object):
 
         fusions = list(
             star.extract_junction_fusions(
-                chimeric_data, merge_dist=10))
+                chimeric_data, sample_name='S1', merge_dist=10))
 
         assert fusions == [
             Fusion(
-                seqname_a='1',
-                location_a=300,
+                chromosome_a='1',
+                position_a=300,
                 strand_a=1,
-                seqname_b='T2onc',
-                location_b=420,
+                chromosome_b='T2onc',
+                position_b=420,
                 strand_b=1,
                 flank_a=52,
                 flank_b=62,
                 support_junction=4,
-                support_spanning=0)
+                support_spanning=0,
+                sample='S1')
         ]
 
 
@@ -163,20 +175,21 @@ class TestExtractSpanningFusions(object):
 
         fusions = list(
             star.extract_spanning_fusions(
-                chimeric_data, max_dist=300))
+                chimeric_data, sample_name='S1', max_dist=300))
 
         assert fusions == [
             Fusion(
-                seqname_a='1',
-                location_a=280,
+                chromosome_a='1',
+                position_a=280,
                 strand_a=1,
-                seqname_b='T2onc',
-                location_b=435,
+                chromosome_b='T2onc',
+                position_b=435,
                 strand_b=1,
                 flank_a=0,
                 flank_b=0,
                 support_junction=0,
-                support_spanning=3)
+                support_spanning=3,
+                sample='S1')
         ]
 
 
@@ -209,15 +222,6 @@ def star_output_dir(tmpdir, chimeric_junctions_path):
     pytest.helpers.touch(star_dir / 'Aligned.sortedByCoord.out.bam')
 
     return output_dir
-
-
-@pytest.fixture
-def cmdline_args(tmpdir):
-    """Example command line arguments."""
-    return [
-        '--fastq', 'a.fastq.gz', '--fastq2', 'b.fastq.gz', '--reference',
-        native_str(tmpdir), '--output_dir', '/path/to/out'
-    ]
 
 
 class TestStarAligner(object):
@@ -277,7 +281,7 @@ class TestStarAligner(object):
         assert len(ins) == 5
 
         assert ins[2].id == 'INS_3'
-        assert ins[2].seqname == '16'
+        assert ins[2].chromosome == '16'
         assert ins[2].position == 52141095
         assert ins[2].strand == -1
         assert ins[2].support_junction == 380
@@ -294,21 +298,36 @@ class TestStarAligner(object):
         assert ins[2].metadata['ffpm_spanning'] == 59.0
         assert ins[2].metadata['ffpm'] == 249.0
 
+
+@pytest.fixture
+def cmdline_args(tmpdir):
+    """Example command line arguments."""
+    return [
+        '--fastq', 'a.fastq.gz', '--fastq2', 'b.fastq.gz', '--reference',
+        native_str(tmpdir), '--output_dir', '/path/to/out', '--sample_name',
+        'S1'
+    ]
+
+
+class TestStarCommand(object):
     def test_from_args_basic(self, cmdline_args):
         """Tests creation with minimal arguments."""
 
+        command = star.StarCommand()
+
         # Setup parser.
         parser = argparse.ArgumentParser()
-        star.StarAligner.configure_args(parser)
+        command.configure(parser)
 
         # Construct aligner.
         args = parser.parse_args(cmdline_args)
-        aligner = star.StarAligner.from_args(args)
+        aligner = command._build_aligner(args)
 
         # Check args.
         assert args.fastq == Path('a.fastq.gz')
         assert args.fastq2 == Path('b.fastq.gz')
         assert args.output_dir == Path('/path/to/out')
+        assert args.sample_name == 'S1'
 
         # Check aligner.
         assert not aligner._assemble
@@ -328,7 +347,7 @@ class TestStarAligner(object):
         """Tests creation with extra options."""
 
         cmdline_args += [
-            '--star_threads', '5', '--star_min_flank', '20',
+            '--threads', '5', '--star_min_flank', '20',
             '--star_external_sort', '--star_args', "--limitBAMsortRAM 2000",
             '--merge_junction_dist', '20', '--max_spanning_dist', '600',
             '--max_junction_dist', '50000', '--assemble',
@@ -336,18 +355,21 @@ class TestStarAligner(object):
             '--blacklisted_genes', 'En2'
         ] # yapf:disable
 
+        command = star.StarCommand()
+
         # Setup parser.
         parser = argparse.ArgumentParser()
-        star.StarAligner.configure_args(parser)
+        command.configure(parser)
 
         # Construct aligner.
         args = parser.parse_args(cmdline_args)
-        aligner = star.StarAligner.from_args(args)
+        aligner = command._build_aligner(args)
 
         # Check args.
         assert args.fastq == Path('a.fastq.gz')
         assert args.fastq2 == Path('b.fastq.gz')
         assert args.output_dir == Path('/path/to/out')
+        assert args.sample_name == 'S1'
 
         # Check aligner.
         assert aligner._assemble

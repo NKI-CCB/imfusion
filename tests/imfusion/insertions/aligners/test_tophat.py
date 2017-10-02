@@ -16,7 +16,7 @@ import pytest
 
 from imfusion.insertions.aligners import tophat
 from imfusion.model import Insertion
-from imfusion.util.frozendict import frozendict
+from imfusion.vendor.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name
 
@@ -57,15 +57,6 @@ def tophat_output_dir(tmpdir, tophat_path):
     pytest.helpers.touch(tophat_dir / 'Aligned.sortedByCoord.out.bam')
 
     return output_dir
-
-
-@pytest.fixture
-def cmdline_args(tmpdir):
-    """Example command line arguments."""
-    return [
-        '--fastq', 'a.fastq.gz', '--fastq2', 'b.fastq.gz', '--reference',
-        native_str(tmpdir), '--output_dir', '/path/to/out'
-    ]
 
 
 class TestTophatAligner(object):
@@ -122,7 +113,7 @@ class TestTophatAligner(object):
         assert len(ins) == 7
 
         assert ins[2].id == 'INS_4'
-        assert ins[2].seqname == '16'
+        assert ins[2].chromosome == '16'
         assert ins[2].position == 52141093
         assert ins[2].strand == -1
         assert ins[2].support_junction == 462
@@ -139,21 +130,38 @@ class TestTophatAligner(object):
         assert ins[2].metadata['ffpm_spanning'] == 51.5
         assert ins[2].metadata['ffpm'] == 282.5
 
+
+@pytest.fixture
+def cmdline_args(tmpdir):
+    """Example command line arguments."""
+    return [
+        '--fastq', 'a.fastq.gz', '--fastq2', 'b.fastq.gz', '--reference',
+        native_str(tmpdir), '--output_dir', '/path/to/out', '--sample_name',
+        'S1'
+    ]
+
+
+class TestTophatCommand(object):
+    """Tests for TophatCommand class."""
+
     def test_from_args_basic(self, cmdline_args):
         """Tests creation with minimal arguments."""
 
+        command = tophat.TophatCommand()
+
         # Setup parser.
         parser = argparse.ArgumentParser()
-        tophat.TophatAligner.configure_args(parser)
+        command.configure(parser)
 
         # Construct aligner.
         args = parser.parse_args(cmdline_args)
-        aligner = tophat.TophatAligner.from_args(args)
+        aligner = command._build_aligner(args)
 
         # Check args.
         assert args.fastq == Path('a.fastq.gz')
         assert args.fastq2 == Path('b.fastq.gz')
         assert args.output_dir == Path('/path/to/out')
+        assert args.sample_name == 'S1'
 
         # Check aligner.
         # pylint: disable=w0212
@@ -170,24 +178,27 @@ class TestTophatAligner(object):
         """Tests creation with extra options."""
 
         cmdline_args += [
-            '--tophat_threads', '5', '--tophat_min_flank', '20',
+            '--threads', '5', '--tophat_min_flank', '20',
             '--tophat_args', "--limitBAMsortRAM 2000", '--assemble',
             '--no_filter_orientation', '--no_filter_feature',
             '--blacklisted_genes', 'En2'
         ] # yapf:disable
 
+        command = tophat.TophatCommand()
+
         # Setup parser.
         parser = argparse.ArgumentParser()
-        tophat.TophatAligner.configure_args(parser)
+        command.configure(parser)
 
         # Construct aligner.
         args = parser.parse_args(cmdline_args)
-        aligner = tophat.TophatAligner.from_args(args)
+        aligner = command._build_aligner(args)
 
         # Check args.
         assert args.fastq == Path('a.fastq.gz')
         assert args.fastq2 == Path('b.fastq.gz')
         assert args.output_dir == Path('/path/to/out')
+        assert args.sample_name == 'S1'
 
         # Check aligner.
         # pylint: disable=w0212

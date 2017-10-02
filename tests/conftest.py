@@ -6,6 +6,8 @@ pytest_plugins = ['helpers_namespace']
 
 import pytest
 
+# Helpers
+
 BASE_DIR = Path(__file__).parent
 
 
@@ -54,3 +56,6 @@ def touch(path):
     path = str(path)
     with open(path, 'a'):
         os.utime(path, None)
+
+
+# Fixtures

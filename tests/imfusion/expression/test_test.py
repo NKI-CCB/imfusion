@@ -12,8 +12,6 @@ from imfusion.expression.counts import read_exon_counts
 from imfusion.expression import test
 from imfusion.model import Insertion
 
-from imfusion.util.frozendict import frozendict
-
 # pylint: disable=no-self-use,redefined-outer-name
 
 
@@ -24,28 +22,26 @@ def insertions():
         # After third exon.
         Insertion(
             id='1',
-            seqname='1',
+            chromosome='1',
             position=3207327,
             strand=1,
             support_junction=1,
             support_spanning=1,
             support=2,
-            metadata=frozendict({
-                'gene_id': 'ENSMUSG00000051951',
-                'sample': 'S1'})),
+            gene_id='ENSMUSG00000051951',
+            sample='S1'),
 
         # After first exon.
         Insertion(
             id='2',
-            seqname='1',
+            chromosome='1',
             position=3214491,
             strand=-1,
             support_junction=1,
             support_spanning=1,
             support=2,
-            metadata=frozendict({
-                'gene_id': 'ENSMUSG00000051951',
-                'sample': 'S2'}))
+            gene_id='ENSMUSG00000051951',
+            sample='S2')
     ] # yapf: disable
 
 
