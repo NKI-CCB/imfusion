@@ -26,7 +26,7 @@ class RecordSet(object):
     return the namedtuple class that should be used as a record.
     """
 
-    def __init__(self, values: pd.DataFrame) -> None:
+    def __init__(self, values):
         self._values = self._check_frame(values)
 
     @classmethod
@@ -52,7 +52,7 @@ class RecordSet(object):
         return cls._tuple_class()._fields
 
     @property
-    def values(self) -> pd.DataFrame:
+    def values(self):
         """Internal DataFrame representation of records."""
         return self._values
 
