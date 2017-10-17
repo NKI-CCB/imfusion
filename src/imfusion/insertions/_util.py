@@ -135,7 +135,7 @@ def annotate_fusions_for_transposon(fusions, feature_path):
     for fusion in fusions:
         overlap = features.gloc.search('transposon', *fusion.transposon_region)
 
-        if len(overlap) > 0:
+        if overlap.shape[0] > 0:
             for feature in overlap.itertuples():
                 new_meta = {
                     'feature_name': feature.name,

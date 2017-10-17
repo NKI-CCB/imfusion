@@ -142,20 +142,18 @@ class AlignerCommand(Command):
         aligner = self._build_aligner(args)
         aligner.check_dependencies()
 
-        insertions = aligner.identify_insertions(
+        # Identify insertions.
+        insertion_set = aligner.identify_insertions(
             fastq_path=args.fastq,
             output_dir=args.output_dir,
             fastq2_path=args.fastq2,
             sample=args.sample_name)
-
-        # Convert to dataframe.
-        insertion_frame = Insertion.to_frame(insertions)
-        insertion_frame = insertion_frame.sort_values(
-            'support', ascending=False)
+        insertion_set = insertion_set.sort_values(
+            by='support', ascending=False)
 
         # Write output.
         ins_path = args.output_dir / 'insertions.txt'
-        insertion_frame.to_csv(str(ins_path), sep='\t', index=False)
+        insertion_set.to_csv(ins_path, sep='\t', index=False)
 
     def _build_aligner(self, args):
         raise NotImplementedError()

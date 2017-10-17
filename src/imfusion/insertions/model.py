@@ -7,6 +7,7 @@ from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
 import collections
+import gzip
 import itertools
 import operator
 import warnings
@@ -16,188 +17,11 @@ import numpy as np
 import pandas as pd
 import toolz
 
+from imfusion.util.pandas_ import MetadataRecordSet
 from imfusion.vendor.frozendict import frozendict
+from imfusion.vendor.genopandas import GenomicDataFrame
 
-
-class RecordSet(object):
-    """Base class that provides functionality for serializing and
-       deserializing namedtuple records into a DataFrame format.
-
-    Subclasses should override the ``_tuple_class`` method to
-    return the namedtuple class that should be used as a record.
-    """
-
-    def __init__(self, values):
-        self._values = self._check_frame(values)
-
-    @classmethod
-    def _check_frame(cls, values):
-        if len(values) > 0:
-            fields = cls._tuple_fields()
-
-            for field in fields:
-                if field not in values.columns:
-                    raise ValueError(
-                        'Missing required column {}'.format(field))
-
-        return values.reindex(columns=fields)
-
-    @classmethod
-    def _tuple_class(cls):
-        """Returns namedtuple class used to instantiate records."""
-        raise NotImplementedError()
-
-    @classmethod
-    def _tuple_fields(cls):
-        """Returns the fields in the named tuple class."""
-        return cls._tuple_class()._fields
-
-    @property
-    def values(self):
-        """Internal DataFrame representation of records."""
-        return self._values
-
-    def __getitem__(self, item):
-        return self._values[item]
-
-    def __setitem__(self, idx, value):
-        self._values[idx] = value
-
-    def __len__(self):
-        return len(self._values)
-
-    @property
-    def loc(self):
-        """Label-based indexer (similar to pandas .loc)."""
-        return LocWrapper(self._values.loc, constructor=self._loc_constructor)
-
-    @property
-    def iloc(self):
-        """Label-based indexer (similar to pandas .loc)."""
-        return LocWrapper(self._values.iloc, constructor=self._loc_constructor)
-
-    def _loc_constructor(self, values):
-        if len(values.shape) != 2:
-            return values
-        return self.__class__(values)
-
-    @classmethod
-    def from_tuples(cls, tuples):
-        """Builds a record set instance from the given tuples."""
-        records = (tup._asdict() for tup in tuples)
-        return cls(pd.DataFrame.from_records(records))
-
-    def to_tuples(self):
-        """Converts the record set into an iterable of tuples."""
-
-        tuple_class = self._tuple_class()
-
-        for row in self._values.itertuples():
-            row_dict = row._asdict()
-            row_dict.pop('Index', None)
-
-            yield tuple_class(**row_dict)
-
-    @classmethod
-    def from_csv(cls, file_path, **kwargs):
-        """Reads a record set from a csv file using pandas.read_csv."""
-        values = pd.read_csv(native_str(file_path), **kwargs)
-        return cls(values)
-
-    def to_csv(self, file_path, **kwargs):
-        """Writes the record set to a csv file using pandas' to_csv."""
-        self._values.to_csv(native_str(file_path), **kwargs)
-
-    def groupby(self, by, **kwargs):
-        """Groups the set by values of the specified columns."""
-        for key, group in self._values.groupby(by, **kwargs):
-            yield key, self.__class__(group)
-
-    def query(self, expr, **kwargs):
-        """Queries the columns of the set with a boolean expression."""
-        return self.__class__(self._values.query(expr, **kwargs))
-
-    @classmethod
-    def concat(cls, record_sets):
-        """Concatenates multiple records sets into a single set."""
-        return cls(pd.concat((rs.values for rs in record_sets), axis=0))
-
-
-class LocWrapper(object):
-    """Wrapper class that wraps an objects loc/iloc accessor."""
-
-    def __init__(self, loc, constructor=None):
-        if constructor is None:
-            constructor = lambda x: x
-
-        self._loc = loc
-        self._constructor = constructor
-
-    def __getitem__(self, item):
-        result = self._loc[item]
-        return self._constructor(result)
-
-
-class MetadataRecordSet(RecordSet):
-    """Base RecordSet that supports record metadata.
-
-    Extension of the RecordSet class, which assumes that records contain
-    a dict 'metadata' field which contains variable metadata. The
-    MetadataRecordSet class ensures that this data is expanded from the
-    original record when converted to the set's DataFrame format, and
-    converted back again when transforming back to tuples.
-    """
-
-    METADATA_FIELD = 'metadata'
-
-    @property
-    def metadata_columns(self):
-        """Available metadata columns."""
-        return set(self._values.columns) - set(self._tuple_fields())
-
-    @classmethod
-    def _check_frame(cls, values):
-        fields = [
-            field for field in cls._tuple_fields()
-            if field != cls.METADATA_FIELD
-        ]
-
-        if len(values) > 0:
-            for field in fields:
-                if field not in values.columns:
-                    raise ValueError(
-                        'Missing required column {}'.format(field))
-
-        extra_cols = set(values.columns) - set(fields)
-        col_order = list(fields) + sorted(extra_cols)
-
-        return values.reindex(columns=col_order)
-
-    @classmethod
-    def from_tuples(cls, tuples):
-        """Builds a record set instance from the given tuples."""
-
-        metadata_field = cls.METADATA_FIELD
-
-        def _to_record(tup):
-            record = tup._asdict()
-            record.update(record.pop(metadata_field))
-            return record
-
-        records = (_to_record(tup) for tup in tuples)
-        return cls(pd.DataFrame.from_records(records))
-
-    def to_tuples(self):
-        """Converts the record set into an iterable of tuples."""
-
-        tuple_class = self._tuple_class()
-
-        for row in self._values.itertuples():
-            row_dict = row._asdict()
-            row_dict.pop('Index', None)
-
-            yield tuple_class(**row_dict)
-
+from .reference import TranscriptReference
 
 _Fusion = collections.namedtuple('Fusion', [
     'chromosome_a', 'position_a', 'strand_a', 'chromosome_b', 'position_b',
@@ -402,6 +226,183 @@ class TransposonFusion(_TransposonFusion):
             sample=fusion.sample,
             **(metadata or {}))
 
+    @staticmethod
+    def annotate_for_genes(fusions, reference):
+        # type: (Iterable[Fusion], TranscriptReference) -> Iterable[Fusion]
+        """Annotates fusions with genes overlapped by the genomic fusion site.
+
+        Parameters
+        ----------
+        fusions : iterable[TransposonFusion]
+            Fusions to annotate.
+        gtf_path : pathlib.Path
+            Path to (indexed) gtf file, containing gene exon features.
+
+        Yields
+        ------
+        Fusion
+            Fusions, annotated with overlapped genes.
+
+        """
+
+        for fusion in fusions:
+            genes = reference.overlap_genes(fusion.genome_region)
+
+            if len(genes) > 0:
+                for gene in genes:
+                    gene_meta = {
+                        'gene_name': gene.name,
+                        'gene_strand': gene.strand,
+                        'gene_id': gene.id
+                    }
+                    merged_meta = toolz.merge(fusion.metadata, gene_meta)
+                    yield fusion._replace(metadata=frozendict(merged_meta))
+            else:
+                yield fusion
+
+    @staticmethod
+    def annotate_for_transposon(fusions, feature_path):
+        # type: (Iterable[Fusion], pathlib.Path) -> Iterable[Fusion]
+        """Annotates fusions with transposon features overlapped by the fusion.
+
+        Parameters
+        ----------
+        fusions : iterable[TransposonFusion]
+            Fusions to annotate.
+        feature_path : str or pathlib.Path
+            Path to TSV file containing transposon features.
+
+        Yields
+        ------
+        Fusion
+            Fusions, annotated with transposon features.
+
+        """
+
+        # Build transposon feature frame.
+        features = pd.read_csv(native_str(feature_path), sep='\t')
+        features['chromosome'] = 'transposon'
+        features = features.set_index(['chromosome', 'start', 'end'])
+
+        features = GenomicDataFrame(features)
+
+        # Lookup annotations.
+        for fusion in fusions:
+            overlap = features.gloc.search('transposon',
+                                           *fusion.transposon_region)
+
+            if overlap.shape[0] > 0:
+                for feature in overlap.itertuples():
+                    new_meta = {
+                        'feature_name': feature.name,
+                        'feature_type': feature.type,
+                        'feature_strand': feature.strand
+                    }
+
+                    merged_meta = toolz.merge(fusion.metadata, new_meta)
+                    yield fusion._replace(metadata=frozendict(merged_meta))
+            else:
+                yield fusion
+
+    @staticmethod
+    def annotate_for_assembly(fusions,
+                              reference,
+                              assembly,
+                              skip_annotated=True):
+        """Annotates fusions using the assembled GTF."""
+
+        def _exon_region(exon):
+            return (exon.chromosome, exon.start, exon.end)
+
+        for fusion in fusions:
+            if skip_annotated and 'gene_id' in fusion.metadata:
+                # Already annotated
+                yield fusion
+            else:
+                # Identify overlapped transcripts.
+                transcripts = assembly.overlap_transcripts(
+                    fusion.genome_region)
+
+                if len(transcripts) > 0:
+                    for transcript in transcripts:
+                        # Lookup genes that overlap with exons.
+                        exons = assembly.get_exons(transcript.id)
+
+                        genes = set(
+                            itertools.chain.from_iterable(
+                                reference.overlap_genes(_exon_region(exon))
+                                for exon in exons))
+
+                        if len(genes) > 0:
+                            for gene in genes:
+                                # Yield with information from overlapping genes.
+                                new_meta = {
+                                    'gene_name': gene.name,
+                                    'gene_strand': gene.strand,
+                                    'gene_id': gene.id,
+                                    'novel_transcript': transcript.id
+                                }
+                                yield fusion._replace(metadata=toolz.merge(
+                                    fusion.metadata, new_meta))
+                        else:
+                            # No gene overlap, yield with transcript info.
+                            new_meta = {
+                                'gene_name': transcript.id,
+                                'gene_id': transcript.id,
+                                'gene_strand': transcript.strand,
+                                'novel_transcript': transcript.id
+                            }
+                            yield fusion._replace(metadata=toolz.merge(
+                                fusion.metadata, new_meta))
+                else:
+                    # No overlap.
+                    yield fusion
+
+    @staticmethod
+    def annotate_ffpm(fusions, fastq_path):
+        # type: (Iterable[Fusion], pathlib.Path) -> Iterable[Fusion]
+        """Annotates fusions with FFPM (Fusion Fragments Per Million) score."""
+
+        # Calculate normalization factor.
+        n_reads = count_lines(fastq_path) // 4
+        norm_factor = (1.0 / n_reads) * 1e6
+
+        for fusion in fusions:
+            ffpm_meta = {
+                'ffpm_junction': fusion.support_junction * norm_factor,
+                'ffpm_spanning': fusion.support_spanning * norm_factor,
+                'ffpm': fusion.support * norm_factor
+            }
+            merged_meta = toolz.merge(fusion.metadata, ffpm_meta)
+            yield fusion._replace(metadata=frozendict(merged_meta))
+
+
+def count_lines(file_path):
+    # type: (pathlib.Path) -> int
+    """Counts number of lines in (gzipped) file."""
+
+    def _count_lines_obj(file_obj):
+        """Counts number of lines in given file object."""
+
+        lines = 0
+        buf_size = 1024 * 1024
+        read_f = file_obj.read  # loop optimization
+
+        buf = read_f(buf_size)
+        while buf:
+            lines += buf.count(b'\n')
+            buf = read_f(buf_size)
+
+        return lines
+
+    if file_path.suffixes[-1] == '.gz':
+        with gzip.open(str(file_path)) as file_obj:
+            count = _count_lines_obj(file_obj)
+    else:
+        with file_path.open() as file_obj:
+            count = _count_lines_obj(file_obj)
+    return count
+
 
 _Insertion = collections.namedtuple('Insertion', [
     'id', 'chromosome', 'position', 'strand', 'support', 'sample', 'metadata'
@@ -481,22 +482,69 @@ class Insertion(_Insertion):
             **ins_metadata)
 
     @classmethod
-    def from_transposon_fusions(cls,
-                                fusions,
-                                id_fmt_str=None,
-                                drop_metadata=None):
+    def from_annotated_transposon_fusions(cls,
+                                          fusions,
+                                          id_fmt_str=None,
+                                          drop_metadata=None):
         """Converts annotated transposon fusions to insertions."""
 
         if id_fmt_str is not None:
             for i, fusion in enumerate(fusions):
                 yield cls.from_transposon_fusion(
                     fusion,
-                    id=id_fmt_str.format(i + 1, sample=fusion.sample),
+                    id=id_fmt_str.format(num=i + 1, sample=fusion.sample),
                     drop_metadata=drop_metadata)
         else:
             for fusion in fusions:
                 yield cls.from_transposon_fusion(
                     fusion, drop_metadata=drop_metadata)
+
+    @classmethod
+    def from_transposon_fusions(
+            cls,
+            fusions,  # type: Iterable[TransposonFusion]
+            gtf_path,  # type: pathlib.Path
+            features_path,  # type: pathlib.Path
+            chromosomes=None,  # type: List[str]
+            assembled_gtf_path=None,  # type: pathlib.Path
+            ffpm_fastq_path=None,  # type: pathlib.Path,
+            id_fmt_str='{sample}.INS_{num}'  # type: str
+    ):  # type: (...) -> Iterable[Insertion]
+        """Extract insertions from gene-transposon fusions."""
+
+        # Annotate for genes.
+        gtf_reference = TranscriptReference.from_gtf(
+            gtf_path, chromosomes=chromosomes)
+
+        annotated = TransposonFusion.annotate_for_genes(fusions, gtf_reference)
+
+        # Annotate for assembly (if given).
+        if assembled_gtf_path is not None:
+            assembled_reference = TranscriptReference.from_gtf(
+                assembled_gtf_path, chromosomes=chromosomes)
+
+            annotated = TransposonFusion.annotate_for_assembly(
+                annotated, gtf_reference, assembled_reference)
+
+        # Annotate for transposon.
+        annotated = TransposonFusion.annotate_for_transposon(
+            annotated, features_path)
+
+        # Drop any fusions without a transposon feature.
+        annotated = (fusion for fusion in annotated
+                     if 'feature_name' in fusion.metadata)
+
+        # Calculate FFPM scores.
+        if ffpm_fastq_path is not None:
+            annotated = TransposonFusion.annotate_ffpm(
+                annotated, fastq_path=ffpm_fastq_path)
+
+        # Convert to insertions.
+        insertions = cls.from_annotated_transposon_fusions(
+            annotated, id_fmt_str=id_fmt_str)
+
+        for insertion in insertions:
+            yield insertion
 
 
 class InsertionSet(MetadataRecordSet):

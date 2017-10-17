@@ -31,7 +31,7 @@ from imfusion.insertions import Fusion, TransposonFusion
 from imfusion.util import tabix, path
 
 from .base import Aligner, AlignerCommand
-from .. import util
+from ..model import Insertion, InsertionSet
 
 CIGAR_MATCH_REGEX = re.compile(r'(\d+)M')
 
@@ -263,20 +263,22 @@ class StarAligner(Aligner):
             self._extract_fusions(junction_path, sample_name=sample))
 
         self._logger.info('Summarizing insertions')
-        insertions = list(
-            util.extract_insertions(
-                fusions,
-                gtf_path=self._reference.indexed_gtf_path,
-                features_path=self._reference.features_path,
-                assembled_gtf_path=assembled_path,
-                ffpm_fastq_path=fastq_path,
-                chromosomes=None))
 
-        insertions = util.filter_insertions(
-            insertions,
-            features=self._filter_features,
-            orientation=self._filter_orientation,
-            blacklist=self._filter_blacklist)
+        insertion_tuples = Insertion.from_transposon_fusions(
+            fusions,
+            gtf_path=self._reference.indexed_gtf_path,
+            features_path=self._reference.features_path,
+            assembled_gtf_path=assembled_path,
+            ffpm_fastq_path=fastq_path,
+            chromosomes=None)
+
+        insertions = InsertionSet.from_tuples(insertion_tuples)
+
+        # insertions = util.filter_insertions(
+        #     insertions,
+        #     features=self._filter_features,
+        #     orientation=self._filter_orientation,
+        #     blacklist=self._filter_blacklist)
 
         # Identify endogenous fusions with STAR if requested.
         if self._star_fusion_ref_path is not None:
@@ -292,8 +294,7 @@ class StarAligner(Aligner):
                 'star-fusion.fusion_candidates.final.abridged',
                 dest_path=output_dir / 'gene_fusions.txt')
 
-        for insertion in insertions:
-            yield insertion
+        return insertions
 
     def _align(self, fastq_path, output_dir, fastq2_path=None):
         # Gather default arguments.

@@ -21,7 +21,6 @@ from imfusion.util import path, tabix
 from imfusion.vendor.frozendict import frozendict
 
 from .base import Aligner, AlignerCommand
-from .. import util
 
 
 class TophatAligner(Aligner):
