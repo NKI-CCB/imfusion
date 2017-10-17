@@ -11,7 +11,7 @@ import logging
 import pathlib2 as pathlib
 
 from imfusion.main import Command
-from imfusion.model import Insertion
+from imfusion.insertions import Insertion
 from imfusion.external.util import check_dependencies
 
 

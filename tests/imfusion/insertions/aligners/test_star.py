@@ -17,7 +17,7 @@ from future.utils import native_str
 import pandas as pd
 
 from imfusion.insertions.aligners import star
-from imfusion.model import Fusion, TransposonFusion, Insertion
+from imfusion.insertions import Fusion, TransposonFusion, Insertion
 from imfusion.vendor.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name

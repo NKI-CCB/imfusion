@@ -18,7 +18,7 @@ from imfusion.build import Reference
 from imfusion.ctg import test_ctgs
 from imfusion.expression.counts import read_exon_counts
 from imfusion.expression.test import test_de
-from imfusion.model import Insertion
+from imfusion.insertions import Insertion
 
 FORMAT = "[%(asctime)-15s] %(message)s"
 logging.basicConfig(

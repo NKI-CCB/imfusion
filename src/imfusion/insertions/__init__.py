@@ -2,3 +2,4 @@
 # from .convert import convert_to_insertions
 # from .filter import (filter_blacklist, filter_invalid_insertions,
 #                      filter_unexpected_sites, filter_wrong_orientation)
+from .model import Insertion, InsertionSet, Fusion, TransposonFusion

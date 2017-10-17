@@ -25,20 +25,13 @@ def feature_counts(
         Keys should correspond to argument names (including dashes),
         values should be tuples containing the argument values.
 
-    Returns
-    -------
-    pandas.Dataframe
-        DataFrame containing feature counts for the given bam files. The rows
-        correspond to the counted features, the columns correspond to the
-        index values (chomosome, position etc.) and the bam files.
-
     """
 
     extra_kws = extra_kws or {}
 
     # Run feature counts.
-    args = (['featureCounts'] + flatten_arguments(extra_kws) +
-            ['-a', str(gtf_path), '-o', str(output_path)] +
-            [str(bf) for bf in bam_files])
+    args = (['featureCounts'] + flatten_arguments(extra_kws) + [
+        '-a', str(gtf_path), '-o', str(output_path)
+    ] + [str(bf) for bf in bam_files])
 
     run_command(args=args, log_path=log_path)

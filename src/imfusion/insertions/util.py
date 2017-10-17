@@ -23,9 +23,10 @@ import toolz
 
 from intervaltree import IntervalTree
 
-from imfusion.model import Insertion, Fusion
 from imfusion.util import tabix
 from imfusion.vendor.frozendict import frozendict
+
+from .model import Insertion, Fusion
 
 
 def extract_insertions(
@@ -257,9 +258,8 @@ class TranscriptReference(object):
             grouped = itertools.groupby(exons, key=keyfunc)
 
             for tr_id, grp in grouped:
-                exon_trees[tr_id] = IntervalTree.from_tuples((exon.start,
-                                                              exon.end, exon)
-                                                             for exon in grp)
+                exon_trees[tr_id] = IntervalTree.from_tuples(
+                    (exon.start, exon.end, exon) for exon in grp) # yapf: disable
 
         return cls(transcript_trees, exon_trees)
 

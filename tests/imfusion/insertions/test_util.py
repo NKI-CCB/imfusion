@@ -11,8 +11,7 @@ import pytest
 import numpy as np
 import toolz
 
-from imfusion.insertions import util
-from imfusion.model import TransposonFusion, Insertion
+from imfusion.insertions import TransposonFusion, Insertion, util
 from imfusion.vendor.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name

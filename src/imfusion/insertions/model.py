@@ -10,6 +10,7 @@ import collections
 import itertools
 import operator
 
+from future.utils import native_str
 import numpy as np
 import pandas as pd
 import toolz
@@ -30,11 +31,13 @@ class RecordSet(object):
 
     @classmethod
     def _check_frame(cls, values):
-        fields = cls._tuple_fields()
+        if len(values) > 0:
+            fields = cls._tuple_fields()
 
-        for field in fields:
-            if field not in values.columns:
-                raise ValueError('Missing required column {}'.format(field))
+            for field in fields:
+                if field not in values.columns:
+                    raise ValueError(
+                        'Missing required column {}'.format(field))
 
         return values.reindex(columns=fields)
 
@@ -62,6 +65,21 @@ class RecordSet(object):
     def __len__(self):
         return len(self._values)
 
+    @property
+    def loc(self):
+        """Label-based indexer (similar to pandas .loc)."""
+        return LocWrapper(self._values.loc, constructor=self._loc_constructor)
+
+    @property
+    def iloc(self):
+        """Label-based indexer (similar to pandas .loc)."""
+        return LocWrapper(self._values.iloc, constructor=self._loc_constructor)
+
+    def _loc_constructor(self, values):
+        if len(values.shape) != 2:
+            return values
+        return self.__class__(values)
+
     @classmethod
     def from_tuples(cls, tuples):
         """Builds a record set instance from the given tuples."""
@@ -82,7 +100,7 @@ class RecordSet(object):
     @classmethod
     def from_csv(cls, file_path, **kwargs):
         """Reads a record set from a csv file using pandas.read_csv."""
-        values = pd.read_csv(file_path, **kwargs)
+        values = pd.read_csv(native_str(file_path), **kwargs)
         return cls(values)
 
     def to_csv(self, file_path, **kwargs):
@@ -102,6 +120,21 @@ class RecordSet(object):
     def concat(cls, record_sets):
         """Concatenates multiple records sets into a single set."""
         return cls(pd.concat((rs.values for rs in record_sets), axis=0))
+
+
+class LocWrapper(object):
+    """Wrapper class that wraps an objects loc/iloc accessor."""
+
+    def __init__(self, loc, constructor=None):
+        if constructor is None:
+            constructor = lambda x: x
+
+        self._loc = loc
+        self._constructor = constructor
+
+    def __getitem__(self, item):
+        result = self._loc[item]
+        return self._constructor(result)
 
 
 class MetadataRecordSet(RecordSet):
@@ -128,9 +161,11 @@ class MetadataRecordSet(RecordSet):
             if field != cls.METADATA_FIELD
         ]
 
-        for field in fields:
-            if field not in values.columns:
-                raise ValueError('Missing required column {}'.format(field))
+        if len(values) > 0:
+            for field in fields:
+                if field not in values.columns:
+                    raise ValueError(
+                        'Missing required column {}'.format(field))
 
         extra_cols = set(values.columns) - set(fields)
         col_order = list(fields) + sorted(extra_cols)
@@ -466,9 +501,23 @@ class Insertion(_Insertion):
 class InsertionSet(MetadataRecordSet):
     """Class that represents an insertion dataset."""
 
-    def __init__(self, values):
-        super().__init__(values)
+    @property
+    def samples(self):
+        return set(self._values['sample'])
 
     @classmethod
     def _tuple_class(cls):
         return Insertion
+
+    @classmethod
+    def concat(cls, insertion_sets, check_overlap=True):
+        """Concatenates multiple records sets into a single set."""
+
+        seen = set()
+        if check_overlap:
+            for ins_set in insertion_sets:
+                if len(ins_set) > 0 and (seen & ins_set.samples):
+                    raise ValueError('Duplicate samples in insertion sets')
+                seen |= ins_set.samples
+
+        return super().concat(insertion_sets)

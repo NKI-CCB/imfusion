@@ -27,7 +27,7 @@ from imfusion.external.star_fusion import star_fusion
 from imfusion.external.stringtie import stringtie_assemble
 from imfusion.external.compound import sort_bam
 from imfusion.external.util import which, parse_arguments
-from imfusion.model import Fusion, TransposonFusion
+from imfusion.insertions import Fusion, TransposonFusion
 from imfusion.util import tabix, path
 
 from .base import Aligner, AlignerCommand

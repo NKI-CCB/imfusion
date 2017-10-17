@@ -1,4 +1,4 @@
-id	seqname	position	strand	support	feature_name	feature_strand	feature_type	gene_id	gene_name	gene_strand	orientation	sample	transcript_id	transcript_novel	support_junction	support_spanning
+id	chromosome	position	strand	support	feature_name	feature_strand	feature_type	gene_id	gene_name	gene_strand	orientation	sample	transcript_id	transcript_novel	support_junction	support_spanning
 1566_15_11KOU029-R5.INS_2	11	79458907	1	1	SA	1	SA	ENSMUSG00000020716	Nf1	1.0	sense	1566_15_11KOU029-R5			1
 1566_15_11KOU029-R5.INS_3	11	79475884	1	1	SA	1	SA	ENSMUSG00000020716	Nf1	1.0	sense	1566_15_11KOU029-R5			1
 1566_17_11KOU031-R5.INS_1	1	182448400	1	4	SD	1	SD	ENSMUSG00000026510	Trp53bp2	1.0	sense	1566_17_11KOU031-R5			4

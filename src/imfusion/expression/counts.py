@@ -17,6 +17,7 @@ import subprocess
 import tempfile
 from typing import Any, Iterable
 
+from future.utils import native, native_str
 import pathlib2 as pathlib
 
 import numpy as np
@@ -29,180 +30,212 @@ from imfusion.external.feature_counts import feature_counts
 # pylint: disable=E1101
 
 
-def generate_exon_counts(
-        bam_files,  # type: Iterable[pathlib.Path]
-        gtf_path,  # type: pathlib.Path
-        names=None,  # type: List[str]
-        extra_kws=None,  # type: Dict[str, Iterable[Any]]
-        tmp_dir=None,  # type: pathlib.Path
-        keep_tmp=False,  # type: bool
-):  # type: (...) -> pd.DataFrame
-    """Generates exon counts for given bam files using featureCounts.
+class _ExpressionMatrix(object):
+    """Matrix containing expression values."""
 
-    This function is used to generate a m-by-n matrix (m = number of samples,
-    n = number of exons) of exon expression counts. This matrix is generated
-    using featureCounts, whose results are then parsed and returned.
+    def __init__(self, values):
+        self._values = values
 
-    Parameters
-    ----------
-    bam_files : list[pathlib.Path]
-        List of paths to the bam files for which counts should be generated.
-    gtf_path : pathlib.Path
-        Path to the GTF file containing gene features.
-    names : dict[str, str]
-        Alternative names to use for the given bam
-        files. Keys of the dict should correspond to bam file paths, values
-        should reflect the sample names that should be used in the
-        resulting count matrix.
-    extra_kws : dict[str, tuple]:
-        Dictionary of extra arguments that should be passed to feature counts.
-        Keys should correspond to argument names (including dashes),
-        values should be tuples containing the argument values.
-    tmp_dir : pathlib.Path
-        Temp directory to use for generating counts.
-    keep_tmp : bool
-        Whether to keep the temp directory (default = False).
-    **kwargs
-        Any kwargs are passed to `feature_counts`.
+    @property
+    def values(self):
+        """Matrix values."""
+        return self._values
 
-    Returns
-    -------
-    pandas.DataFrame
-        DataFrame containing counts. The index of the DataFrame contains
-        gene ids corresponding to exons in the gff file, the columns
-        correspond to samples/bam files. Column names are either the bam
-        file paths, or the alternative sample names if given.
+    @classmethod
+    def concat(cls, matrices, axis=1, verify_integrity=True):
+        """Concatenate expression matrices."""
 
-    """
+        merged = pd.concat(
+            (mat.values for mat in matrices),
+            axis=axis,
+            verify_integrity=verify_integrity)
 
-    # Set exon-level parameters for feature counts.
-    default_kws = {
-        '-f': True,  # Feature level
-        '-t': 'exonic_part',  # Use 'exonic_part' features.
-        '--minOverlap': '1',  # Minimum overlap with exon.
-        '-O': True  # Include if spanning 1+ exons.
-    }
-    extra_kws = toolz.merge(default_kws, extra_kws or {})
+        return cls(merged)
 
-    # Create tmpdir if needed.
-    if tmp_dir is None:
+    def to_csv(self, file_path, index=True, **kwargs):
+        self._values.to_csv(str(file_path), index=index, **kwargs)
+
+
+class GeneExpressionMatrix(_ExpressionMatrix):
+    """Matrix containing gene expression values."""
+
+    def normalize(self, size_factors=None, log2=False):
+        """Normalizes expression values for sequencing depth."""
+
+        with np.errstate(divide="ignore"):
+            if size_factors is None:
+                size_factors = estimate_size_factors(self._values)
+            normalized = self._values.divide(size_factors, axis=1)
+
+        if log2:
+            normalized = np.log2(normalized + 1)
+
+        return self.__class__(normalized)
+
+    @classmethod
+    def from_alignments(cls,
+                        file_paths,
+                        gtf_path,
+                        sample_names=None,
+                        feature_count_kws=None):
+        """Generates gene expression counts using featureCounts."""
+
+        # Run feature counts and read output.
         tmp_dir = pathlib.Path(tempfile.mkdtemp())
-    elif not tmp_dir.exists():
-        tmp_dir.mkdir(parents=True)
-
-    # Run feature counts and read output.
-    try:
         output_path = tmp_dir / 'counts.txt'
-        feature_counts(
-            bam_files=bam_files,
-            gtf_path=gtf_path,
-            output_path=output_path,
-            extra_kws=extra_kws)
-        counts = _read_feature_count_output(output_path, names=names)
-    finally:
-        if not keep_tmp:
+
+        try:
+            feature_counts(
+                bam_files=file_paths,
+                gtf_path=gtf_path,
+                output_path=output_path,
+                extra_kws=feature_count_kws or {})
+
+            counts = cls.from_subread(output_path)
+        finally:
             shutil.rmtree(str(tmp_dir))
 
-    # Drop/rename columns.
-    counts.drop('Length', axis=1, inplace=True)
-    counts.rename(
-        columns={
-            'Geneid': 'gene_id',
-            'Chr': 'chr',
-            'Start': 'start',
-            'End': 'end',
-            'Strand': 'strand'
-        },
-        inplace=True)
+        if sample_names is not None:
+            name_map = dict(zip([str(fp) for fp in file_paths], sample_names))
+            counts.values.rename(columns=name_map, inplace=True)
 
-    # Set and sort by index.
-    counts.set_index(
-        ['gene_id', 'chr', 'start', 'end', 'strand'], inplace=True)
-    counts.sort_index(inplace=True)
+        return counts
 
-    return counts
+    @classmethod
+    def from_subread(cls, file_path, **kwargs):
+        """Reads expression from a subread output file."""
 
+        values = pd.read_csv(
+            native_str(file_path),
+            sep='\t',
+            comment='#',
+            index_col=['Geneid'],
+            **kwargs)
 
-def _read_feature_count_output(file_path, names=None):
-    # type (pathlib.Path, Dict[str, str]) -> pd.DataFrame
-    """Reads counts from featureCounts output.
+        values = values.drop(
+            ['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
+        values.index.name = 'gene_id'
 
-    Parameters
-    ----------
-    file_path : pathlib.Path
-        Path to count file.
-    names : Optional[Dict[str, str]]
-        Optional dictionary that maps featureCount column names, which are
-        typically file paths, to more readable sample names.
+        return cls(values)
 
-    """
-
-    # Read counts.
-    counts = pd.read_csv(
-        str(file_path), sep='\t', comment='#', dtype={'Chr': 'str'})
-
-    # If names are given, rename columns.
-    if names is not None:
-        for name in names:
-            if name not in counts.columns:
-                # TODO: Use logging.
-                print('Warning: missing sample {} for renaming'.format(name))
-        counts = counts.rename(columns=names)
-
-    return counts
+    @classmethod
+    def from_csv(cls, file_path, index_col=0, **kwargs):
+        """Reads expression from a CSV file."""
+        values = pd.read_csv(
+            native_str(file_path), index_col=index_col, **kwargs)
+        return cls(values)
 
 
-def read_exon_counts(file_path):
-    # type: (pathlib.Path) -> pd.DataFrame
-    """Reads exon counts from an IM-Fusion expression file.
+class ExonExpressionMatrix(_ExpressionMatrix):
+    """Matrix containing exon expression values."""
 
-    Parameters
-    ----------
-    file_path : pathlib.Path
-        Path to the exon count file.
-    gene_id : Optional[str]
-        Optional gene_id.
+    def get_exons(self, gene_id):
+        """Returns exon positions for given gene."""
 
-    Returns
-    -------
-    pd.DataFrame
-        Matrix of exon counts. The rows correspond to the
-        counted features, the columns correspond to the index values
-        (chomosome, position etc.) and the samples.
+        values = self.values
 
-    """
+        try:
+            values = values.loc[[gene_id]]
+        except KeyError:
+            raise ValueError('Invalid gene_id {!r}'.format(gene_id))
 
-    return pd.read_csv(
-        str(file_path),
-        sep='\t',
-        dtype={'chr': 'str'},
-        comment='#',
-        index_col=['gene_id', 'chr', 'start', 'end', 'strand'])
+        exons = pd.DataFrame.from_records(
+            native(list(values.index.get_values())),
+            columns=['gene_id', 'chromosome', 'start', 'end', 'strand'])
+        exons['strand'] = exons['strand'].map({'-': -1, '+': 1})
 
+        return exons
 
-def normalize_counts(counts):
-    # type: (pd.DataFrame) -> pd.DataFrame
-    """Normalizes counts for sequencing depth using median-of-ratios.
+    @classmethod
+    def from_alignments(cls,
+                        file_paths,
+                        gtf_path,
+                        sample_names=None,
+                        feature_count_kws=None):
+        """Generates exon expression counts using featureCounts.
 
-    Normalizes gene expression counts for differences in sequencing depth
-    between samples using the median-of-ratios approach described in DESeq2.
+        This function is used to generate a m-by-n matrix (m = number of samples,
+        n = number of exons) of exon expression counts. This matrix is generated
+        using featureCounts, whose results are then parsed and returned.
 
-    Parameters
-    ----------
-    counts : pd.DataFrame
-        Matrix of gene counts, with genes along the rows and samples
-        along the columns.
+        Parameters
+        ----------
+        file_paths : list[pathlib.Path]
+            List of paths to the bam files for which counts should be generated.
+        gtf_path : pathlib.Path
+            Path to the GTF file containing gene features.
+        sample_names : List[str]
+            Sample names to use for the given bam files.
+        feature_count_kws : dict[str, tuple]:
+            Dictionary of extra arguments that should be passed to feature
+            counts. Keys should correspond to argument names (including dashes),
+            values should be tuples containing the argument values.
 
-    Returns
-    -------
-    pd.DataFrame
-        Matrix of normalized expression counts.
+        Returns
+        -------
+        ExonExpressionCounts
+            Matrix containing expression counts.
 
-    """
+        """
 
-    with np.errstate(divide='ignore'):
-        size_factors = estimate_size_factors(counts)
-        return counts / size_factors
+        # Set exon-level parameters for feature counts.
+        default_fc_kws = {
+            '-f': True,  # Feature level
+            '-t': 'exonic_part',  # Use 'exonic_part' features.
+            '--minOverlap': '1',  # Minimum overlap with exon.
+            '-O': True  # Include if spanning 1+ exons.
+        }
+        feature_count_kws = toolz.merge(default_fc_kws, feature_count_kws
+                                        or {})
+
+        # Run feature counts and read output.
+        tmp_dir = pathlib.Path(tempfile.mkdtemp())
+        output_path = tmp_dir / 'counts.txt'
+
+        try:
+            feature_counts(
+                bam_files=file_paths,
+                gtf_path=gtf_path,
+                output_path=output_path,
+                extra_kws=feature_count_kws)
+
+            counts = cls.from_subread(output_path)
+        finally:
+            shutil.rmtree(str(tmp_dir))
+
+        if sample_names is not None:
+            name_map = dict(zip([str(fp) for fp in file_paths], sample_names))
+            counts.values.rename(columns=name_map, inplace=True)
+
+        return counts
+
+    @classmethod
+    def from_subread(cls, file_path, **kwargs):
+        """Reads expression from a subread output file."""
+
+        values = pd.read_csv(
+            native_str(file_path),
+            sep='\t',
+            comment='#',
+            index_col=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'],
+            **kwargs)
+
+        values.index = values.index.droplevel(5)
+        values.index.names = ['gene_id', 'chr', 'start', 'end', 'strand']
+
+        return cls(values)
+
+    @classmethod
+    def from_imf(cls, file_path, **kwargs):
+        """Reads expression from IM-Fusion expression file."""
+
+        values = pd.read_csv(
+            native_str(file_path),
+            sep='\t',
+            index_col=['gene_id', 'chr', 'start', 'end', 'strand'],
+            **kwargs)
+
+        return cls(values)
 
 
 def estimate_size_factors(counts):

@@ -17,8 +17,8 @@ import pandas as pd
 from scipy.stats import mannwhitneyu
 import toolz
 
-from imfusion.model import Insertion
-from .counts import estimate_size_factors, normalize_counts
+from imfusion.insertions import Insertion
+from .counts import estimate_size_factors
 from .stats import NegativeBinomial
 
 MATPLOTLIB_IMPORT_ERR_MSG = (
@@ -72,6 +72,8 @@ def test_de(
         in samples with an insertion or goes down (=-1).
     """
 
+    raise NotImplementedError()
+
     rows = []
 
     for gene_id in gene_ids:
@@ -113,8 +115,8 @@ def _test_gene(insertions, gene_counts, gene_id):
 
 
 def test_de_exon(
-        insertions,  # type: Union[List[Insertion], pd.DataFrame]
-        exon_counts,  # type: pd.DataFrame
+        insertions,  # type: InsertionSet
+        exon_counts,  # type: ExonExpressionMatrix
         gene_id,  # type: str
         pos_samples=None,  # type: Set[str]
         neg_samples=None  # type: Set[str]
@@ -136,13 +138,13 @@ def test_de_exon(
 
     Parameters
     ----------
-    insertions : List[Insertion] or pd.DataFrame
-        List of insertions.
-    exon_counts : pandas.DataFrame
+    insertions : InsertionSet
+        Set of insertions.
+    exon_counts : ExonExpressionMatrix
         Matrix containing exon counts, with samples along the columns and
         exons along the rows. The DataFrame should have a multi-index
-        containing the chromosome, start, end and strand of the exon. The
-        samples should correspond with samples in the insertions frame.
+        containing the chromosome, start, end and strand of the exon.
+        Samples should correspond with the samples in the insertions frame.
     gene_id : str
         ID of the gene of interest. Should correspond with a
         gene in the count matrix.
@@ -160,27 +162,27 @@ def test_de_exon(
 
     """
 
-    # Convert insertions to objects (if needed) and subset for gene.
-    insertion_objs = _preprocess_insertions(insertions, gene_id)
+    # Subset insertions for gene.
+    insertions = insertions.loc[insertions['gene_id'] == gene_id]
 
     # Split counts by insertions.
     before, after, dropped_samples = split_counts(
-        exon_counts, insertion_objs, gene_id=gene_id)
+        exon_counts, insertions, gene_id=gene_id)
 
     # Define postive/negative sample groups (positive = with insertion).
     if pos_samples is None:
-        pos_samples = set(ins.sample for ins in insertion_objs)
+        pos_samples = set(insertions['sample'])
 
     if neg_samples is None:
-        neg_samples = set(exon_counts.columns) - pos_samples
+        neg_samples = set(exon_counts.values.columns) - pos_samples
 
     pos_samples -= dropped_samples
     neg_samples -= dropped_samples
 
-    if len(pos_samples) == 0:
+    if not pos_samples:
         raise ValueError('No samples in positive set')
 
-    if len(neg_samples) == 0:
+    if not neg_samples:
         raise ValueError('No samples in negative set')
 
     # Normalize counts using before counts.
@@ -188,18 +190,11 @@ def test_de_exon(
     norm_before = before / size_factors
     norm_after = after / size_factors
 
-    # Check for missing samples.
-    missing_samples = (pos_samples | neg_samples) - set(exon_counts.columns)
-    if len(missing_samples) > 0:
-        raise ValueError('Missing samples in counts ({})'
-                         .format(', '.join(missing_samples)))
-
     # Calculate p-value between groups.
     pos_sums = norm_after[list(pos_samples)].sum()
     neg_sums = norm_after[list(neg_samples)].sum()
 
     p_value = mannwhitneyu(pos_sums, neg_sums, alternative='two-sided')[1]
-
     direction = 1 if pos_sums.mean() > neg_sums.mean() else -1
 
     # Return result.
@@ -207,37 +202,18 @@ def test_de_exon(
                     dropped_samples, direction, p_value)
 
 
-def _preprocess_insertions(insertions, gene_id):
-    """Converts insertions into common object format and subsets for gene."""
-
-    if isinstance(insertions, pd.DataFrame):
-        insertions = insertions.loc[insertions['gene_id'] == gene_id]
-        insertions = list(Insertion.from_frame(insertions))
-    else:
-        insertions = [ins for ins in insertions
-                      if ins.metadata['gene_id'] == gene_id]  # yapf: disable
-
-    return insertions
-
-
-def split_counts(
-        counts,  # type: pd.DataFrame,
-        insertions,  # type: Union[List[Insertion], pd.DataFrame]
-        gene_id,  # type: str
-        min_before=1,  # type: int
-        min_after=1  # type: int
-):  # type: (...) -> Tuple[pd.DataFrame, pd.DataFrame, Set[str]]
-    """Splits count frame for exons before and after insertion sites.
+def split_counts(exon_counts, insertions, gene_id, min_before=1, min_after=1):
+    """Splits counts for exons before and after insertion sites.
 
     Parameters
     ----------
-    counts : pd.DataFrame
+    counts : ExonExpressionMatrix
         Matrix of exon expression counts, with positions along the rows
         and samples along the columns. The index of the DataFrame should
         be a multi-level index containing the following levels: gene_id,
         chromosome, start, end and strand.
-    insertions : List[Insertion] or pandas.DataFrame
-        List of identified insertions.
+    insertions : InsertionSet
+        Set of insertions.
     gene_id : str
         Gene identifier.
     min_before : int
@@ -258,62 +234,52 @@ def split_counts(
 
     """
 
-    # TODO: tests for min_before/min_after.
+    # TODO: check min_before/min_after values.
 
-    # Convert insertions to objects (if needed) and subset for gene.
-    insertion_objs = _preprocess_insertions(insertions, gene_id)
+    # Subset insertions for gene id.
+    insertions = insertions.loc[insertions['gene_id'] == gene_id]
 
     # Extract exon information from counts.
-    exons = _get_exons(counts.loc[gene_id])
-    strand = exons.iloc[0].strand
+    exons = exon_counts.get_exons(gene_id=gene_id)
+    exons = exons.sort_values(by=['start', 'end'])
 
     # Switch limits if gene on - strand.
+    strand = exons.iloc[0].strand
+
     if strand == -1:
-        min_after, min_before = min_before, min_after
+        min_before, min_after = min_after, min_before
 
-    max_after = len(exons) - min_after
+    range_start = exons.iloc[min_before - 1]['end']
+    range_end = exons.iloc[len(exons) - min_after]['start']
 
-    # Search for common split.
-    dropped = set()  # type: Set[str]
+    # Check valid insertions.
+    mask = ((range_start <= insertions['position'])
+            & (insertions['position'] <= range_end))
+    invalid_samples = set(insertions.loc[~mask, 'sample'])
 
-    curr_min, curr_max = len(exons), 0
-    for insertion in insertion_objs:
-        idx = bisect.bisect_right(exons.end, insertion.position)
+    valid_insertions = insertions.loc[
+        ~insertions['sample'].isin(invalid_samples)]
 
-        if idx < min_before or idx > max_after:
-            # Add to invalid samples.
-            dropped |= {insertion.sample}
-        else:
-            if idx > curr_max:
-                curr_max = idx
+    # Raise error if we have no insertions to split on.
+    if not valid_insertions:
+        raise ValueError('No split possible')
 
-            if idx < curr_min:
-                curr_min = idx
+    # Determine start/end indices.
+    right_positions = exons['end'].searchsorted(
+        valid_insertions['position'], side='right')
+    left_positions = exons['start'].searchsorted(
+        valid_insertions['position'], side='left')
 
-    if curr_min > curr_max:
-        raise ValueError('No valid split found')
+    # Subset counts.
+    exon_counts_gene = exon_counts.values.loc[[gene_id]]
 
-    # Apply split to full frame (includes gene_id).
-    before = counts.loc[[gene_id]].iloc[:curr_min]
-    after = counts.loc[[gene_id]].iloc[curr_max:]
+    before = exon_counts_gene.iloc[:right_positions.min()]
+    after = exon_counts_gene.iloc[left_positions.max():]
 
-    # Switch if gene on - strand.
     if strand == -1:
         before, after = after, before
 
-    return before, after, dropped
-
-
-def _get_exons(counts):
-    # type: (pd.DataFrame) -> pd.DataFrame
-    """Extracts exon position information from given count frame."""
-
-    exons = pd.DataFrame.from_records(
-        native(list(counts.index.get_values())),
-        columns=['chromosome', 'start', 'end', 'strand'])
-    exons['strand'] = exons['strand'].map({'-': -1, '+': 1})
-
-    return exons
+    return before, after, invalid_samples
 
 
 class DeResult(object):
@@ -515,13 +481,15 @@ def test_de_exon_single(
 
     Parameters
     ----------
-    insertions : Union[List[Insertion], pd.DataFrame]
-        List of insertions.
-    exon_counts : pandas.DataFrame
+    insertions : InsertionSet
+        Set of insertions.
+    exon_counts : ExonExpressionMatrix
         Matrix containing exon counts, with samples along the columns and
         exons along the rows. The DataFrame should have a multi-index
         containing the chromosome, start, end and strand of the exon. The
         samples should correspond with samples in the insertions frame.
+    insertion_id : str
+        ID of insertion to test.
     gene_id : str
         ID of the gene of interest. Should correspond with a
         gene in the count matrix.
@@ -536,38 +504,28 @@ def test_de_exon_single(
 
     """
 
-    # Convert insertions to objects (if needed) and subset for gene.
-    insertion_objs = _preprocess_insertions(insertions, gene_id)
-
-    # Extract selected insertion.
-    insertions_by_id = {ins.id: ins for ins in insertion_objs}
-    selected_ins = insertions_by_id[insertion_id]
+    # Subset insertions for gene and extract selected insertion.
+    insertions = insertions.loc[insertions['gene_id'] == gene_id]
+    selected = insertions.loc[insertions['id'] == insertion_id]
 
     # Split counts by selected insertion.
-    before, after, _ = split_counts(
-        exon_counts, [selected_ins], gene_id=gene_id)
-
-    # Define postive/negative sample groups (positive = with the insertion,
-    # negative = all samples without an insertion).
-    pos_sample = selected_ins.sample
-
-    if neg_samples is None:
-        samples_with_ins = set(ins.sample for ins in insertion_objs)
-        neg_samples = set(exon_counts.columns) - samples_with_ins
-
-    if len(neg_samples) == 0:
-        raise ValueError('No samples in negative set')
+    before, after, _ = split_counts(exon_counts, selected, gene_id=gene_id)
 
     # Normalize counts using before counts.
     size_factors = estimate_size_factors(before + 1)
     norm_before = before / size_factors
     norm_after = after / size_factors
 
-    # Check for missing samples.
-    missing_samples = ({pos_sample} | neg_samples) - set(exon_counts.columns)
-    if len(missing_samples) > 0:
-        raise ValueError('Missing samples in counts ({})'
-                         .format(', '.join(missing_samples)))
+    # Define postive/negative sample groups (positive = with the insertion,
+    # negative = all samples without an insertion).
+    pos_sample = selected.iloc[0]['sample']
+
+    if neg_samples is None:
+        neg_samples = set(exon_counts.values.columns) - \
+            set(insertions['sample'])
+
+    if not neg_samples:
+        raise ValueError('No samples in negative set')
 
     # Calculate p-value between groups.
     pos_sum = int(norm_after[pos_sample].sum())
@@ -647,9 +605,9 @@ def test_de_gene(
 
     Parameters
     ----------
-    insertions : Union[List[Insertion], pd.DataFrame]
-        List of insertions.
-    gene_counts : pandas.DataFrame
+    insertions : InsertionSet
+        Set of insertions.
+    gene_counts : GeneExpressionMatrix
         Matrix containing gene counts, with samples along the columns and
         genes along the rows.
     gene_id : str
@@ -669,38 +627,32 @@ def test_de_gene(
 
     """
 
-    # Normalize gene expression counts.
-    norm_counts = normalize_counts(gene_counts)
+    # Subset insertions and normalize gene expression counts.
+    insertions = insertions.loc[insertions['gene_id'] == gene_id]
+    gene_counts = gene_counts.normalize(log2=True)
 
     # Split into positive/negative samples.
     if pos_samples is None:
-        if isinstance(insertions, pd.DataFrame):
-            mask = insertions['gene_id'] == gene_id
-            pos_samples = set(insertions.loc[mask]['sample'])
-        else:
-            pos_samples = set([
-                ins.sample for ins in insertions
-                if ins.metadata['gene_id'] == gene_id
-            ])
+        pos_samples = set(insertions['sample'])
 
     if neg_samples is None:
-        neg_samples = set(gene_counts.columns) - pos_samples
+        neg_samples = set(gene_counts.values.columns) - pos_samples
 
-    if len(pos_samples) == 0:
+    if not pos_samples:
         raise ValueError('No samples in positive set')
 
-    if len(neg_samples) == 0:
+    if not neg_samples:
         raise ValueError('No samples in negative set')
 
     # Perform test.
-    pos_counts = norm_counts.loc[gene_id, pos_samples]
-    neg_counts = norm_counts.loc[gene_id, neg_samples]
+    pos_counts = gene_counts.values.loc[gene_id, pos_samples]
+    neg_counts = gene_counts.values.loc[gene_id, neg_samples]
 
     p_value = mannwhitneyu(pos_counts, neg_counts, alternative='two-sided')[1]
     direction = 1 if pos_counts.mean() > neg_counts.mean() else -1
 
     return DeGeneResult(
-        counts=norm_counts.loc[gene_id],
+        counts=gene_counts.values.loc[gene_id],
         pos_samples=pos_samples,
         neg_samples=neg_samples,
         direction=direction,

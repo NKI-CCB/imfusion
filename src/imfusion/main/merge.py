@@ -14,7 +14,8 @@ import pandas as pd
 from pathlib2 import Path
 
 import imfusion
-from imfusion.expression import read_exon_counts
+from imfusion.expression import ExonExpressionMatrix
+from imfusion.insertions import InsertionSet
 
 
 def main():
@@ -22,37 +23,26 @@ def main():
 
     args = parse_args()
 
-    # Use directory names to name samples if no names given.
-    ins_frames = [pd.read_csv(str(fp), sep='\t') for fp in args.insertions]
-
-    # Check for overlapping samples between sets.
-    seen = set()
-    for ins_frame in ins_frames:
-        if len(set(ins_frame['sample']) & seen) > 0:
-            raise ValueError('Overlapping samples between inputs')
-        seen |= set(ins_frame['sample'])
-
-    # Merge insertions
-    ins_merged = pd.concat(ins_frames, axis=0)
-    ins_merged.to_csv(str(args.output), sep='\t', index=True)
-
+    # Check if we have the same number of files for
+    # insertion and expression data.
     if args.expression and args.output_expression:
-        if len(args.expression) != len(ins_frames):
+        if len(args.expression) != len(args.insertions):
             raise ValueError('Differing number of insertion/expression paths')
 
-        # Read expression.
-        expr_frames = [read_exon_counts(fp) for fp in args.expression]
+    # Merge insertions.
+    insertions = [InsertionSet.from_csv(str(fp), sep='\t')
+                  for fp in args.insertions]  # yapf: disable
 
-        # Check insertion/expression frames have same samples.
-        for ins_frame, expr_frame in zip(ins_frames, expr_frames):
-            if (ins_frame.shape[0] > 0 and
-                    not set(ins_frame['sample']) == set(expr_frame.columns)):
-                raise ValueError('Insertion and expression inputs do '
-                                 'not have matching samples')
+    merged_insertions = InsertionSet.concat(insertions)
+    merged_insertions.to_csv(args.output, sep='\t')
 
-        # Merge expression.
-        expr_merged = pd.concat(expr_frames, axis=1)
-        expr_merged.to_csv(str(args.output_expression), sep='\t', index=True)
+    # Merge expression.
+    if args.expression and args.output_expression:
+        expr_matrices = [ExonExpressionMatrix.from_imf(fp)
+                         for fp in args.expression]  # yapf: disable
+        merged_expr = ExonExpressionMatrix.concat(expr_matrices, axis=1)
+
+        merged_expr.to_csv(args.output_expression, sep='\t')
 
 
 def parse_args():

@@ -11,7 +11,7 @@ import logging
 
 import imfusion
 from imfusion.insertions.aligners import AlignerCommand
-from imfusion.model import Insertion
+from imfusion.insertions import Insertion
 
 FORMAT = "[%(asctime)-15s] %(message)s"
 logging.basicConfig(

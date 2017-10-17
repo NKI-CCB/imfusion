@@ -23,13 +23,13 @@ from intervaltree import IntervalTree
 from scipy.stats import poisson
 
 from imfusion.build import Reference
-from imfusion.model import Insertion, InsertionSet
+from imfusion.insertions import Insertion, InsertionSet
 from imfusion.util.genomic import GenomicIntervalTree
 from imfusion.util.tabix import GtfIterator
 
 
 def test_ctgs(
-        insertions,  # type: List[Insertion]
+        insertions,  # type: InsertionSet
         reference,  # type: Reference
         gene_ids=None,  # type: Set[str]
         chromosomes=None,  # type: Set[str]
@@ -49,7 +49,7 @@ def test_ctgs(
 
     Parameters
     ----------
-    insertions : List[Insertion]
+    insertions : InsertionSet
         Insertions to test.
     reference : Reference
         Reference index used by the aligner to identify insertions.
@@ -81,6 +81,12 @@ def test_ctgs(
 
     """
 
+    if len(insertions) == 0:
+        raise ValueError('Empty insertion set')
+
+    if 'gene_id' not in insertions.values:
+        raise ValueError('Insertions are not annotated with gene ids')
+
     # Default to shared chromosome sequences (typically drops some
     # of the more esoteric extra scaffold/patch sequences).
     if chromosomes is None:
@@ -90,11 +96,11 @@ def test_ctgs(
         chromosomes = list(
             set(reference_seq.keys()) & set(reference_gtf.contigs))
 
-        if len(chromosomes) == 0:
+        if not chromosomes:
             ValueError('No chromosomes are shared between the reference '
                        'sequence and reference gtf files')
 
-    if len(chromosomes) == 0:
+    if not chromosomes:
         raise ValueError('At least one chromosome must be given')
 
     # Determine gene windows using GTF.
@@ -106,13 +112,13 @@ def test_ctgs(
     insertions = _subset_to_windows(insertions, gene_windows)
 
     if gene_ids is None:
-        gene_ids = set(ins.metadata['gene_id'] for ins in insertions)
+        gene_ids = set(insertions['gene_id'])
 
     # Collapse insertions per gene/sample (recommended).
     # Corrects for hopping/multiple detection issues.
     if per_sample:
         logging.info('Collapsing insertions')
-        insertions = list(_collapse_per_sample(insertions))
+        insertions = _collapse_per_sample(insertions)
 
     # Calculate total number of pattern occurrences within intervals.
     logging.info('Counting pattern occurrences')
@@ -123,8 +129,8 @@ def test_ctgs(
 
     # Calculate p-values for each gene.
     logging.info('Calculating significance for genes')
-    insertion_trees = GenomicIntervalTree.from_objects_position(
-        insertions, chrom_attr='chromosome')
+    # insertion_trees = GenomicIntervalTree.from_objects_position(
+    #     insertions, chrom_attr='chromosome')
 
     p_values = {
         gene_id: test_region(
@@ -133,8 +139,7 @@ def test_ctgs(
             region=gene_windows[gene_id],
             total=total,
             pattern=pattern,
-            filters=[lambda ins, gid=gene_id: ins.metadata['gene_id'] == gid],
-            insertion_trees=insertion_trees)
+            filter_expr='gene_id == {!r}'.format(gene_id))
         for gene_id in gene_ids
     }
 
@@ -150,19 +155,15 @@ def test_ctgs(
 
     if len(insertions) > 0:
         # Annotate with gene_name if possible.
-        if 'gene_name' in insertions[0].metadata:
-            name_map = {
-                ins.metadata['gene_id']: ins.metadata['gene_name']
-                for ins in insertions
-            }
+        if 'gene_name' in insertions.values:
+            name_map = dict(
+                zip(insertions['gene_id'], insertions['gene_name']))
             result.insert(1, 'gene_name', result['gene_id'].map(name_map))
         else:
             result['gene_name'] = np.nan
 
         # Annotate with frequency.
-        ins_set = InsertionSet.from_tuples(insertions)
-
-        frequency = (ins_set.values
+        frequency = (insertions.values
                      .groupby('gene_id')
                      ['sample'].nunique()
                      .reset_index(name='n_samples')) # yapf: disable
@@ -213,9 +214,9 @@ def _apply_gene_window(
 
 
 def _subset_to_windows(
-        insertions,  # type: List[Insertion]
+        insertions,  # type: InsertionSet
         gene_windows  # type: Dict[str, Tuple[str, int, int]]
-):  # type: (...) -> List[Insertion]
+):  # type: (...) -> InsertionSet
     """Subsets insertions for given gene windows."""
 
     # Create lookup trees.
@@ -233,38 +234,38 @@ def _subset_to_windows(
         except KeyError:
             return False
 
-    return [
-        ins for ins in insertions
-        if ins.metadata['gene_id'] in gene_windows and _in_windows(ins, trees)
-    ]
+    mask = [_in_windows(ins, trees) for ins in insertions.values.itertuples()]
+    mask &= insertions['gene_id'].isin(gene_windows.keys())
+
+    return insertions.loc[mask]
 
 
 def _collapse_per_sample(insertions):
-    # Type: (List[Insertion]) -> Generator
-    def _keyfunc(insertion):
-        return (insertion.sample, str(insertion.metadata['gene_id']))
+    """Collapses insertions per sample."""
 
-    grouped = itertools.groupby(sorted(insertions, key=_keyfunc), key=_keyfunc)
+    grouped = insertions.values.groupby(['sample', 'gene_id'])
 
-    for _, grp in grouped:
-        grp = list(grp)
+    collapsed = grouped.agg({
+        'id': 'first',
+        'chromosome': 'first',
+        'position': 'mean',
+        'strand': lambda values: int(np.sign(values.mean())),
+        'support': 'sum',
+        'support_junction': 'sum',
+        'support_spanning': 'sum'
+    }).reset_index()  # yapf: disable
 
-        if len(grp) > 1:
-            mean_pos = int(np.mean([ins.position for ins in grp]))
-            yield grp[0]._replace(position=mean_pos)
-        else:
-            yield grp[0]
+    return InsertionSet(collapsed)
 
 
 def test_region(
-        insertions,  # type: List[Insertion]
+        insertions,  # type: InsertionSet
         reference_seq,  # type: pyfaidx.Fasta
         region,  # type: Tuple[str, int, int]
         pattern=None,  # type: Optional[str]
         intervals=None,  # type: Optional[Iterable[Tuple[str, int, int]]]
         total=None,  # type: Optional[int]
-        filters=None,  # type: Optional[List[Callable]]
-        insertion_trees=None  # type: GenomicIntervalTree
+        filter_expr=None,  # type: Optional[List[Callable]]
 ):  # type: (...) -> float
     """Tests a given genomic region for enrichment in insertions."""
 
@@ -276,21 +277,16 @@ def test_region(
     region_count = count_region(reference_seq, region=region, pattern=pattern)
 
     # Sub-select insertions for region.
-    if insertion_trees is None:
-        insertion_trees = GenomicIntervalTree.from_objects_position(
-            insertions, chrom_attr='chromosome')
+    expr = ('chromosome == {!r} and position >= {}'
+            ' and position < {}').format(*region)
 
-    region_ins = set(interval[2]
-                     for interval in insertion_trees.search(*region))
+    if filter_expr is not None:
+        expr += ' and ' + filter_expr
 
-    # Apply additional filter functions to insertions if given
-    # (such as filtering on gene name/id for example).
-    if filters is not None:
-        for filter_func in filters:
-            region_ins = set(ins for ins in region_ins if filter_func(ins))
+    region_ins_df = insertions.values.query(expr)
 
     # Calculate p-value.
-    x = len(list(region_ins))
+    x = len(region_ins_df)
     mu = len(insertions) * (region_count / total)
 
     # Note here we use loc=1, because we are interested in

@@ -15,7 +15,7 @@ from future.utils import native_str
 import pytest
 
 from imfusion.insertions.aligners import tophat
-from imfusion.model import Insertion
+from imfusion.insertions import Insertion
 from imfusion.vendor.frozendict import frozendict
 
 # pylint: disable=no-self-use,redefined-outer-name

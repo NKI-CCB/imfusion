@@ -13,7 +13,7 @@ import pytest
 
 from imfusion import ctg
 from imfusion.build import Reference
-from imfusion.model import Insertion
+from imfusion.insertions import Insertion, InsertionSet
 
 Sequence = namedtuple('Sequence', ['seq'])
 Gene = namedtuple('Gene', ['contig', 'start', 'end', 'strand'])
@@ -37,9 +37,9 @@ def _insertion(id,
         position=position,
         strand=strand,
         sample=sample,
+        support=support_junction + support_spanning,
         support_junction=support_junction,
         support_spanning=support_spanning,
-        support=support_junction + support_spanning,
         **kwargs)
 
 
@@ -129,12 +129,14 @@ class TestCountTotal(object):
 def insertions():
     """Example insertion set."""
 
-    return [
+    tuples = [
         _insertion(id='1', chromosome='1', position=9, strand=1, sample='S1',
                    gene_id='gene_a'),
         _insertion(id='2', chromosome='1', position=15, strand=-1, sample='S2',
                    gene_id='gene_b')
     ] # yapf: disable
+
+    return InsertionSet.from_tuples(tuples)
 
 
 class TestTestRegion(object):
@@ -195,7 +197,7 @@ class TestSubsetToWindows(object):
         subset = ctg._subset_to_windows(insertions, windows)
 
         assert len(subset) == 1
-        assert subset[0].chromosome == '1'
+        assert subset.iloc[0].chromosome == '1'
 
     def test_subset_insertions_no_overlap(self, insertions):
         """Test example with no insertions within windows."""
@@ -216,7 +218,7 @@ class TestSubsetToWindows(object):
         subset = ctg._subset_to_windows(insertions, windows)
 
         assert len(subset) == 1
-        assert subset[0].chromosome == '1'
+        assert subset.iloc[0].chromosome == '1'
 
 
 class TestCollapsePerSample(object):
@@ -225,24 +227,25 @@ class TestCollapsePerSample(object):
     def test_example(self, insertions):
         """Tests example with collapsing."""
 
-        insertions[1] = insertions[1]._replace(
-            sample='S1', metadata={'gene_id': 'gene_a'})
-        merged = list(ctg._collapse_per_sample(insertions))
+        insertions.values.loc[1, 'sample'] = 'S1'
+        insertions.values.loc[1, 'gene_id'] = 'gene_a'
+        merged = ctg._collapse_per_sample(insertions)
 
         assert len(merged) == 1
-        assert merged[0].position == 12
+        assert merged.iloc[0].position == 12
 
     def test_negative_example(self, insertions):
         """Tests example without collapsing."""
 
-        merged = list(ctg._collapse_per_sample(insertions))
-        assert merged == insertions
+        merged = ctg._collapse_per_sample(insertions)
+        assert len(merged) == 2
 
 
 @pytest.fixture
 def ctg_insertions():
     """Insertions for test_ctg test case."""
-    return [
+
+    tuples = [
         _insertion(id='1', chromosome='1', position=9, strand=1,
                    sample='S1', gene_id='gene_a'),
         _insertion(id='2', chromosome='1', position=9, strand=1,
@@ -256,6 +259,8 @@ def ctg_insertions():
         _insertion(id='6', chromosome='1', position=6, strand=-1,
                    sample='S3', gene_id='gene_a')
     ] # yapf: disable
+
+    return InsertionSet.from_tuples(tuples)
 
 
 @pytest.fixture
@@ -322,10 +327,8 @@ class TestTestCtgs(object):
     def test_empty(self, ctg_reference):
         """Test example without insertions."""
 
-        result = ctg.test_ctgs(
-            [], ctg_reference, window=(4, 0), per_sample=False)
+        insertions = InsertionSet.from_tuples([])
 
-        assert len(result) == 0
-        assert list(result.columns) == [
-            'gene_id', 'p_value', 'q_value', 'gene_name', 'n_samples'
-        ]
+        with pytest.raises(ValueError):
+            ctg.test_ctgs(
+                insertions, ctg_reference, window=(4, 0), per_sample=False)

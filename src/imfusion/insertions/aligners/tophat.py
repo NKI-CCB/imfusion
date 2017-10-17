@@ -16,7 +16,7 @@ from imfusion.build.indexers.tophat import TophatReference
 from imfusion.external.stringtie import stringtie_assemble
 from imfusion.external.tophat import tophat2_align
 from imfusion.external.util import parse_arguments
-from imfusion.model import TransposonFusion
+from imfusion.insertions import TransposonFusion
 from imfusion.util import path, tabix
 from imfusion.vendor.frozendict import frozendict
 

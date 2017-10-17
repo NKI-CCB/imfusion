@@ -6,13 +6,15 @@ from __future__ import absolute_import, division, print_function
 from builtins import *
 # pylint: enable=wildcard-import,redefined-builtin,unused-wildcard-import
 
+import tempfile
 import shutil
 
 from pathlib2 import Path
-
+import pandas as pd
 import pytest
 
 from imfusion.expression import counts
+from imfusion.expression.counts import ExonExpressionMatrix
 
 # pylint: disable=no-self-use,redefined-outer-name
 
@@ -33,40 +35,82 @@ def fc_counts(tmpdir):
     return dest
 
 
-@pytest.fixture
-def count_kws(tmpdir):
-    """Basic keyword arguments for generate_exon_counts."""
+class TestExonExpressionMatrix(object):
+    """Tests for ExonExpressionMatrix."""
 
-    return {
-        'bam_files': [Path('a.bam'), Path('b.bam')],
-        'gtf_path': Path('/path/to/gtf'),
-        'names': {
-            'a.bam': 'a',
-            'b.bam': 'b'
-        },
-        'tmp_dir': tmpdir
-    }
+    def test_from_subread(self):
+        """Tests reading from subread files."""
 
+        file_path = pytest.helpers.data_path(
+            'fc_counts.txt', relative_to=__file__)
 
-class TestGenerateExonCounts(object):
-    """Tests for the generate_exon_counts function."""
+        matrix = ExonExpressionMatrix.from_subread(file_path)
 
-    def test_example(self, mocker, count_kws, fc_counts):
-        """Tests function using example output file from feature counts."""
+        assert list(matrix.values.columns) == ['a.bam', 'b.bam']
+        assert list(matrix.values.index.names) == [
+            'gene_id', 'chr', 'start', 'end', 'strand'
+        ]
 
-        # NOTE: fc_counts fixture copies counts into output directory.
+    def test_from_imf(self):
+        """Tests reading from IM-Fusion expression files."""
 
-        # Mock and copy result into place.
-        mock = mocker.patch.object(counts, 'feature_counts')
+        file_path = pytest.helpers.data_path(
+            'exon_counts.txt', relative_to=__file__)
 
-        # Call function.
-        exon_counts = counts.generate_exon_counts(**count_kws)
+        matrix = ExonExpressionMatrix.from_imf(file_path)
 
-        # Check call + result.
-        mock.assert_called_once_with(
+        assert list(matrix.values.columns) == ['a', 'b']
+        assert list(matrix.values.index.names) == [
+            'gene_id', 'chr', 'start', 'end', 'strand'
+        ]
+
+    def test_get_exons(self):
+        """Tests getting exons."""
+        file_path = pytest.helpers.data_path(
+            'exon_counts.txt', relative_to=__file__)
+
+        matrix = ExonExpressionMatrix.from_imf(file_path)
+        exons = matrix.get_exons(gene_id='gene_a')
+
+        expected = pd.DataFrame(
+            {
+                'gene_id': 'gene_a',
+                'chromosome': '1',
+                'start': [10, 30, 50, 70, 90],
+                'end': [20, 40, 60, 80, 100],
+                'strand': 1
+            },
+            columns=['gene_id', 'chromosome', 'start', 'end', 'strand'])
+
+        assert all(exons == expected)
+
+    def test_get_exons_invalid(self):
+        """Tests getting exons with invalid gene id."""
+
+        file_path = pytest.helpers.data_path(
+            'exon_counts.txt', relative_to=__file__)
+
+        matrix = ExonExpressionMatrix.from_imf(file_path)
+
+        with pytest.raises(ValueError):
+            matrix.get_exons(gene_id='gene_x')
+
+    def test_from_alignments(self, mocker, tmpdir, fc_counts):
+        """Tests generating counts using featureCounts."""
+
+        mocker.patch.object(tempfile, 'mkdtemp', return_value=str(tmpdir))
+        mock_fc = mocker.patch.object(counts, 'feature_counts')
+
+        exon_counts = ExonExpressionMatrix.from_alignments(
+            file_paths=[Path('a.bam'), Path('b.bam')],
+            gtf_path=Path('/path/to/reference.gtf'),
+            sample_names=['a', 'b'],
+            feature_count_kws={})
+
+        mock_fc.assert_called_once_with(
             bam_files=[Path('a.bam'), Path('b.bam')],
-            gtf_path=Path('/path/to/gtf'),
-            output_path=count_kws['tmp_dir'] / 'counts.txt',
+            gtf_path=Path('/path/to/reference.gtf'),
+            output_path=tmpdir / 'counts.txt',
             extra_kws={
                 '--minOverlap': '1',
                 '-O': True,
@@ -74,23 +118,5 @@ class TestGenerateExonCounts(object):
                 '-t': 'exonic_part'
             })
 
-        assert exon_counts.shape == (7, 2)
-        assert list(exon_counts.columns) == ['a', 'b']
-
-
-@pytest.fixture
-def exon_counts_path():
-    """Example exon counts file."""
-    return pytest.helpers.data_path('exon_counts.txt', relative_to=__file__)
-
-
-class TestReadExonCounts(object):
-    """Tests for the read_exon_counts function."""
-
-    def test_example(self, exon_counts_path):
-        """Tests reading example output from the generate_exon_counts test."""
-
-        exon_counts = counts.read_exon_counts(exon_counts_path)
-
-        assert exon_counts.shape == (7, 2)
-        assert list(exon_counts.columns) == ['a', 'b']
+        assert len(exon_counts.values) > 0
+        assert list(exon_counts.values.columns) == ['a', 'b']
