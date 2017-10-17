@@ -18,7 +18,7 @@ from scipy.stats import mannwhitneyu
 import toolz
 
 from imfusion.insertions import Insertion
-from .counts import estimate_size_factors
+from .counts import estimate_size_factors, GeneExpressionMatrix
 from .stats import NegativeBinomial
 
 MATPLOTLIB_IMPORT_ERR_MSG = (
@@ -28,8 +28,8 @@ MATPLOTLIB_IMPORT_ERR_MSG = (
 
 
 def test_de(
-        insertions,  # type: List[Insertion]
-        exon_counts,  # type: pd.DataFrame
+        insertions,  # type: InsertionSet
+        exon_counts,  # type: ExonExpressionMatrix
         gene_ids,  # type: List[str]
         fallback_to_gene=False,  # type: bool
         gene_counts=None  # type: pd.DataFrame
@@ -72,8 +72,6 @@ def test_de(
         in samples with an insertion or goes down (=-1).
     """
 
-    raise NotImplementedError()
-
     rows = []
 
     for gene_id in gene_ids:
@@ -90,7 +88,8 @@ def test_de(
                 if gene_counts is None:
                     logging.warning('Using summed exon counts to approximate '
                                     'gene counts for gene DE test')
-                    gene_counts = exon_counts.groupby(level=0).sum()
+                    gene_counts = GeneExpressionMatrix.from_exon_expression(
+                        exon_counts)
 
                 # Use helper function to avoid nesteed try/except.
                 p_value, dir_, type_ = _test_gene(insertions, gene_counts,
@@ -458,8 +457,8 @@ def _plot_sums_sample(before, after, width, ax, **kwargs):
 
 
 def test_de_exon_single(
-        insertions,  # type: Union[List[Insertion], pd.DataFrame]
-        exon_counts,  # type: pd.DataFrame
+        insertions,  # type: InsertionSet
+        exon_counts,  # type: ExonExpressionMatrix
         insertion_id,  # type: str
         gene_id,  # type: str
         neg_samples=None  # type: Set[str]
@@ -589,8 +588,8 @@ class DeSingleResult(object):
 
 
 def test_de_gene(
-        insertions,  # type: Union[List[Insertion], pd.DataFrame]
-        gene_counts,  # type: pd.DataFrame
+        insertions,  # type: InsertionSet
+        gene_counts,  # type: GeneExpressionMatrix
         gene_id,  # type: str
         pos_samples=None,  # type: Set[str]
         neg_samples=None  # type: Set[str]

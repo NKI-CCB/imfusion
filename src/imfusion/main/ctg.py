@@ -16,9 +16,8 @@ import pandas as pd
 import imfusion
 from imfusion.build import Reference
 from imfusion.ctg import test_ctgs
-from imfusion.expression.counts import read_exon_counts
-from imfusion.expression.test import test_de
-from imfusion.insertions import Insertion
+from imfusion.expression import test_de, ExonExpressionMatrix
+from imfusion.insertions import InsertionSet
 
 FORMAT = "[%(asctime)-15s] %(message)s"
 logging.basicConfig(
@@ -33,12 +32,8 @@ def main():
     args = parse_args()
 
     # Read insertions and filter for depth.
-    insertions = list(Insertion.from_csv(args.insertions, sep='\t'))
-
-    if args.min_depth is not None:
-        insertions = [
-            ins for ins in insertions if ins.support >= args.min_depth
-        ]
+    insertions = InsertionSet.from_csv(args.insertions, sep='\t')
+    insertions = insertions.loc[insertions['support'] >= args.min_depth]
 
     # Identify CTGs.
     logger.info('Testing for CTGs')
@@ -65,8 +60,8 @@ def main():
         logger.info('Testing for differential expression')
 
         # Perform DE tests.
-        exon_counts = read_exon_counts(args.expression)
-        de_results = test_de(insertions, exon_counts, gene_ids=ctgs['gene_id'])
+        exon_expr = ExonExpressionMatrix.from_imf(args.expression)
+        de_results = test_de(insertions, exon_expr, gene_ids=ctgs['gene_id'])
 
         # Combine with CTG result.
         de_results = de_results.rename(columns={
@@ -164,7 +159,7 @@ def parse_args():
     ins_group.add_argument(
         '--min_depth',
         type=int,
-        default=None,
+        default=0,
         help='Minimum supporting number of reads for '
         'insertions to be included in the CTG '
         'analysis. Can be used to omit insertions '

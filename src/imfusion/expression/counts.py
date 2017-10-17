@@ -125,6 +125,12 @@ class GeneExpressionMatrix(_ExpressionMatrix):
             native_str(file_path), index_col=index_col, **kwargs)
         return cls(values)
 
+    @classmethod
+    def from_exon_expression(cls, exon_expr):
+        """Generates gene expression values from exon expression."""
+        gene_expr = exon_expr.values.groupby(level=0).sum()
+        return cls(gene_expr)
+
 
 class ExonExpressionMatrix(_ExpressionMatrix):
     """Matrix containing exon expression values."""
@@ -233,6 +239,7 @@ class ExonExpressionMatrix(_ExpressionMatrix):
             native_str(file_path),
             sep='\t',
             index_col=['gene_id', 'chr', 'start', 'end', 'strand'],
+            dtype={'chr': 'str'},
             **kwargs)
 
         return cls(values)
