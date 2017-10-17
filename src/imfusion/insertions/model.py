@@ -106,7 +106,7 @@ class RecordSet(object):
 
     def to_csv(self, file_path, **kwargs):
         """Writes the record set to a csv file using pandas' to_csv."""
-        self._values.to_csv(file_path, **kwargs)
+        self._values.to_csv(native_str(file_path), **kwargs)
 
     def groupby(self, by, **kwargs):
         """Groups the set by values of the specified columns."""

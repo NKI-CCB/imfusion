@@ -53,7 +53,7 @@ class _ExpressionMatrix(object):
         return cls(merged)
 
     def to_csv(self, file_path, index=True, **kwargs):
-        self._values.to_csv(str(file_path), index=index, **kwargs)
+        self._values.to_csv(native_str(file_path), index=index, **kwargs)
 
 
 class GeneExpressionMatrix(_ExpressionMatrix):
