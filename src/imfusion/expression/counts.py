@@ -110,6 +110,7 @@ class GeneExpressionMatrix(_ExpressionMatrix):
             sep='\t',
             comment='#',
             index_col=['Geneid'],
+            dtype={'Chr': 'str'},
             **kwargs)
 
         values = values.drop(
@@ -224,6 +225,8 @@ class ExonExpressionMatrix(_ExpressionMatrix):
             sep='\t',
             comment='#',
             index_col=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'],
+            dtype={'Geneid': 'str',
+                   'Chr': 'str'},
             **kwargs)
 
         values.index = values.index.droplevel(5)

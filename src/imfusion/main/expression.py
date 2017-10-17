@@ -13,7 +13,7 @@ from pathlib2 import Path
 
 import imfusion
 from imfusion.build.indexers import Reference
-from imfusion.expression.counts import generate_exon_counts
+from imfusion.expression import ExonExpressionMatrix
 
 FORMAT = "[%(asctime)-15s] %(message)s"
 logging.basicConfig(
@@ -38,11 +38,11 @@ def main():
     bam_path = args.bam
     reference = Reference(args.reference)
 
-    exon_counts = generate_exon_counts(
+    exon_counts = ExonExpressionMatrix.from_alignments(
         [bam_path],
         gtf_path=reference.exon_gtf_path,
-        names={str(bam_path): args.name},
-        extra_kws=feature_counts_kws)
+        sample_names=[args.sample_name],
+        feature_count_kws=feature_counts_kws)
 
     # Write output.
     output = args.output or args.sample_dir / 'expression.txt'
@@ -75,7 +75,7 @@ def parse_args():
 
     parser.add_argument('--output', type=Path, required=True)
 
-    parser.add_argument('--name', required=True, help='Sample name.')
+    parser.add_argument('--sample_name', required=True, help='Sample name.')
 
     parser.add_argument(
         '--paired',
