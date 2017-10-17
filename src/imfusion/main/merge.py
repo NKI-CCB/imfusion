@@ -15,7 +15,6 @@ from pathlib2 import Path
 
 import imfusion
 from imfusion.expression import read_exon_counts
-from imfusion.model import Insertion
 
 
 def main():
@@ -46,7 +45,8 @@ def main():
 
         # Check insertion/expression frames have same samples.
         for ins_frame, expr_frame in zip(ins_frames, expr_frames):
-            if not set(ins_frame['sample']) == set(expr_frame.columns):
+            if (ins_frame.shape[0] > 0 and
+                    not set(ins_frame['sample']) == set(expr_frame.columns)):
                 raise ValueError('Insertion and expression inputs do '
                                  'not have matching samples')
 
