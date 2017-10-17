@@ -9,6 +9,7 @@ from builtins import *
 import collections
 import itertools
 import operator
+import warnings
 
 from future.utils import native_str
 import numpy as np
@@ -508,6 +509,19 @@ class InsertionSet(MetadataRecordSet):
     @classmethod
     def _tuple_class(cls):
         return Insertion
+
+    @classmethod
+    def from_csv(cls, file_path, **kwargs):
+        """Reads a InsertionSet from a csv file using pandas.read_csv."""
+        values = pd.read_csv(native_str(file_path), **kwargs)
+
+        if 'chromosome' not in values and 'seqname' in values:
+            warnings.warn('Using \'seqname\' to describe insertion positions '
+                          'is deprecated, use \'chromosome\' instead',
+                          DeprecationWarning)
+            values = values.rename(columns={'seqname': 'chromosome'})
+
+        return cls(values)
 
     @classmethod
     def concat(cls, insertion_sets, check_overlap=True):
